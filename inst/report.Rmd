@@ -1,0 +1,303 @@
+---
+title: "ÉPICo analysis report"
+output: html_document
+params:
+  name_var: NA
+  grouping_var: NA
+  donor_var: NA
+  normalization_mode: NA
+  
+  limma_voi: NA
+  limma_covar: NA
+  limma_ebayes_trend: NA
+  limma_ebayes_robust: NA
+  limma_sel_contrasts: NA
+  
+  #heatmap options
+  min_deltabeta: NA
+  max_fdr: NA
+  cluster_alg: NA
+  groups2plot: NA
+  contrasts2plot: NA
+  Colv: NA
+  clusteralg: NA
+  distance: NA
+  scale: NA
+  
+  
+  rval_gset: NA
+  rval_rgset: NA
+  rval_sheet_target: NA
+  rval_design: NA
+  rval_fit: NA
+  rval_contrasts: NA
+  rval_filteredlist: NA
+  
+  plot_density_raw: NA
+  plot_density_norm: NA
+  plot_densitybean_raw: NA
+  plot_densitybean_norm: NA
+  plot_sexprediction: NA
+  plot_heatmapsnps: NA
+  
+  plot_filterheatmap: NA
+  table_filtercounts: NA
+  
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#some assignments:
+
+pdata_target = pData(params$rval_gset)
+rval_voi = pdata_target[,params$limma_voi]
+
+gset_beta = getBeta(params$rval_gset)
+colnames(gset_beta) = pdata_target[,params$name_var]
+rgset_beta= getBeta(params$rval_rgset)
+colnames(rgset_beta) = pdata_target[,params$name_var]
+
+#shared functions
+source("utils.R")
+
+```
+
+
+This report was created with the ÉPICo ShinyApp.<br>
+(c) 2020 Octavio Morante-Palacios
+
+
+
+## Variable selection
+
+The group variable selected was __`r params$grouping_var`__, and the donor variable was __`r params$donor_var`__ .
+
+Finally, the selected samples added to the RGSet file were:
+
+```{r name_var, echo=FALSE}
+params$rval_sheet_target[,params$name_var]
+```
+
+
+## Bad probes filtering
+
+Before Minfi Normalization, RGChannelSet is filtered:
+
+```{r bad_probes, eval=F, echo=T}
+RGSet [(rowMeans(as.matrix(detectionP(RGSet))) <0.01),]
+```
+
+<br>
+
+## Minfi Normalization
+
+The selected normalization method of Minfi was `r params$normalization_mode`. In the next plots, we can see the comparison of the processed data with the raw data.
+
+<br>
+
+### Density plot  
+
+__Raw__
+
+```{r density_plot_raw, echo=FALSE}
+densityPlot(rgset_beta)
+```
+
+__Processed (`r params$normalization_mode`)__
+
+```{r density_plot_processed, echo=FALSE}
+densityPlot(gset_beta)
+
+```
+
+<br>
+
+### Density Bean plot
+
+__Raw__
+
+```{r densitybean_plot_raw, echo=FALSE}
+densityBeanPlot(rgset_beta)
+```
+
+__Processed (`r params$normalization_mode`)__
+
+```{r densitybean_plot_processed, echo=FALSE}
+densityBeanPlot(gset_beta)
+
+```
+
+
+<br>
+
+### Boxplot
+
+__Raw__
+
+```{r boxplot_raw, echo=FALSE}
+boxplot(rgset_beta)
+```
+
+__Processed (`r params$normalization_mode`)__
+
+```{r boxplot_processed, echo=FALSE}
+boxplot(gset_beta)
+
+```
+
+
+<br>
+
+### MDS Plot
+
+__Raw__
+
+```{r mds_plot_raw, echo=FALSE}
+mdsPlot(rgset_beta)
+```
+
+__Processed (`r params$normalization_mode`)__
+
+```{r mds_plot_processed, echo=FALSE}
+mdsPlot(gset_beta)
+
+```
+
+
+<br>
+
+### SNPs Heatmap
+
+The methylation array has 65 specific SNP probes. These SNP probes are intended to be used for sample tracking and sample mixups. Each SNP probe ought to have values clustered around 3 distinct values corresponding to homo-, and hetero-zygotes.' Therefore, different samples of the same donor should cluster together.
+
+__Processed (`r params$normalization_mode`)__
+
+```{r snps_heatmap, echo=FALSE}
+
+   buylrd = c("#313695", "#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8", "#FFFFBF",
+                    "#FEE090", "#FDAE61", "#F46D43", "#D73027", "#A50026")
+   colors.martin = colorRampPalette(buylrd)(100)
+   snps = getSnpBeta(params$rval_rgset)
+   colnames(snps) = params$rval_sheet_target[,params$name_var]
+   heatmaply::heatmaply(snps, col = colors.martin, Colv = T, key.title = "", na.rm = T, dendogram = "both", scale = "row", 
+                       col_side_colors = params$rval_sheet_target[,params$donor_var, drop=F], distfun = "pearson", hclustfun = function(x) hclust(x, method = "average"),
+                       seriate = "mean", row_dend_left = TRUE, showticklabels = c(TRUE, FALSE), branches_lwd = 0.3, plot_method = "plotly", colorbar_xpos = -0.01,
+                       colorbar_ypos=0.3, margins=c(25,25,NA,0) )
+        
+
+```
+
+
+### Sex Prediction
+
+```{r sex_prediction, echo=FALSE}
+  library(knitr)
+  knitr::kable(data.frame(name=pdata_target[,params$name_var],sex=pdata_target$predictedSex)) # %>% kable_styling()
+  plotSex(params$rval_gset)
+
+        
+
+```
+
+## Preprocessing 
+
+
+
+
+After Minfi normalization, we obtained a GenomicRatioSet with some transformations depending on the type of normalization chosen. To understand better the different classes of Minfi packages, and their relations depending of the normalization method, please read this [vignette](https://www.bioconductor.org/help/course-materials/2015/BioC2015/methylation450k.html) of Minfi creators (it is also valid for Illumina EPIC arrays).
+
+
+Moreover, we also removed SNP loci and added Sex information:
+
+```{r dropsnps, eval=F, echo=T}
+addSex(dropLociWithSnps(gset, maf = 0))
+
+```
+
+
+<br>
+
+## Linear Model (Limma)
+
+Then, the linear model was generated using __`r params$limma_voi`__ as variable of interest and __`r if(params$limma_covar == "") "None" else paste(params$limma_covar, collapse=",")`__ as covariables to block.
+
+The resulting design matrix was:
+
+```{r design, echo=FALSE}
+  knitr::kable(params$rval_design) # %>% kable_styling()
+
+```
+
+The relation variance/average of the fit model was:
+```{r fit, echo=FALSE}
+  plotSA(params$rval_fit)
+
+```
+
+Using this model, the t-statistics and p.values are obtained for each contrast :
+
+```{r ebayes, eval=F, echo=T}
+contraste = makeContrasts(contrasts=contrast, levels = design)
+  fitting = contrasts.fit(fit, contraste)
+  fitting = eBayes(fitting, trend=trend, robust=robust)
+  toptable = topTable(fitting, coef= 1,  adjust.method = "fdr", number =  Inf)
+
+```
+
+Where `trend` and `robust` are the options specified in the form. In this case, trend is  __`r params$limma_ebayes_trend`__ and robust is __`r params$limma_ebayes_robust`__ .
+
+
+## Filtered results
+
+For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`__ ) , the topTable was generated and, after, filtered with these criteria:
+
+* Max. FDR: __`r params$max_fdr`__
+* Min. Δβ:   __`r params$min_deltabeta`__
+
+###(Heatmap with all contrasts and comparison)
+
+```{r filtered_table_all,echo=FALSE}
+  DT::datatable(rbindlist(params$rval_filteredlist, idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+
+```
+
+
+* Max. FDR: __`r params$max_fdr`__
+* Min. Δβ:   __`r params$min_deltabeta`__
+* Column dendogram: __TRUE__
+* Scale: __`r params$scale`__
+* Cluster Algorithm: __`r params$clusteralg`__
+* Distance: __`r params$distance`__
+```{r all_heatmap, echo=FALSE, message=FALSE, warning=FALSE}
+
+ create_heatmap(params$rval_filteredlist, as.data.frame(gset_beta), factorgroups =  factor(rval_voi), groups2plot = rval_voi %in% rval_voi, contrasts2plot = params$rval_contrasts %in% params$rval_contrasts, Colv = T, clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=F)
+
+```
+
+
+###(Custom heatmap)
+```{r filtered_table,echo=FALSE}
+  DT::datatable(rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+
+```
+
+* Max. FDR: __`r params$max_fdr`__
+* Min. Δβ:   __`r params$min_deltabeta`__
+* Column dendogram:  __`r params$Colv`__
+* Scale: __`r params$scale`__
+* Cluster Algorithm: __`r params$clusteralg`__
+* Distance: __`r params$distance`__
+
+
+```{r custom_heatmap, echo=FALSE, message=FALSE, warning=FALSE}
+
+create_heatmap(params$rval_filteredlist, as.data.frame(gset_beta), factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels=params$groups2plot),groups2plot = rval_voi %in% params$groups2plot, contrasts2plot = params$rval_contrasts %in% params$contrasts2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=F)
+  
+
+```
+
+
+
+
