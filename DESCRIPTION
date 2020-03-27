@@ -1,8 +1,37 @@
-Title: ÉPICo!
-Author: Octavio Morante-Palacios
-AuthorUrl: http://www.carrerasresearch.org
-License: GPLv3
-DisplayMode: normal
-Tags: methylation
-Type: Shiny
-
+Package: shinyepico
+Title: ShinyEPICO!
+Version: 0.1.0
+Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
+Description: ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays.
+License: GPL-3
+Imports: 
+    config,
+    golem,
+    shiny,
+    DT,
+    htmltools,
+    minfi,
+    limma,
+    heatmaply,
+    doParallel,
+    data.table,
+    shinycssloaders,
+    dplyr,
+    tidyr,
+    statmod,
+    gplots,
+    IlluminaHumanMethylationEPICmanifest,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    shinythemes,
+    plotly,
+    foreach,
+    knitr,
+    rmarkdown
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+URL: https://github.com/omorante/shiny_epico
+BugReports: https://github.com/omorante/shiny_epico/issues
+Suggests: 
+VignetteBuilder: knitr
+biocViews: DifferentialMethylation,DNAMethylation,Microarray,Preprocessing,QualityControl
