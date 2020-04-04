@@ -16,6 +16,7 @@ params:
   #heatmap options
   min_deltabeta: NA
   max_fdr: NA
+  max_pvalue: NA
   cluster_alg: NA
   groups2plot: NA
   contrasts2plot: NA
@@ -51,6 +52,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #some assignments:
 
+`%>%` = magrittr::`%>%`
+
 pdata_target = pData(params$rval_gset)
 rval_voi = pdata_target[,params$limma_voi]
 
@@ -60,7 +63,7 @@ rgset_beta= getBeta(params$rval_rgset)
 colnames(rgset_beta) = pdata_target[,params$name_var]
 
 #shared functions
-source("utils.R")
+#source("utils.R")
 
 ```
 
@@ -155,13 +158,13 @@ boxplot(gset_beta)
 __Raw__
 
 ```{r mds_plot_raw, echo=FALSE}
-mdsPlot(rgset_beta)
+minfi::mdsPlot(rgset_beta)
 ```
 
 __Processed (`r params$normalization_mode`)__
 
 ```{r mds_plot_processed, echo=FALSE}
-mdsPlot(gset_beta)
+minfi::mdsPlot(gset_beta)
 
 ```
 
@@ -179,7 +182,7 @@ __Processed (`r params$normalization_mode`)__
    buylrd = c("#313695", "#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8", "#FFFFBF",
                     "#FEE090", "#FDAE61", "#F46D43", "#D73027", "#A50026")
    colors.martin = colorRampPalette(buylrd)(100)
-   snps = getSnpBeta(params$rval_rgset)
+   snps = minfi::getSnpBeta(params$rval_rgset)
    colnames(snps) = params$rval_sheet_target[,params$name_var]
    heatmaply::heatmaply(snps, col = colors.martin, Colv = T, key.title = "", na.rm = T, dendogram = "both", scale = "row", 
                        col_side_colors = params$rval_sheet_target[,params$donor_var, drop=F], distfun = "pearson", hclustfun = function(x) hclust(x, method = "average"),
@@ -195,7 +198,7 @@ __Processed (`r params$normalization_mode`)__
 ```{r sex_prediction, echo=FALSE}
   library(knitr)
   knitr::kable(data.frame(name=pdata_target[,params$name_var],sex=pdata_target$predictedSex)) # %>% kable_styling()
-  plotSex(params$rval_gset)
+  minfi::plotSex(params$rval_gset)
 
         
 
@@ -212,7 +215,7 @@ After Minfi normalization, we obtained a GenomicRatioSet with some transformatio
 Moreover, we also removed SNP loci and added Sex information:
 
 ```{r dropsnps, eval=F, echo=T}
-addSex(dropLociWithSnps(gset, maf = 0))
+minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
 
 ```
 
@@ -232,7 +235,7 @@ The resulting design matrix was:
 
 The relation variance/average of the fit model was:
 ```{r fit, echo=FALSE}
-  plotSA(params$rval_fit)
+  limma::plotSA(params$rval_fit)
 
 ```
 
@@ -255,17 +258,19 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
+* Max. pvalue:   __`r params$max_pvalue`__
 
 ###(Heatmap with all contrasts and comparison)
 
 ```{r filtered_table_all,echo=FALSE}
-  DT::datatable(rbindlist(params$rval_filteredlist, idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+  DT::datatable(data.table::rbindlist(params$rval_filteredlist, idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
 
 ```
 
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
+* Max. pvalue:   __`r params$max_pvalue`__
 * Column dendogram: __TRUE__
 * Scale: __`r params$scale`__
 * Cluster Algorithm: __`r params$clusteralg`__
@@ -279,7 +284,7 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 
 ###(Custom heatmap)
 ```{r filtered_table,echo=FALSE}
-  DT::datatable(rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+  DT::datatable(data.table::rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
 
 ```
 

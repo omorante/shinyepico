@@ -10,13 +10,13 @@
 
 
 app_server = function(input, output, session) {
-  onStop(function() {
-    print("Cleaning session...")
-    
-    print(ls())
-    rm(list = ls())
-    gc()
-  })
+  #onStop(function() {
+  #  print("Cleaning session...")
+  #  
+  #  print(ls())
+  #  rm(list = ls())
+  #  gc()
+  #})
   
   #PERFORMANCE SETTINGS
   n_cores = golem::get_golem_options("n_cores")
@@ -102,6 +102,7 @@ app_server = function(input, output, session) {
   rval_gset = reactive({
     if (input$select_minfi_norm == "Illumina") {
       gset = minfi::mapToGenome(minfi::ratioConvert(
+        type="Illumina",
         minfi::preprocessIllumina(
           rval_rgset(),
           bg.correct = TRUE,
@@ -151,6 +152,7 @@ app_server = function(input, output, session) {
   
   rval_gset_getM = reactive({
     minfi::getM(rval_gset())
+  
   })
   ###
   
@@ -164,7 +166,9 @@ app_server = function(input, output, session) {
   output$graph_minfi_densitybeanplotraw = renderCachedPlot(minfi::densityBeanPlot(rval_rgset()),
                                                            paste0("Raw", "densitybeanplot"))
   output$graph_minfi_mdsplotraw = renderCachedPlot(
-    minfi::mdsPlot(rval_rgset(), sampGroups = input$select_input_groupingvar),
+    minfi::mdsPlot(rval_rgset(), 
+                   sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
+                   sampNames = rval_sheet_target()[,input$select_input_samplenamevar]),
     paste0("Raw", "mdsplot")
   )
   output$graph_minfi_boxplotraw = renderCachedPlot(graphics::boxplot(as.matrix(rval_rgset_getBeta())),
@@ -182,32 +186,24 @@ app_server = function(input, output, session) {
   output$graph_minfi_mdsplot = renderCachedPlot(
     minfi::mdsPlot(
       as.matrix(rval_gset_getBeta()),
-      sampGroups = input$select_input_groupingvar
+      sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
+      sampNames = rval_sheet_target()[, input$select_input_samplenamevar]
     ),
     paste0(input$select_minfi_norm, "mdsplot")
   )
   output$graph_minfi_boxplot = renderCachedPlot(graphics::boxplot(as.matrix(rval_gset_getBeta())),
                                                 paste0(input$select_minfi_norm, "boxplot"))
   
-  output$graph_minfi_sex = renderCachedPlot(minfi::plotSex(rval_gset()),
+  output$graph_minfi_sex = renderCachedPlot(minfi::plotSex(rval_gset(), 
+                                            id = rval_sheet_target()[, input$select_input_samplenamevar] ),
                                             paste0(input$select_minfi_norm, "sex"))
   
   #SNPs heatmap
   
   rval_plot_minfi_snps = reactive({
-    buylrd = c(
-      "#313695",
-      "#4575B4",
-      "#74ADD1",
-      "#ABD9E9",
-      "#E0F3F8",
-      "#FFFFBF",
-      "#FEE090",
-      "#FDAE61",
-      "#F46D43",
-      "#D73027",
-      "#A50026"
-    )
+    buylrd = c("#313695","#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8",
+               "#FFFFBF", "#FEE090","#FDAE61","#F46D43","#D73027","#A50026")
+    
     colors.martin = grDevices::colorRampPalette(buylrd)(100)
     snps = minfi::getSnpBeta(rval_rgset())
     rval_sheet_target =  rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples, ]
@@ -288,12 +284,12 @@ app_server = function(input, output, session) {
   #LIMMA
   
   #Variable of interest
-  rval_voi = reactive(factor(minfi::pData(rval_gset())[, input$select_limma_voi]))
+  rval_voi = reactive(factor(sub("-","_",minfi::pData(rval_gset())[, input$select_limma_voi]))) #add substitution of "-" for "_", avoiding conflicts
   
   #Design calculation
   rval_design = reactive({
     #design = model.matrix(~ 0 + rval_voi())
-    pdata = minfi::pData(rval_gset())
+    pdata = as.data.frame(apply(minfi::pData(rval_gset()), 2, sub, pattern = "-", replacement = "_")) #avoiding any "-" in the data
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
         input$select_limma_voi,
@@ -379,14 +375,7 @@ app_server = function(input, output, session) {
       choices = rval_contrasts(),
       selected = rval_contrasts()
     )
-    updateSliderInput(
-      session,
-      "slider_limma_deltab",
-      "min DeltaBeta",
-      min = 0,
-      max = 1,
-      value = 0.2
-    )
+
     #force rval_filteredlist
     rval_filteredlist()
   })
@@ -407,7 +396,7 @@ app_server = function(input, output, session) {
                      rval_globaldifs(),
                      deltaB = input$slider_limma_deltab,
                      adjp_max = input$slider_limma_adjpvalue,
-                     p.value = 0.05,
+                     p.value = input$slider_limma_pvalue,
                      cores = n_cores
                    )
                  })
@@ -440,7 +429,7 @@ app_server = function(input, output, session) {
     input$button_limma_heatmapcalc,
     data.table::rbindlist(rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot],
                           idcol = "contrast") %>% 
-                          dplyr::mutate(type = ifelse(.data$dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% 
+                          dplyr::mutate(type = ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated")) %>% 
                             dplyr::group_by(.data$contrast, .data$type)  %>%
                             dplyr::summarise(CpGs = dplyr::n()) %>% tidyr::pivot_wider(names_from =
                             .data$type, values_from = .data$CpGs) %>% dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated)
@@ -489,8 +478,6 @@ app_server = function(input, output, session) {
   output$download_export_robjects = downloadHandler(
     "R_Objects.zip",
     content = function(file) {
-      oldwd = getwd()
-      setwd(tempdir())
       
       rgset = rval_rgset()
       gset = rval_gset()
@@ -501,29 +488,31 @@ app_server = function(input, output, session) {
       mvalues = rval_gset_getM()
       annotation = rval_annotation()
       
-      #save(bvalues,file="Bvalues.RData")
-      #save(mvalues,file="Mvalues.RData")
-      save(rgset , file = "RGSet.RData")
-      save(gset, file = "Normalized_GenomicRatioSet.RData")
-      save(fit, file = "fit.RData")
-      save(design, file = "design.RData")
-      #save(annotation,file="annotation.RData")
-      save(ebayes_tables, file = "ebayestables.RData")
+      save(bvalues,file=paste(tempdir(),"Bvalues.RData", sep="/"))
+      save(mvalues,file=paste(tempdir(),"Mvalues.RData", sep="/"))
+      save(rgset , file = paste(tempdir(),"RGSet.RData", sep="/"))
+      save(gset, file=paste(tempdir(),"Normalized_genomicratioset.RData", sep="/"))
+      save(fit, file=paste(tempdir(),"fit.RData", sep="/"))
+      save(design, file=paste(tempdir(),"design.RData", sep="/"))
+      save(annotation,file=paste(tempdir(),"annotation.RData", sep="/"))
+      save(ebayes_tables,file=paste(tempdir(),"ebayestables.RData", sep="/"))
       
-      objects = list.files(pattern = "*.RData", full.names = TRUE)
-      
-      setwd(oldwd)
+      objects = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
       
       utils::zip(file, objects, flags = "-j9X")
+      
     }
   )
   
   
   #Filtered BEDs
-  output$download_export_filteredbeds  = downloadHandler(
-    "filtered_beds.zip",
+  output$download_export_filteredbeds  = downloadHandler("filtered_beds.zip",
     content = function(file) {
-      filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation())
+      
+      oldwd = getwd()
+      setwd(tempdir())
+      
+      filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), cores=n_cores)
       
       lapply(names(filtered_beds), function(x) {
         data.table::fwrite(
@@ -547,9 +536,10 @@ app_server = function(input, output, session) {
   #Markdown Report
   
   output$download_export_markdown = downloadHandler(
-    "Markdown.html",
+    filename= "Markdown.html",
     content = function(file) {
-      params = list(
+     
+       params = list(
         name_var = input$select_input_samplenamevar,
         grouping_var = input$select_input_groupingvar,
         donor_var = input$select_input_donorvar,
@@ -572,14 +562,19 @@ app_server = function(input, output, session) {
         distance = input$select_limma_clusterdist,
         scale = input$select_limma_scale,
         max_fdr = input$slider_limma_adjpvalue,
-        min_deltabeta = input$slider_limma_deltab
+        min_deltabeta = input$slider_limma_deltab,
+        max_pvalue = input$slider_limma_pvalue
       )
       
+      print(file)
+      newenv = new.env(parent = globalenv())
+      newenv$create_heatmap = create_heatmap
+      
       rmarkdown::render(
-        system.file("report.Rmd", package = "shinyepico"),
+        input = system.file("report.Rmd", package = "shinyepico"),
         output_file = file,
         params = params,
-        envir = new.env(parent = globalenv())
+        envir = newenv
       )
       
     }

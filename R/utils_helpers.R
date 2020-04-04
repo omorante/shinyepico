@@ -2,9 +2,7 @@ globalVariables("cont")
 globalVariables("contrast")
 globalVariables("grupo")
 globalVariables("type")
-
-#PERFORMANCE SETTINGS
-cores = golem::get_golem_options("n_cores")
+globalVariables("table")
 
 #calculation of global difs table
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
@@ -172,6 +170,10 @@ create_heatmap = function(filtered_data,
   filtered_data = filtered_data[contrasts2plot] # filter contrasts2plot
   dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
   
+  if (length(dif_cpgs) == 0 ){
+    message("No differences found with this criteria. Heatmap can't be plotted")
+    return()
+  }
   
   join_table = global_Bvalues[dif_cpgs, ]
   join_table$cpg = NULL
@@ -287,27 +289,44 @@ create_heatmap = function(filtered_data,
 }
 
 
-create_filtered_beds = function(filtered_data, annotation) {
+create_filtered_beds = function(filtered_data, annotation, cores) {
   doParallel::registerDoParallel(cores)
   
   annotation$cpg = row.names(annotation)
   annotation = data.table::as.data.table(annotation)
   
-  utils::globalVariables("table")
+  
+  #saving hypo and hyper results individually
+  
   result = foreach::foreach (
     table = filtered_data,
     .final = function(x)
-      stats::setNames(x, names(filtered_data))
+      stats::setNames(x, paste0(names(filtered_data),"_hypermethylated"))
   ) %dopar% {
-    temp = dplyr::left_join(table, annotation, by = "cpg")
+    temp = dplyr::left_join(table[table$dif_current < 0,], annotation, by = "cpg")
     data.table::data.table(
       chr = temp$chr,
       start = temp$pos - 1,
       end = temp$pos,
-      strand = ".",
       name = temp$cpg
     )
   }
+  
+  result = c(result,
+                foreach::foreach (
+                  table = filtered_data,
+                  .final = function(x)
+                    stats::setNames(x, paste0(names(filtered_data),"_hypomethylated"))
+                ) %dopar% {
+                  temp = dplyr::left_join(table[table$dif_current > 0,], annotation, by = "cpg")
+                  data.table::data.table(
+                    chr = temp$chr,
+                    start = temp$pos - 1,
+                    end = temp$pos,
+                    name = temp$cpg
+                  )
+                } )
+  
   
   result[["annotation"]] = data.table::data.table(
     chr = annotation$chr,
