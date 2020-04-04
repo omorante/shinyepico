@@ -199,16 +199,11 @@ app_ui <- function(request) {
                   ),
                   column(
                     6,
-<<<<<<< HEAD
                     h4("Filtering options"),
                     sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
                     sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
                     sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
-=======
-                    h4("Filter options"),
-                    sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
-                    sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05)
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+
                   ),
                   h4("Clustering options", align =
                        "center"),
@@ -233,11 +228,7 @@ app_ui <- function(request) {
                       c("pearson", "spearman", "kendall", "euclidean"),
                       "pearson"
                     ),
-<<<<<<< HEAD
                     selectInput("select_limma_graphstatic", label = "Plot Static Graph:", c(TRUE, FALSE), c(TRUE))
-=======
-                    selectInput("select_limma_graphstatic", label = "Plot Static Graph:", c(TRUE, FALSE), c(FALSE))
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
                     
                   ),
                   

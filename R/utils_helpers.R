@@ -2,13 +2,8 @@ globalVariables("cont")
 globalVariables("contrast")
 globalVariables("grupo")
 globalVariables("type")
-<<<<<<< HEAD
 globalVariables("table")
-=======
 
-#PERFORMANCE SETTINGS
-cores = golem::get_golem_options("n_cores")
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 #calculation of global difs table
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
@@ -176,13 +171,11 @@ create_heatmap = function(filtered_data,
   filtered_data = filtered_data[contrasts2plot] # filter contrasts2plot
   dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
   
-<<<<<<< HEAD
   if (length(dif_cpgs) == 0 ){
     message("No differences found with this criteria. Heatmap can't be plotted")
     return()
   }
-=======
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+
   
   join_table = global_Bvalues[dif_cpgs, ]
   join_table$cpg = NULL
@@ -298,18 +291,14 @@ create_heatmap = function(filtered_data,
 }
 
 
-<<<<<<< HEAD
 create_filtered_beds = function(filtered_data, annotation, cores) {
-=======
-create_filtered_beds = function(filtered_data, annotation) {
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+
   doParallel::registerDoParallel(cores)
   
   annotation$cpg = row.names(annotation)
   annotation = data.table::as.data.table(annotation)
   
-<<<<<<< HEAD
-  
+
   #saving hypo and hyper results individually
   
   result = foreach::foreach (
@@ -318,28 +307,15 @@ create_filtered_beds = function(filtered_data, annotation) {
       stats::setNames(x, paste0(names(filtered_data),"_hypermethylated"))
   ) %dopar% {
     temp = dplyr::left_join(table[table$dif_current < 0,], annotation, by = "cpg")
-=======
-  utils::globalVariables("table")
-  result = foreach::foreach (
-    table = filtered_data,
-    .final = function(x)
-      stats::setNames(x, names(filtered_data))
-  ) %dopar% {
-    temp = dplyr::left_join(table, annotation, by = "cpg")
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+
     data.table::data.table(
       chr = temp$chr,
       start = temp$pos - 1,
       end = temp$pos,
-<<<<<<< HEAD
-=======
-      strand = ".",
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
       name = temp$cpg
     )
   }
   
-<<<<<<< HEAD
   result = c(result,
                 foreach::foreach (
                   table = filtered_data,
@@ -355,9 +331,7 @@ create_filtered_beds = function(filtered_data, annotation) {
                   )
                 } )
   
-  
-=======
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+
   result[["annotation"]] = data.table::data.table(
     chr = annotation$chr,
     start = annotation$pos - 1,
