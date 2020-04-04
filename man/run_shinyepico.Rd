@@ -22,6 +22,10 @@ None
 ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays
 }
 \examples{
+<<<<<<< HEAD
 \donttest{run_shinyepico()}
+=======
+\dontrun{run_shinyepico()}
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 }

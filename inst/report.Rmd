@@ -16,7 +16,10 @@ params:
   #heatmap options
   min_deltabeta: NA
   max_fdr: NA
+<<<<<<< HEAD
   max_pvalue: NA
+=======
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
   cluster_alg: NA
   groups2plot: NA
   contrasts2plot: NA
@@ -52,8 +55,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #some assignments:
 
+<<<<<<< HEAD
 `%>%` = magrittr::`%>%`
 
+=======
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 pdata_target = pData(params$rval_gset)
 rval_voi = pdata_target[,params$limma_voi]
 
@@ -63,7 +69,11 @@ rgset_beta= getBeta(params$rval_rgset)
 colnames(rgset_beta) = pdata_target[,params$name_var]
 
 #shared functions
+<<<<<<< HEAD
 #source("utils.R")
+=======
+source("utils.R")
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 
@@ -158,13 +168,21 @@ boxplot(gset_beta)
 __Raw__
 
 ```{r mds_plot_raw, echo=FALSE}
+<<<<<<< HEAD
 minfi::mdsPlot(rgset_beta)
+=======
+mdsPlot(rgset_beta)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 ```
 
 __Processed (`r params$normalization_mode`)__
 
 ```{r mds_plot_processed, echo=FALSE}
+<<<<<<< HEAD
 minfi::mdsPlot(gset_beta)
+=======
+mdsPlot(gset_beta)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 
@@ -182,7 +200,11 @@ __Processed (`r params$normalization_mode`)__
    buylrd = c("#313695", "#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8", "#FFFFBF",
                     "#FEE090", "#FDAE61", "#F46D43", "#D73027", "#A50026")
    colors.martin = colorRampPalette(buylrd)(100)
+<<<<<<< HEAD
    snps = minfi::getSnpBeta(params$rval_rgset)
+=======
+   snps = getSnpBeta(params$rval_rgset)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
    colnames(snps) = params$rval_sheet_target[,params$name_var]
    heatmaply::heatmaply(snps, col = colors.martin, Colv = T, key.title = "", na.rm = T, dendogram = "both", scale = "row", 
                        col_side_colors = params$rval_sheet_target[,params$donor_var, drop=F], distfun = "pearson", hclustfun = function(x) hclust(x, method = "average"),
@@ -198,7 +220,11 @@ __Processed (`r params$normalization_mode`)__
 ```{r sex_prediction, echo=FALSE}
   library(knitr)
   knitr::kable(data.frame(name=pdata_target[,params$name_var],sex=pdata_target$predictedSex)) # %>% kable_styling()
+<<<<<<< HEAD
   minfi::plotSex(params$rval_gset)
+=======
+  plotSex(params$rval_gset)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
         
 
@@ -215,7 +241,11 @@ After Minfi normalization, we obtained a GenomicRatioSet with some transformatio
 Moreover, we also removed SNP loci and added Sex information:
 
 ```{r dropsnps, eval=F, echo=T}
+<<<<<<< HEAD
 minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
+=======
+addSex(dropLociWithSnps(gset, maf = 0))
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 
@@ -235,7 +265,11 @@ The resulting design matrix was:
 
 The relation variance/average of the fit model was:
 ```{r fit, echo=FALSE}
+<<<<<<< HEAD
   limma::plotSA(params$rval_fit)
+=======
+  plotSA(params$rval_fit)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 
@@ -258,19 +292,29 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
+<<<<<<< HEAD
 * Max. pvalue:   __`r params$max_pvalue`__
+=======
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ###(Heatmap with all contrasts and comparison)
 
 ```{r filtered_table_all,echo=FALSE}
+<<<<<<< HEAD
   DT::datatable(data.table::rbindlist(params$rval_filteredlist, idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
+=======
+  DT::datatable(rbindlist(params$rval_filteredlist, idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
+<<<<<<< HEAD
 * Max. pvalue:   __`r params$max_pvalue`__
+=======
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 * Column dendogram: __TRUE__
 * Scale: __`r params$scale`__
 * Cluster Algorithm: __`r params$clusteralg`__
@@ -284,7 +328,11 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 
 ###(Custom heatmap)
 ```{r filtered_table,echo=FALSE}
+<<<<<<< HEAD
   DT::datatable(data.table::rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
+=======
+  DT::datatable(rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% group_by(contrast, type) %>% summarise(CpGs=dplyr::n()) %>% pivot_wider(names_from=type, values_from=CpGs) %>% mutate(total = Hypermethylated + Hypomethylated))
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 ```
 

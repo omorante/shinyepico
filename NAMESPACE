@@ -8,5 +8,13 @@ importFrom(golem,add_resource_path)
 importFrom(golem,bundle_resources)
 importFrom(golem,favicon)
 importFrom(golem,with_golem_options)
+<<<<<<< HEAD
 importFrom(rlang,.data)
+=======
+importFrom(htmltools,HTML)
+importFrom(htmltools,tagAppendAttributes)
+importFrom(htmltools,tagList)
+importFrom(htmltools,tags)
+importFrom(shiny,column)
+>>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 importFrom(shiny,shinyApp)
