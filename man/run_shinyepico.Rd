@@ -5,15 +5,15 @@
 \title{Run Shiny ÉPICo!}
 \usage{
 run_shinyepico(
-  n_cores = if (parallel::detectCores() > 1) {     cores =
-    round(parallel::detectCores()/2, digits = 0) } else {     cores = 1 },
-  max_upload_size = 500
+  n_cores = if (parallel::detectCores() > 1) {     round(parallel::detectCores()/3,
+    digits = 0) } else {     1 },
+  max_upload_size = 2000
 )
 }
 \arguments{
 \item{n_cores}{Number of cores to be used in parallelized operations in the application. By default, half of your CPU cores. As more cores mean more RAM used, we don't recommend use more than 1 core per 4GB of RAM available}
 
-\item{max_upload_size}{The limit in MB of the .zip file size to be uploaded. By default, 500MB.}
+\item{max_upload_size}{The limit in MB of the .zip file size to be uploaded. By default, 2000MB.}
 }
 \value{
 None
@@ -22,10 +22,6 @@ None
 ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays
 }
 \examples{
-<<<<<<< HEAD
 \donttest{run_shinyepico()}
-=======
-\dontrun{run_shinyepico()}
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
 
 }
