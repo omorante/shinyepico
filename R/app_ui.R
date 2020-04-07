@@ -126,9 +126,7 @@ app_ui <- function(request) {
             tabPanel(
               "QC plot",
               h4("Raw"),
-              plotOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner(),
-              h4("Processed"),
-              plotOutput("graph_minfi_qc") %>% shinycssloaders::withSpinner()
+              plotOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner()
             )
             
             

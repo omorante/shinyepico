@@ -8,11 +8,22 @@ ShinyÉPICo
 
 ShinyÉPICO is a web interface based on Shiny that makes it easy to do differentially methylated CpGs analysis from Illumina EPIC methylation arrays. This program allows following a standard pipeline of normalization (with minfi package), model creation and statistical analysis (with limma package), with different options in each step and plots to be able to choose properly. Moreover, you can select different options in the final heatmap and download an RMarkdown report with all the steps chosen.
 
-Installation
-------------
+Installation and use
+--------------------
 
-Nowadays, you have to download the source package from the github repository and install the package manually.
+To install ShinyEPICO, you have to use the GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package:
 
 ``` r
-install.packages("shinyepico")
+install.packages("remotes")
+library("remotes")
+install_github("omorante/shinyepico")
 ```
+
+To run the package:
+
+``` r
+library("shinyepico")
+run_shinyepico()
+```
+
+You can assign the number of cores or the upload memory limit with the arguments of that function. The parallelization makes the application faster, but it requires more RAM available. For computers with limited RAM, the recommendation is n\_cores=1 .

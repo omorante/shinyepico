@@ -168,8 +168,6 @@ app_server = function(input, output, session) {
                                                    paste0(input$select_minfi_norm, "boxplot"))
   
   
-  output$graph_minfi_qc = renderCachedPlot(minfi::plotQC(minfi::getQC(rval_gset())),
-                                           paste0(input$select_minfi_norm, "QC"))
   output$graph_minfi_densityplot = renderCachedPlot(minfi::densityPlot(as.matrix(rval_gset_getBeta())),
                                                     paste0(input$select_minfi_norm, "densityplot"))
   output$graph_minfi_densitybeanplot = renderCachedPlot(
