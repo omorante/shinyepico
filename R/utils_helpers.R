@@ -336,7 +336,6 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
     chr = annotation$chr,
     start = annotation$pos - 1,
     end = annotation$pos,
-    strand = ".",
     name = annotation$cpg
   )
   
