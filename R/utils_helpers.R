@@ -64,6 +64,8 @@ find_dif_cpgs = function (groups,
                           trend = FALSE,
                           robust = FALSE,
                           cores) {
+  print("number of cores is (#debugging)")
+  print(cores)
   doParallel::registerDoParallel(cores)
   
   tabla_global = foreach::foreach(contrast = contrasts) %dopar% {
@@ -310,8 +312,8 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
 
     data.table::data.table(
       chr = temp$chr,
-      start = temp$pos - 1,
-      end = temp$pos,
+      start = format(temp$pos - 1, scientific = FALSE),
+      end = format(temp$pos, scientific = FALSE),
       name = temp$cpg
     )
   }
@@ -325,8 +327,8 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
                   temp = dplyr::left_join(table[table$dif_current > 0,], annotation, by = "cpg")
                   data.table::data.table(
                     chr = temp$chr,
-                    start = temp$pos - 1,
-                    end = temp$pos,
+                    start = format(temp$pos - 1, scientific = FALSE),
+                    end = format(temp$pos, scientific = FALSE),
                     name = temp$cpg
                   )
                 } )
@@ -334,8 +336,8 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
 
   result[["annotation"]] = data.table::data.table(
     chr = annotation$chr,
-    start = annotation$pos - 1,
-    end = annotation$pos,
+    start = format(annotation$pos - 1, scientific = FALSE),
+    end = format(annotation$pos, scientific = FALSE),
     name = annotation$cpg
   )
   

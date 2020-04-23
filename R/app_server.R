@@ -93,6 +93,7 @@ app_server = function(input, output, session) {
   
   #Calculation of minfi normalized data
   rval_gset = reactive({
+    
     if (input$select_minfi_norm == "Illumina") {
       gset = minfi::mapToGenome(minfi::ratioConvert( 
         type="Illumina",
@@ -346,8 +347,8 @@ app_server = function(input, output, session) {
       rval_fit(),
       rval_contrasts(),
       trend = as.logical(input$select_limma_trend),
-      robust = as.logical(input$select_limma_robust,
-      cores = n_cores)
+      robust = as.logical(input$select_limma_robust),
+      cores = n_cores
     )
   })
   
