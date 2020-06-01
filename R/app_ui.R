@@ -149,6 +149,12 @@ app_ui <- function(request) {
           ),
           #checkboxGroupInput("checkbox_limma_groups", "Select groups to compare", c()),
           selectInput(
+            "select_limma_weights",
+            "ArrayWeights option:",
+            c("TRUE","FALSE"),
+            c("FALSE")
+          ),
+          selectInput(
             "select_limma_trend",
             "eBayes trend option:",
             c("TRUE", "FALSE"),

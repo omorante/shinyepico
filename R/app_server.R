@@ -321,7 +321,13 @@ app_server = function(input, output, session) {
   
   #Calculation of limma model
   rval_fit = eventReactive(input$button_limma_calculatemodel, {
-    limma::lmFit(rval_gset_getM(), rval_design())
+    
+    if (as.logical(input$select_limma_weights)){
+      weights = limma::arrayWeights(rval_gset_getM())
+    }
+    else { weights = NULL}
+    
+    limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)
   })
   
   
@@ -480,7 +486,8 @@ app_server = function(input, output, session) {
       ebayes_tables = rval_finddifcpgs()
       bvalues = rval_gset_getBeta()
       mvalues = rval_gset_getM()
-      annotation = rval_annotation()
+      #annotation = rval_annotation()
+      global_difs = rval_globaldifs()
       
       save(bvalues,file=paste(tempdir(),"Bvalues.RData", sep="/"))
       save(mvalues,file=paste(tempdir(),"Mvalues.RData", sep="/"))
@@ -488,7 +495,8 @@ app_server = function(input, output, session) {
       save(gset, file=paste(tempdir(),"Normalized_genomicratioset.RData", sep="/"))
       save(fit, file=paste(tempdir(),"fit.RData", sep="/"))
       save(design, file=paste(tempdir(),"design.RData", sep="/"))
-      save(annotation,file=paste(tempdir(),"annotation.RData", sep="/"))
+      save(global_difs, file=paste(tempdir(),"global_difs.RData", sep="/"))
+      #save(annotation,file=paste(tempdir(),"annotation.RData", sep="/"))
       save(ebayes_tables,file=paste(tempdir(),"ebayestables.RData", sep="/"))
       
       objects = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
