@@ -8,6 +8,8 @@ Imports:
     config,
     golem,
     shiny,
+    shinyjs,
+    shinyWidgets,
     DT,
     htmltools,
     minfi,

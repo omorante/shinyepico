@@ -24,6 +24,7 @@ hclust_methods = c("single",
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import shinyWidgets
 #' @noRd
 app_ui <- function(request) {
   navbarPage(
@@ -148,26 +149,34 @@ app_ui <- function(request) {
             c()
           ),
           #checkboxGroupInput("checkbox_limma_groups", "Select groups to compare", c()),
-          selectInput(
-            "select_limma_weights",
-            "ArrayWeights option:",
-            c("TRUE","FALSE"),
-            c("FALSE")
+          
+
+          switchInput(
+            inputId = "select_limma_weights",
+            label = "Array Weights", 
+            labelWidth = "80px",
+            value = FALSE,
           ),
-          selectInput(
-            "select_limma_trend",
-            "eBayes trend option:",
-            c("TRUE", "FALSE"),
-            c("FALSE")
+          
+          switchInput(
+            inputId = "select_limma_trend",
+            label = "eBayes Trend", 
+            labelWidth = "80px",
+            value = FALSE,
           ),
-          selectInput(
-            "select_limma_robust",
-            "eBayes robust option:",
-            c("TRUE", "FALSE"),
-            c("FALSE")
+          
+          switchInput(
+            inputId = "select_limma_robust",
+            label = "eBayes Robust", 
+            labelWidth = "80px",
+            value = FALSE,
           ),
+          
+          
           actionButton("button_limma_calculatemodel", "Generate Model"),
-          actionButton("button_limma_calculatedifs", "Calculate Contrasts")
+          tags$br(),
+          uiOutput("button_limma_calculatedifs_container")
+          #actionButton("button_limma_calculatedifs", "Calculate Contrasts")
           
         ),
         mainPanel(
@@ -201,6 +210,7 @@ app_ui <- function(request) {
                       multiple = TRUE
                     )
                   ),
+                  
                   column(
                     6,
                     h4("Filtering options"),
@@ -209,8 +219,10 @@ app_ui <- function(request) {
                     sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
 
                   ),
+                  
                   h4("Clustering options", align =
                        "center"),
+                  
                   column(
                     6,
                     selectInput(
@@ -226,30 +238,44 @@ app_ui <- function(request) {
                       ),
                       "average"
                     ),
+                    
                     selectInput(
                       "select_limma_clusterdist",
                       "Distance Function:",
                       c("pearson", "spearman", "kendall", "euclidean"),
                       "pearson"
                     ),
-                    selectInput("select_limma_graphstatic", label = "Plot Static Graph:", c(TRUE, FALSE), c(TRUE))
                     
+                    selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                    tags$br(),
                   ),
                   
                   column(
                     6,
-                    selectInput(
-                      "select_limma_colv",
-                      "Create Column Dendogram:",
-                      c(TRUE, FALSE),
-                      c(TRUE)
-                    ),
-                    selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                    
                     tags$br(),
-                    actionButton("button_limma_heatmapcalc", "Update")
-                  ),
+                    
+                    switchInput(
+                      inputId = "select_limma_colv",
+                      label = "Column Dendogram", 
+                      labelWidth = "80px",
+                      value = TRUE,
+                    ),
+                    
+                    tags$br(),
+                    
+                    switchInput(
+                      inputId = "select_limma_graphstatic",
+                      label = "Static Graph", 
+                      labelWidth = "80px",
+                      value = TRUE,
+                    ),
+                    
                   tags$br(),
-                  tags$br()
+            
+                  actionButton("button_limma_heatmapcalc", "Update")
+                  ),
+                  
                   
                   
                 )

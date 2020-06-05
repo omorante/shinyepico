@@ -13,14 +13,16 @@
 #' @export
 #' 
 run_shinyepico <- function(
-  n_cores = if (parallel::detectCores() > 1) {round(parallel::detectCores()/3, digits=0) } else { 1},
-  max_upload_size = 2000
+  n_cores = 1,
+  max_upload_size = 2000,
+  host = "0.0.0.0",
+  port = 80
 
 ) {
   with_golem_options(
     app = shinyApp(
       ui = app_ui, 
-      server = app_server
+      server = app_server, options = list(host = host, port=port)
     ), 
     golem_opts = list(n_cores = n_cores, max_upload_size = max_upload_size * 1024^2)
   )

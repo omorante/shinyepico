@@ -2,6 +2,7 @@
 
 export(run_shinyepico)
 import(shiny)
+import(shinyWidgets)
 importFrom(config,get)
 importFrom(golem,activate_js)
 importFrom(golem,add_resource_path)

@@ -8,14 +8,15 @@
 #' @noRd
 
 
-
 app_server = function(input, output, session) {
 
+  
   #PERFORMANCE SETTINGS
   n_cores = golem::get_golem_options("n_cores")
   options(shiny.maxRequestSize = golem::get_golem_options("max_upload_size"))
   
-  #INPUT
+  #INITIALIZE REACTIVE VARIABLES
+  rval_generated_limma_model = reactiveVal(value = FALSE)
   
   #Load button only shows if file is uploaded
   output$ui_button_input_load = renderUI({
@@ -43,6 +44,7 @@ app_server = function(input, output, session) {
       label = "Select Sample Names Column:",
       choices = colnames(rval_sheet())
     )
+    
     updateSelectInput(
       session,
       "select_input_groupingvar",
@@ -260,16 +262,17 @@ app_server = function(input, output, session) {
                  )
                  updateNavbarPage(session, "navbar_epic", "Limma")
                  
-                 updateSelectInput(session,
-                                   "select_limma_trend",
-                                   label = "eBayes trend option:",
-                                   c("TRUE", "FALSE"),
-                                   "FALSE")
-                 updateSelectInput(session,
-                                   "select_limma_robust",
-                                   label = "eBayes robust option:",
-                                   c("TRUE", "FALSE"),
-                                   "FALSE")
+                 #preparing next form
+                 updateSwitchInput(session, "select_limma_trend", 
+                                   value = FALSE, 
+                                   disabled=FALSE)
+                 
+                 updateSwitchInput(session, "select_limma_trend", 
+                                   value = FALSE, 
+                                   disabled=FALSE)
+                 
+
+                 
                })
   
   
@@ -323,21 +326,49 @@ app_server = function(input, output, session) {
   rval_fit = eventReactive(input$button_limma_calculatemodel, {
     
     if (as.logical(input$select_limma_weights)){
-      weights = limma::arrayWeights(rval_gset_getM())
+      weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())
     }
     else { weights = NULL}
     
     limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)
+    
   })
   
   
   #f rval_fit() has NAs, we remove the option to trend or robust in eBayes to prevent failure
   observeEvent(input$button_limma_calculatemodel, {
     if (any(is.na(rval_fit()$coefficients))) {
-      updateSelectInput(session, "select_limma_trend", label = "Norm. method is not compatible with trend", "FALSE", "FALSE")
-      updateSelectInput(session, "select_limma_robust", label = "Norm. method is not compatible with robust", "FALSE", "FALSE")
+      
+      message("NAs detected, trend and robust options are disabled.")
+      
+      updateSwitchInput(session, "select_limma_trend", 
+                        value = FALSE, 
+                        disabled=TRUE)
+      
+      updateSwitchInput(session, "select_limma_robust", 
+                        value = FALSE, 
+                        disabled=TRUE)
+      
     }
+    
+    # Creating calculate differences button
+    rval_generated_limma_model(TRUE)
   })
+  
+  
+  output$button_limma_calculatedifs_container = renderUI({
+    print(rval_generated_limma_model())
+    if (rval_generated_limma_model())
+      return(actionButton("button_limma_calculatedifs", "Calculate Contrasts"))
+    else 
+      return()
+      })
+  
+  
+  #render of plots and tables
+  output$graph_limma_plotMA = renderPlot(limma::plotMA(rval_gset_getM()))
+  output$graph_limma_plotSA = renderPlot(limma::plotSA(rval_fit()))
+  
   
   
   #Calculation of global difs
@@ -403,10 +434,7 @@ app_server = function(input, output, session) {
   })
   
   
-  #render of plots and tables
-  output$graph_limma_plotSA = renderPlot(limma::plotSA(rval_fit()))
-  output$graph_limma_plotMA = renderPlot(limma::plotMA(rval_gset_getM()))
-  
+
   
   plot_heatmap = eventReactive(
     input$button_limma_heatmapcalc,
