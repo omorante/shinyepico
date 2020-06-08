@@ -264,11 +264,9 @@ app_server = function(input, output, session) {
                  
                  #preparing next form
                  updateSwitchInput(session, "select_limma_trend", 
-                                   value = FALSE, 
                                    disabled=FALSE)
                  
                  updateSwitchInput(session, "select_limma_trend", 
-                                   value = FALSE, 
                                    disabled=FALSE)
                  
 
@@ -285,8 +283,18 @@ app_server = function(input, output, session) {
 
   #Design calculation
   rval_design = reactive({
-    #design = model.matrix(~ 0 + rval_voi())
+
     pdata = as.data.frame(apply(minfi::pData(rval_gset()), 2, sub, pattern = "-", replacement = "_")) #avoiding any "-" in the data
+    
+    #We convert to numeric variable any column of pdata with all numbers
+    pdata = as.data.frame(apply(pdata, 2, function(x){
+      if (!any(is.na(as.numeric(x)))) {
+        as.numeric(x)
+      }
+      else x
+      
+    }))
+    
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
         input$select_limma_voi,
@@ -350,6 +358,19 @@ app_server = function(input, output, session) {
                         disabled=TRUE)
       
     }
+    else {
+      
+      message("NAs not detected, trend and robust options are enabled")
+      
+      updateSwitchInput(session, "select_limma_trend", 
+                        value = FALSE, 
+                        disabled=FALSE)
+      
+      updateSwitchInput(session, "select_limma_robust", 
+                        value = FALSE, 
+                        disabled=FALSE)
+      
+    }
     
     # Creating calculate differences button
     rval_generated_limma_model(TRUE)
@@ -357,7 +378,7 @@ app_server = function(input, output, session) {
   
   
   output$button_limma_calculatedifs_container = renderUI({
-    print(rval_generated_limma_model())
+
     if (rval_generated_limma_model())
       return(actionButton("button_limma_calculatedifs", "Calculate Contrasts"))
     else 
@@ -436,9 +457,13 @@ app_server = function(input, output, session) {
   
 
   
-  plot_heatmap = eventReactive(
-    input$button_limma_heatmapcalc,
-    create_heatmap(
+  plot_heatmap = eventReactive(input$button_limma_heatmapcalc,
+    
+     {
+      validate(need(nrow(rval_filteredlist()) == 0, "No differences were found with this criteria"))
+      validate(need(nrow(rval_filteredlist()) > 10000, "Too many differences with this criteria (>10000), they can not be plotted" )) 
+      
+      create_heatmap(
       rval_filteredlist(),
       rval_gset_getBeta(),
       factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
@@ -452,6 +477,7 @@ app_server = function(input, output, session) {
       scale = input$select_limma_scale,
       static = as.logical(input$select_limma_graphstatic)
     )
+   }
   )
   make_table = eventReactive(
     input$button_limma_heatmapcalc,
