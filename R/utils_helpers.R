@@ -157,11 +157,11 @@ create_filtered_list = function(limma_list,
 
 
 
-create_heatmap = function(filtered_data,
-                          global_Bvalues,
+create_heatmap = function(plot_data,
+                          #global_Bvalues,
                           factorgroups,
                           groups2plot,
-                          contrasts2plot,
+                          #contrasts2plot,
                           Colv = TRUE,
                           clusteralg = "average",
                           distance = "pearson",
@@ -170,18 +170,16 @@ create_heatmap = function(filtered_data,
   #filtered_data = create_filtered_list( findcpgdata, global_difs, deltaB=deltaB, adjp_max = adjp_max, p.value=p.value, sd_cort=sd_cort)
   
   
-  filtered_data = filtered_data[contrasts2plot] # filter contrasts2plot
-  dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
+  #filtered_data = filtered_data[contrasts2plot] # filter contrasts2plot
+  #dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
   
-  if (length(dif_cpgs) == 0 ){
-    message("No differences found with this criteria. Heatmap can't be plotted")
-    return()
-  }
+  #if (length(dif_cpgs) == 0 ){
+  #  message("No differences found with this criteria. Heatmap can't be plotted")
+  #  return("")
+  #}
+  
 
-  
-  join_table = global_Bvalues[dif_cpgs, ]
-  join_table$cpg = NULL
-  heatdata = as.matrix(join_table)
+  heatdata = as.matrix(plot_data)
   heatdata = heatdata[stats::complete.cases(heatdata),]
   
   class(heatdata) = "numeric"

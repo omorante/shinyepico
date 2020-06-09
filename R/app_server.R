@@ -455,22 +455,31 @@ app_server = function(input, output, session) {
   })
   
   
-
+  rval_filteredlist2heatmap = reactive({
+    
+    filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
+    dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
+    join_table = rval_gset_getBeta()[dif_cpgs, ]
+    join_table$cpg = NULL
+    
+    validate(need(!(is.null(join_table)) & nrow(join_table) > 0,  "No differences were found with these criteria" ))
+    validate(need(nrow(join_table) <= 10000, "Too many differences with these criteria (>10000), they can not be plotted" )) 
+    
+    join_table
+  })
+  
   
   plot_heatmap = eventReactive(input$button_limma_heatmapcalc,
     
      {
-      validate(need(nrow(rval_filteredlist()) == 0, "No differences were found with this criteria"))
-      validate(need(nrow(rval_filteredlist()) > 10000, "Too many differences with this criteria (>10000), they can not be plotted" )) 
+
       
       create_heatmap(
-      rval_filteredlist(),
-      rval_gset_getBeta(),
+      rval_filteredlist2heatmap(),
       factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
                              levels =
                                input$select_limma_groups2plot),
       groups2plot = rval_voi() %in% input$select_limma_groups2plot,
-      contrasts2plot = rval_contrasts() %in% input$select_limma_contrasts2plot,
       Colv = as.logical(input$select_limma_colv),
       clusteralg = input$select_limma_clusteralg,
       distance = input$select_limma_clusterdist,
@@ -644,12 +653,10 @@ app_server = function(input, output, session) {
                      height = 11.71,
                      width = 8.6)
       create_heatmap(
-        rval_filteredlist(),
-        rval_gset_getBeta(),
+        rval_filteredlist2heatmap(),
         factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot], levels =
                                  input$select_limma_groups2plot),
         groups2plot = rval_voi() %in% input$select_limma_groups2plot,
-        contrasts2plot = rval_contrasts() %in% input$select_limma_contrasts2plot,
         Colv = as.logical(input$select_limma_colv),
         clusteralg = input$select_limma_clusteralg,
         distance = input$select_limma_clusterdist,
