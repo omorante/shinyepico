@@ -33,6 +33,7 @@ params:
   rval_fit: NA
   rval_contrasts: NA
   rval_filteredlist: NA
+  rval_filteredlist2heatmap: NA
   
   plot_density_raw: NA
   plot_density_norm: NA
@@ -69,7 +70,7 @@ colnames(rgset_beta) = pdata_target[,params$name_var]
 ```
 
 
-This report was created with the ÉPICo ShinyApp.<br>
+This report was created with ÉPICo ShinyApp.<br>
 (c) 2020 Octavio Morante-Palacios
 
 
@@ -272,31 +273,17 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 * Max. pvalue:   __`r params$max_pvalue`__
 
 
-###(Heatmap with all contrasts and comparison)
+###(Table with all contrasts)
 
-```{r filtered_table_all,echo=FALSE}
+```{r filtered_table_all,echo=FALSE,message=FALSE, warning=FALSE}
   DT::datatable(data.table::rbindlist(params$rval_filteredlist, idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
 
 
 ```
 
 
-* Max. FDR: __`r params$max_fdr`__
-* Min. Δβ:   __`r params$min_deltabeta`__
-* Max. pvalue:   __`r params$max_pvalue`__
-* Column dendogram: __TRUE__
-* Scale: __`r params$scale`__
-* Cluster Algorithm: __`r params$clusteralg`__
-* Distance: __`r params$distance`__
-```{r all_heatmap, echo=FALSE, message=FALSE, warning=FALSE}
-
- create_heatmap(params$rval_filteredlist, as.data.frame(gset_beta), factorgroups =  factor(rval_voi), groups2plot = rval_voi %in% rval_voi, contrasts2plot = params$rval_contrasts %in% params$rval_contrasts, Colv = T, clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=F)
-
-```
-
-
 ###(Custom heatmap)
-```{r filtered_table,echo=FALSE}
+```{r filtered_table,echo=FALSE,message=FALSE, warning=FALSE}
   DT::datatable(data.table::rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
 
 
@@ -312,7 +299,7 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 
 ```{r custom_heatmap, echo=FALSE, message=FALSE, warning=FALSE}
 
-create_heatmap(params$rval_filteredlist, as.data.frame(gset_beta), factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels=params$groups2plot),groups2plot = rval_voi %in% params$groups2plot, contrasts2plot = params$rval_contrasts %in% params$contrasts2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=F)
+create_heatmap(params$rval_filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels=params$groups2plot),groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=FALSE)
   
 
 ```

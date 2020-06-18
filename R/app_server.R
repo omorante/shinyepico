@@ -83,7 +83,10 @@ app_server = function(input, output, session) {
   
   #We change the page to the next one
   observeEvent(input$button_input_next,
-      { withProgress(message = "Loading data...", value = 2, max = 5,
+      { 
+        
+        updateSelectInput(session, "select_minfi_mdsplot_graphvariable", choices = colnames(rval_sheet()) , selected = input$select_input_groupingvar)
+        withProgress(message = "Loading data...", value = 2, max = 5,
                               {rval_rgset()
                                 updateNavbarPage(session, "navbar_epic", "Minfi Norm.")
                               })
@@ -155,27 +158,27 @@ app_server = function(input, output, session) {
   
   #Plotting of QC graphs
   output$graph_minfi_qcraw = renderCachedPlot(minfi::plotQC(minfi::getQC(minfi::preprocessRaw(rval_rgset(
-  )))), paste0("Raw", "QC"))
+  )))), paste0("Raw", "QC", input$selected_samples))
   output$graph_minfi_densityplotraw = renderCachedPlot(minfi::densityPlot(rval_rgset()),
-                                                       paste0("Raw", "densityplot"))
+                                                       paste0("Raw", "densityplot", input$selected_samples))
   output$graph_minfi_densitybeanplotraw = renderCachedPlot(minfi::densityBeanPlot(rval_rgset()),
-                                                           paste0("Raw", "densitybeanplot"))
+                                                           paste0("Raw", "densitybeanplot", input$selected_samples))
   output$graph_minfi_mdsplotraw = renderCachedPlot(
     minfi::mdsPlot(rval_rgset(), 
                    sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
                    sampNames = rval_sheet_target()[,input$select_input_samplenamevar]),
-    paste0("Raw", "mdsplot")
+    paste0("Raw", "mdsplot", input$selected_samples)
    )
   
   output$graph_minfi_boxplotraw = renderCachedPlot(graphics::boxplot(as.matrix(rval_rgset_getBeta())),
-                                                   paste0(input$select_minfi_norm, "boxplot"))
+                                                   paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
   
   
   output$graph_minfi_densityplot = renderCachedPlot(minfi::densityPlot(as.matrix(rval_gset_getBeta())),
-                                                    paste0(input$select_minfi_norm, "densityplot"))
+                                                    paste0(input$select_minfi_norm, "densityplot", input$selected_samples))
   output$graph_minfi_densitybeanplot = renderCachedPlot(
     minfi::densityBeanPlot(as.matrix(rval_gset_getBeta())),
-    paste0(input$select_minfi_norm, "densitybeanplot")
+    paste0(input$select_minfi_norm, "densitybeanplot", input$selected_samples)
   )
   
   output$graph_minfi_mdsplot = renderCachedPlot(
@@ -184,14 +187,14 @@ app_server = function(input, output, session) {
       sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
       sampNames = rval_sheet_target()[, input$select_input_samplenamevar]
     ),
-    paste0(input$select_minfi_norm, "mdsplot")
+    paste0(input$select_minfi_norm, "mdsplot", input$selected_samples)
   )
   output$graph_minfi_boxplot = renderCachedPlot(graphics::boxplot(as.matrix(rval_gset_getBeta())),
-                                                paste0(input$select_minfi_norm, "boxplot"))
+                                                paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
   
   output$graph_minfi_sex = renderCachedPlot(minfi::plotSex(rval_gset(), 
                                             id = rval_sheet_target()[, input$select_input_samplenamevar] ),
-                                            paste0(input$select_minfi_norm, "sex"))
+                                            paste0(input$select_minfi_norm, "sex", input$selected_samples))
   
   #SNPs heatmap
   
@@ -284,16 +287,17 @@ app_server = function(input, output, session) {
   #Design calculation
   rval_design = reactive({
 
-    pdata = as.data.frame(apply(minfi::pData(rval_gset()), 2, sub, pattern = "-", replacement = "_")) #avoiding any "-" in the data
+    pdata = data.table::as.data.table(apply(minfi::pData(rval_gset()), 2, sub, pattern = "-", replacement = "_")) #avoiding any "-" in the data
     
     #We convert to numeric variable any column of pdata with all numbers
-    pdata = as.data.frame(apply(pdata, 2, function(x){
+    pdata = data.table::as.data.table(lapply(pdata, function(x){
       if (!any(is.na(as.numeric(x)))) {
         as.numeric(x)
       }
       else x
-      
     }))
+    
+    print(str(pdata)) #debugging
     
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
@@ -552,6 +556,8 @@ app_server = function(input, output, session) {
       #annotation = rval_annotation()
       global_difs = rval_globaldifs()
       
+      
+      
       save(bvalues,file=paste(tempdir(),"Bvalues.RData", sep="/"))
       save(mvalues,file=paste(tempdir(),"Mvalues.RData", sep="/"))
       save(rgset , file = paste(tempdir(),"RGSet.RData", sep="/"))
@@ -613,6 +619,7 @@ app_server = function(input, output, session) {
         rval_fit = rval_fit(),
         rval_design = rval_design(),
         rval_filteredlist = rval_filteredlist(),
+        rval_filteredlist2heatmap = rval_filteredlist2heatmap(),
         rval_contrasts = rval_contrasts(),
         limma_ebayes_trend = input$select_limma_trend,
         limma_ebayes_robust = input$select_limma_robust,

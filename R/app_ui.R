@@ -101,7 +101,10 @@ app_ui <- function(request) {
               h4("Raw"),
               plotOutput("graph_minfi_mdsplotraw") %>% shinycssloaders::withSpinner(),
               h4("Processed"),
-              plotOutput("graph_minfi_mdsplot") %>% shinycssloaders::withSpinner()
+              plotOutput("graph_minfi_mdsplot") %>% shinycssloaders::withSpinner(),
+              br(),
+              selectInput("select_minfi_mdsplot_graphvariable", "Select Color Variable:", c())
+              
             ),
             
             tabPanel(
