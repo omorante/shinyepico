@@ -77,7 +77,7 @@ app_server = function(input, output, session) {
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
   rval_rgset = eventReactive(input$button_input_next, {
     targets = rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples, ]
-    RGSet = minfi::read.metharray.exp(targets = targets, verbose = TRUE)
+    RGSet = minfi::read.metharray.exp(targets = targets, verbose = TRUE, force = TRUE) ##### ! Force true puesto temporalmente
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
   })
   
@@ -165,9 +165,9 @@ app_server = function(input, output, session) {
                                                            paste0("Raw", "densitybeanplot", input$selected_samples))
   output$graph_minfi_mdsplotraw = renderCachedPlot(
     minfi::mdsPlot(rval_rgset(), 
-                   sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
+                   sampGroups = rval_sheet_target()[,input$select_minfi_mdsplot_graphvariable],
                    sampNames = rval_sheet_target()[,input$select_input_samplenamevar]),
-    paste0("Raw", "mdsplot", input$selected_samples)
+    paste0("Raw", "mdsplot", input$selected_samples,input$select_minfi_mdsplot_graphvariable)
    )
   
   output$graph_minfi_boxplotraw = renderCachedPlot(graphics::boxplot(as.matrix(rval_rgset_getBeta())),
@@ -184,10 +184,10 @@ app_server = function(input, output, session) {
   output$graph_minfi_mdsplot = renderCachedPlot(
     minfi::mdsPlot(
       as.matrix(rval_gset_getBeta()),
-      sampGroups = rval_sheet_target()[,input$select_input_groupingvar],
+      sampGroups = rval_sheet_target()[,input$select_minfi_mdsplot_graphvariable],
       sampNames = rval_sheet_target()[, input$select_input_samplenamevar]
     ),
-    paste0(input$select_minfi_norm, "mdsplot", input$selected_samples)
+    paste0(input$select_minfi_norm, "mdsplot", input$selected_samples, input$select_minfi_mdsplot_graphvariable)
   )
   output$graph_minfi_boxplot = renderCachedPlot(graphics::boxplot(as.matrix(rval_gset_getBeta())),
                                                 paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
