@@ -26,4 +26,4 @@ library("shinyepico")
 run_shinyepico()
 ```
 
-You can assign the number of cores or the upload memory limit with the arguments of that function. The parallelization makes the application faster, but it requires more RAM available. For computers with limited RAM, the recommendation is n\_cores=1 .
+You can assign the number of cores or the upload memory limit with the arguments of that function. The parallelization makes the application faster, but it requires more RAM available. By default, n\_cores is 1.
