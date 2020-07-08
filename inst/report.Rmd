@@ -276,15 +276,30 @@ For each contrasts specified ( __`r paste(params$rval_contrasts, collapse=",")`_
 ###(Table with all contrasts)
 
 ```{r filtered_table_all,echo=FALSE,message=FALSE, warning=FALSE}
-  DT::datatable(data.table::rbindlist(params$rval_filteredlist, idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
-
+  DT::datatable(data.table::rbindlist(params$rval_filteredlist, idcol="contrast") %>% 
+    dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
+    dplyr::group_by(.data$contrast, .data$type)  %>%
+    dplyr::summarise(CpGs = dplyr::n()) %>% 
+    tidyr::complete(.data$contrast, .data$type, fill=list(CpGs=0)) %>%
+    tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
+    dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
+    dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), round))
+  )
 
 ```
 
 
 ###(Custom heatmap)
 ```{r filtered_table,echo=FALSE,message=FALSE, warning=FALSE}
-  DT::datatable(data.table::rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% dplyr::mutate(type=ifelse(dif_current > 0, "Hypermethylated", "Hypomethylated")) %>% dplyr::group_by(contrast, type) %>% dplyr::summarise(CpGs=dplyr::n()) %>% tidyr::pivot_wider(names_from=type, values_from=CpGs) %>% dplyr::mutate(total = Hypermethylated + Hypomethylated))
+  DT::datatable(data.table::rbindlist(params$rval_filteredlist[params$rval_contrasts %in% params$contrasts2plot], idcol="contrast") %>% 
+        dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
+        dplyr::group_by(.data$contrast, .data$type)  %>%
+        dplyr::summarise(CpGs = dplyr::n()) %>% 
+        tidyr::complete(.data$contrast, .data$type, fill=list(CpGs=0)) %>%
+        tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
+        dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
+        dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), round))
+  )
 
 
 ```

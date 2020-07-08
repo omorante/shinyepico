@@ -27,14 +27,24 @@ app_server = function(input, output, session) {
   })
   
   #When you press button_input_load, the data is unzipped and the metharray sheet is loaded
-  rval_sheet_target = eventReactive(input$button_input_load, 
-          rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples, ])
-  
   rval_sheet = eventReactive(input$button_input_load, {
+
     utils::unzip(input$fileinput_input$datapath,
                  exdir = paste0(tempdir(), "/experiment_data"))
-    minfi::read.metharray.sheet(paste0(tempdir(), "/experiment_data"))
+    
+    sheet = minfi::read.metharray.sheet(paste0(tempdir(), "/experiment_data"))
+
+    #We check if sheet is correct
+    #This is to prevent app crashes when zip updated is not correct.
+    validate(need(is.data.frame(sheet) & any(colnames(sheet) %in% "Slide") & any(colnames(sheet) %in% "Array"), "SampleSheet is not correct. Please, check your samplesheet and your zip file." ))
+    
+    sheet
   })
+  
+  
+  rval_sheet_target = eventReactive(input$button_input_load, 
+        rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples, ])
+  
   
   #When you press button_input_load, the form options are updated
   observeEvent(input$button_input_load, {
@@ -59,7 +69,7 @@ app_server = function(input, output, session) {
     )
   })
   
-  #the checkbox of samples to process is updated when samplenamevar changes
+  #The checkbox of samples to process is updated when samplenamevar changes
   observeEvent(
     input$select_input_samplenamevar,
     updateCheckboxGroupInput(
@@ -74,10 +84,26 @@ app_server = function(input, output, session) {
   #The dataframe is rendered
   output$samples_table =  DT::renderDT(rval_sheet())
   
+  
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
+  
   rval_rgset = eventReactive(input$button_input_next, {
     targets = rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples, ]
-    RGSet = minfi::read.metharray.exp(targets = targets, verbose = TRUE, force = TRUE) ##### ! Force true puesto temporalmente
+    
+    #We need to check if this step works
+    try({RGSet = minfi::read.metharray.exp(targets = targets, verbose = TRUE, force = TRUE)})
+    
+    if (!exists("RGSet")){
+      showModal(modalDialog(
+        title = "reading error",
+        "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
+        easyClose = TRUE,
+        footer = NULL))
+    }
+    
+    validate(need(exists("RGSet"), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
+    
+    #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
   })
   
@@ -85,7 +111,10 @@ app_server = function(input, output, session) {
   observeEvent(input$button_input_next,
       { 
         
-        updateSelectInput(session, "select_minfi_mdsplot_graphvariable", choices = colnames(rval_sheet()) , selected = input$select_input_groupingvar)
+        updateSelectInput(session, "select_minfi_pcaplot_color", choices = colnames(rval_sheet()), selected = input$select_input_donorvar)
+        
+        
+        
         withProgress(message = "Loading data...", value = 2, max = 5,
                               {rval_rgset()
                                 updateNavbarPage(session, "navbar_epic", "Minfi Norm.")
@@ -129,7 +158,7 @@ app_server = function(input, output, session) {
       gset = minfi::preprocessQuantile(minfi::preprocessNoob(rval_rgset()))
     }
     
-    #remove SNPs to proceed with the analysis
+    #remove SNPs to proceed with the analysis and add sex column
     minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
     
   })
@@ -148,7 +177,6 @@ app_server = function(input, output, session) {
     bvalues
   })
   
-  
   rval_gset_getM = reactive({
     minfi::getM(rval_gset())
   })
@@ -159,23 +187,38 @@ app_server = function(input, output, session) {
   #Plotting of QC graphs
   output$graph_minfi_qcraw = renderCachedPlot(minfi::plotQC(minfi::getQC(minfi::preprocessRaw(rval_rgset(
   )))), paste0("Raw", "QC", input$selected_samples))
-  output$graph_minfi_densityplotraw = renderCachedPlot(minfi::densityPlot(rval_rgset()),
-                                                       paste0("Raw", "densityplot", input$selected_samples))
+  #output$graph_minfi_densityplotraw = renderCachedPlot(minfi::densityPlot(rval_rgset()),
+  #                                                     paste0("Raw", "densityplot", input$selected_samples))
+  output$graph_minfi_densityplotraw = plotly::renderPlotly(plotly::ggplotly(rval_rgset_getBeta()[sample(1:nrow(rval_rgset_getBeta()), 200000),] %>% 
+                                                                           tidyr::pivot_longer(cols = 1:ncol(rval_rgset_getBeta()), names_to = "sample", values_to="Bvalues") %>% 
+                                                                           ggplot2::ggplot(ggplot2::aes(x=.data$Bvalues, color=.data$sample)) + ggplot2::stat_density(position="identity", geom="line") + 
+                                                                           ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())))
+  
+  
+  
   output$graph_minfi_densitybeanplotraw = renderCachedPlot(minfi::densityBeanPlot(rval_rgset()),
                                                            paste0("Raw", "densitybeanplot", input$selected_samples))
   output$graph_minfi_mdsplotraw = renderCachedPlot(
     minfi::mdsPlot(rval_rgset(), 
-                   sampGroups = rval_sheet_target()[,input$select_minfi_mdsplot_graphvariable],
+                   sampGroups = rval_sheet_target()[,input$select_input_donorvar],
                    sampNames = rval_sheet_target()[,input$select_input_samplenamevar]),
-    paste0("Raw", "mdsplot", input$selected_samples,input$select_minfi_mdsplot_graphvariable)
+    paste0("Raw", "mdsplot", input$selected_samples,input$select_input_donorvar)
    )
   
   output$graph_minfi_boxplotraw = renderCachedPlot(graphics::boxplot(as.matrix(rval_rgset_getBeta())),
                                                    paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
   
   
-  output$graph_minfi_densityplot = renderCachedPlot(minfi::densityPlot(as.matrix(rval_gset_getBeta())),
-                                                    paste0(input$select_minfi_norm, "densityplot", input$selected_samples))
+  #output$graph_minfi_densityplot = renderCachedPlot(minfi::densityPlot(as.matrix(rval_gset_getBeta())),
+  #                                                  paste0(input$select_minfi_norm, "densityplot", input$selected_samples))
+  
+  output$graph_minfi_densityplot = plotly::renderPlotly(plotly::ggplotly(rval_gset_getBeta()[sample(1:nrow(rval_gset_getBeta()), 200000),] %>% 
+                                                                           tidyr::pivot_longer(cols = 1:ncol(rval_gset_getBeta()), names_to = "sample", values_to="Bvalues") %>% 
+                                                                           ggplot2::ggplot(ggplot2::aes(x=.data$Bvalues, color=.data$sample)) + ggplot2::stat_density(position="identity", geom="line") + 
+                                                                           ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())))
+  
+
+  
   output$graph_minfi_densitybeanplot = renderCachedPlot(
     minfi::densityBeanPlot(as.matrix(rval_gset_getBeta())),
     paste0(input$select_minfi_norm, "densitybeanplot", input$selected_samples)
@@ -195,6 +238,16 @@ app_server = function(input, output, session) {
   output$graph_minfi_sex = renderCachedPlot(minfi::plotSex(rval_gset(), 
                                             id = rval_sheet_target()[, input$select_input_samplenamevar] ),
                                             paste0(input$select_minfi_norm, "sex", input$selected_samples))
+  
+  
+  #PCA (new)
+  
+  rval_plot_pca = reactive(create_pca(Bvalues=rval_gset_getBeta(), pheno_info=rval_sheet_target(), group=input$select_input_samplenamevar, 
+                                      pc_x=input$select_minfi_pcaplot_pcx, pc_y=input$select_minfi_pcaplot_pcy, color=input$select_minfi_pcaplot_color))
+  
+  output$graph_minfi_pcaplot = plotly::renderPlotly(rval_plot_pca()[["graph"]])
+  
+  output$table_minfi_pcaplot = renderTable(rval_plot_pca()[["info"]], rownames = TRUE)
   
   #SNPs heatmap
   
@@ -290,14 +343,14 @@ app_server = function(input, output, session) {
     pdata = data.table::as.data.table(apply(minfi::pData(rval_gset()), 2, sub, pattern = "-", replacement = "_")) #avoiding any "-" in the data
     
     #We convert to numeric variable any column of pdata with all numbers
+    suppressWarnings({
     pdata = data.table::as.data.table(lapply(pdata, function(x){
       if (!any(is.na(as.numeric(x)))) {
         as.numeric(x)
       }
       else x
-    }))
-    
-    print(str(pdata)) #debugging
+      }))
+    })
     
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
@@ -306,16 +359,20 @@ app_server = function(input, output, session) {
       ),
       collapse = "+"
     )))
-    print(paste0("~ 0 + ", paste(
-      c(
-        input$select_limma_voi,
-        input$checkbox_limma_covariables
-      ),
-      collapse = "+"
-    )))
+    
+    #Add check of variable and covariables. Variable must be categorical, covariables can't have a lot of categories
+    validate(need(anyDuplicated(pdata[,input$select_limma_voi]) > 0, "Variable selected is not valid. Please, change the variable and try again"))
+    
+    if (length(input$checkbox_limma_covariables > 0)){
+    validate(need(all(apply(pdata[,input$checkbox_limma_covariables, drop=FALSE], 2, anyDuplicated)) > 0, 
+                  "Covariable(s) selected are not valid. Please, change the covariable and try again" ))
+    }
+    
+    #Bulding the design matrix
     design = stats::model.matrix(formula, data = pdata)
     print(design)
     colnames(design)[1:length(unique(rval_voi()))] = levels(rval_voi())
+    
     design
   })
   
@@ -338,17 +395,32 @@ app_server = function(input, output, session) {
   rval_fit = eventReactive(input$button_limma_calculatemodel, {
     
     if (as.logical(input$select_limma_weights)){
-      weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())
+      try({weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())})
     }
     else { weights = NULL}
     
-    limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)
+    try({fit = limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)})
     
+    if (!exists("fit")){
+      rval_generated_limma_model(FALSE) #disable contrast button
+      showModal(modalDialog(
+        title = "lmFit error",
+        "lmFit model has failed. Please, check your options and try again.",
+        easyClose = TRUE,
+        footer = NULL))
+       
+    }
+    
+    validate(need(exists("fit"), "lmFit model has failed. Please, check your options and try again.")) 
+    
+    fit #returning linear model
   })
   
   
   #f rval_fit() has NAs, we remove the option to trend or robust in eBayes to prevent failure
   observeEvent(input$button_limma_calculatemodel, {
+    
+    
     if (any(is.na(rval_fit()$coefficients))) {
       
       message("NAs detected, trend and robust options are disabled.")
@@ -496,10 +568,13 @@ app_server = function(input, output, session) {
     input$button_limma_heatmapcalc,
     data.table::rbindlist(rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot],
                           idcol = "contrast") %>% 
-                          dplyr::mutate(type = ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated")) %>% 
+                          dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
                             dplyr::group_by(.data$contrast, .data$type)  %>%
-                            dplyr::summarise(CpGs = dplyr::n()) %>% tidyr::pivot_wider(names_from =
-                            .data$type, values_from = .data$CpGs) %>% dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated)
+                            dplyr::summarise(CpGs = dplyr::n()) %>% 
+                            tidyr::complete(.data$contrast, .data$type, fill=list(CpGs=0)) %>%
+                            tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
+                            dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
+                            dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), ~ format(., digits=0)))
   )
   
   observeEvent(input$button_limma_heatmapcalc, {
@@ -538,14 +613,21 @@ app_server = function(input, output, session) {
   
   
   #EXPORT
-  
   rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
   
   #R Objects
+  
+
   output$download_export_robjects = downloadHandler(
     "R_Objects.zip",
+    
+    
     content = function(file) {
       
+      withProgress(message = "Generating R Objects...",
+                   value = 1,
+                   max = 4,
+      {
       rgset = rval_rgset()
       gset = rval_gset()
       fit = rval_fit()
@@ -557,7 +639,7 @@ app_server = function(input, output, session) {
       global_difs = rval_globaldifs()
       
       
-      
+      setProgress(value=2, message = "Saving RObjects...")
       save(bvalues,file=paste(tempdir(),"Bvalues.RData", sep="/"))
       save(mvalues,file=paste(tempdir(),"Mvalues.RData", sep="/"))
       save(rgset , file = paste(tempdir(),"RGSet.RData", sep="/"))
@@ -570,10 +652,13 @@ app_server = function(input, output, session) {
       
       objects = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
       
+      setProgress(value=3, message = "Compressing RObjects...")
       utils::zip(file, objects, flags = "-j9X")
-      
+      })
     }
   )
+  
+
   
   
   #Filtered BEDs
@@ -605,9 +690,15 @@ app_server = function(input, output, session) {
   
   #Markdown Report
   
+
   output$download_export_markdown = downloadHandler(
     filename= "Markdown.html",
     content = function(file) {
+      
+      withProgress(message = "Generating Report...",
+                   value = 1,
+                   max = 3,
+       {
        params = list(
         name_var = input$select_input_samplenamevar,
         grouping_var = input$select_input_groupingvar,
@@ -647,8 +738,11 @@ app_server = function(input, output, session) {
         envir = newenv
       )
       
-    }
-  )
+      })
+     }
+    )
+  
+  
   
   
   #custom heatmap
@@ -676,8 +770,7 @@ app_server = function(input, output, session) {
     
   )
   
-  #Graphs
-  
+
   
   
   

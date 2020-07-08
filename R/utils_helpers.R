@@ -64,8 +64,7 @@ find_dif_cpgs = function (groups,
                           trend = FALSE,
                           robust = FALSE,
                           cores) {
-  print("number of cores is (#debugging)")
-  print(cores)
+
   doParallel::registerDoParallel(cores)
   
   tabla_global = foreach::foreach(contrast = contrasts) %dopar% {
@@ -341,4 +340,24 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
   
   result
   
+}
+
+
+create_pca = function(Bvalues, pheno_info, pc_x = "PC1", pc_y = "PC2", group, color=NULL){
+  
+      pca_data = stats::prcomp(t(stats::na.omit(Bvalues)))
+      pca_info = as.data.frame(summary(pca_data)[["importance"]])
+      
+      pca_data = as.data.frame(pca_data$x)
+      pca_data = cbind(pca_data, pheno_info) 
+      
+      
+      pca_graph = plotly::ggplotly(ggplot2::ggplot(pca_data) + 
+          ggplot2::geom_point(ggplot2::aes_string(x=pc_x, y=pc_y, group=group, color=color), size=3) +
+          ggplot2::theme_bw()
+          )
+      
+      return(list(info=pca_info, graph=pca_graph))
+      
+      
 }

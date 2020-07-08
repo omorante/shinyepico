@@ -83,10 +83,25 @@ app_ui <- function(request) {
             tabPanel(
               "Density plot",
               h4("Raw"),
-              plotOutput("graph_minfi_densityplotraw") %>% shinycssloaders::withSpinner(),
+              plotly::plotlyOutput("graph_minfi_densityplotraw") %>% shinycssloaders::withSpinner(),
               h4("Processed"),
-              plotOutput("graph_minfi_densityplot") %>% shinycssloaders::withSpinner()
+              plotly::plotlyOutput("graph_minfi_densityplot") %>% shinycssloaders::withSpinner()
             ),
+            
+            tabPanel(
+              "Principal Component Analysis",
+              h4("Processed"),
+              #table of PCA
+              plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
+              tableOutput("table_minfi_pcaplot"),
+              column(6,
+                     selectInput(inputId = "select_minfi_pcaplot_pcx", choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), selected = "PC1", label = "Select x variable"),
+                     selectInput(inputId = "select_minfi_pcaplot_color", choices = c(), label = "Select color variable:")
+                     ),
+              column(6,
+                     selectInput(inputId = "select_minfi_pcaplot_pcy", choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), selected = "PC2", label = "Select y variable"))
+                     ),
+            
             
             tabPanel(
               "Density Bean Plot",
@@ -101,9 +116,7 @@ app_ui <- function(request) {
               h4("Raw"),
               plotOutput("graph_minfi_mdsplotraw") %>% shinycssloaders::withSpinner(),
               h4("Processed"),
-              plotOutput("graph_minfi_mdsplot") %>% shinycssloaders::withSpinner(),
-              br(),
-              selectInput("select_minfi_mdsplot_graphvariable", "Select Color Variable:", c())
+              plotOutput("graph_minfi_mdsplot") %>% shinycssloaders::withSpinner()
               
             ),
             
