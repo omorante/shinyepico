@@ -16,7 +16,7 @@ run_shinyepico <- function(
   n_cores = 1,
   max_upload_size = 2000,
   host = "127.0.0.1",
-  port = 7000
+  port = NULL
 
 ) {
   with_golem_options(

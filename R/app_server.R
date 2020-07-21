@@ -7,7 +7,6 @@
 #'
 #' @noRd
 
-
 app_server = function(input, output, session) {
 
   
@@ -127,7 +126,7 @@ app_server = function(input, output, session) {
   
   #Calculation of minfi normalized data
   rval_gset = reactive({
-    
+   try({
     if (input$select_minfi_norm == "Illumina") {
       gset = minfi::mapToGenome(minfi::ratioConvert( 
         type="Illumina",
@@ -148,8 +147,13 @@ app_server = function(input, output, session) {
     }
     
     else if (input$select_minfi_norm == "Funnorm") {
-      gset = minfi::preprocessFunnorm((rval_rgset()))
+      gset = minfi::preprocessFunnorm(rval_rgset())
     }
+    
+    else if (input$select_minfi_norm == "SWAN") {
+      gset = minfi::preprocessSWAN(rval_rgset(), mSet = minfi::mapToGenome(minfi::preprocessRaw(rval_rgset()))) #MethylSet or GenomicMethylSet?
+    }
+    
     else if (input$select_minfi_norm == "Quantile") {
       gset = minfi::preprocessQuantile(rval_rgset())
     }
@@ -157,6 +161,11 @@ app_server = function(input, output, session) {
     else if (input$select_minfi_norm == "Noob+Quantile") {
       gset = minfi::preprocessQuantile(minfi::preprocessNoob(rval_rgset()))
     }
+    
+   })
+    
+    #check if normalization has worked
+    validate(need(exists("gset"), "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."))  
     
     #remove SNPs to proceed with the analysis and add sex column
     minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
@@ -185,8 +194,15 @@ app_server = function(input, output, session) {
   
   
   #Plotting of QC graphs
-  output$graph_minfi_qcraw = renderCachedPlot(minfi::plotQC(minfi::getQC(minfi::preprocessRaw(rval_rgset(
+  #output$graph_minfi_qcraw = renderCachedPlot(minfi::plotQC(minfi::getQC(minfi::preprocessRaw(rval_rgset(
+  #)))), paste0("Raw", "QC", input$selected_samples))
+  
+  output$graph_minfi_qcraw = plotly::renderPlotly(create_plotqc(rval_rgset(), rval_sheet_target()[,input$select_input_samplenamevar])) 
+    
+    renderCachedPlot(minfi::plotQC(minfi::getQC(minfi::preprocessRaw(rval_rgset(
   )))), paste0("Raw", "QC", input$selected_samples))
+  
+  
   #output$graph_minfi_densityplotraw = renderCachedPlot(minfi::densityPlot(rval_rgset()),
   #                                                     paste0("Raw", "densityplot", input$selected_samples))
   output$graph_minfi_densityplotraw = plotly::renderPlotly(plotly::ggplotly(rval_rgset_getBeta()[sample(1:nrow(rval_rgset_getBeta()), 200000),] %>% 
@@ -769,9 +785,5 @@ app_server = function(input, output, session) {
     }
     
   )
-  
-
-  
-  
   
 }

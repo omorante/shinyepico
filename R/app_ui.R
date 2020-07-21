@@ -5,6 +5,7 @@ norm_options = c("Raw",
                  "Illumina",
                  "Funnorm",
                  "Noob",
+                 "SWAN",
                  "Quantile",
                  "Noob+Quantile")
 
@@ -93,7 +94,7 @@ app_ui <- function(request) {
               h4("Processed"),
               #table of PCA
               plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
-              tableOutput("table_minfi_pcaplot"),
+              tableOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
               column(6,
                      selectInput(inputId = "select_minfi_pcaplot_pcx", choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), selected = "PC1", label = "Select x variable"),
                      selectInput(inputId = "select_minfi_pcaplot_color", choices = c(), label = "Select color variable:")
@@ -143,7 +144,7 @@ app_ui <- function(request) {
             tabPanel(
               "QC plot",
               h4("Raw"),
-              plotOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner()
+              plotly::plotlyOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner()
             )
             
             

@@ -156,11 +156,63 @@ create_filtered_list = function(limma_list,
 
 
 
+create_filtered_beds = function(filtered_data, annotation, cores) {
+
+  doParallel::registerDoParallel(cores)
+  
+  annotation$cpg = row.names(annotation)
+  annotation = data.table::as.data.table(annotation)
+  
+
+  #saving hypo and hyper results individually
+  
+  result = foreach::foreach (
+    table = filtered_data,
+    .final = function(x)
+      stats::setNames(x, paste0(names(filtered_data),"_hypermethylated"))
+  ) %dopar% {
+    temp = dplyr::left_join(table[table$dif_current < 0,], annotation, by = "cpg")
+
+    data.table::data.table(
+      chr = temp$chr,
+      start = format(temp$pos - 1, scientific = FALSE),
+      end = format(temp$pos, scientific = FALSE),
+      name = temp$cpg
+    )
+  }
+  
+  result = c(result,
+                foreach::foreach (
+                  table = filtered_data,
+                  .final = function(x)
+                    stats::setNames(x, paste0(names(filtered_data),"_hypomethylated"))
+                ) %dopar% {
+                  temp = dplyr::left_join(table[table$dif_current > 0,], annotation, by = "cpg")
+                  data.table::data.table(
+                    chr = temp$chr,
+                    start = format(temp$pos - 1, scientific = FALSE),
+                    end = format(temp$pos, scientific = FALSE),
+                    name = temp$cpg
+                  )
+                } )
+  
+
+  result[["annotation"]] = data.table::data.table(
+    chr = annotation$chr,
+    start = format(annotation$pos - 1, scientific = FALSE),
+    end = format(annotation$pos, scientific = FALSE),
+    name = annotation$cpg
+  )
+  
+  result
+  
+}
+
+#Graphs functions
+
 create_heatmap = function(plot_data,
-                          #global_Bvalues,
                           factorgroups,
                           groups2plot,
-                          #contrasts2plot,
                           Colv = TRUE,
                           clusteralg = "average",
                           distance = "pearson",
@@ -177,7 +229,7 @@ create_heatmap = function(plot_data,
   #  return("")
   #}
   
-
+  
   heatdata = as.matrix(plot_data)
   heatdata = heatdata[stats::complete.cases(heatdata),]
   
@@ -198,7 +250,7 @@ create_heatmap = function(plot_data,
   
   
   buylrd = c("#313695", "#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8", "#FFFFBF","#FEE090",
-            "#FDAE61", "#F46D43", "#D73027", "#A50026"
+             "#FDAE61", "#F46D43", "#D73027", "#A50026"
   )
   colors.martin = grDevices::colorRampPalette(buylrd)(100)
   
@@ -283,63 +335,7 @@ create_heatmap = function(plot_data,
     )
     
   }
-  
-  
-  
-  
-}
-
-
-create_filtered_beds = function(filtered_data, annotation, cores) {
-
-  doParallel::registerDoParallel(cores)
-  
-  annotation$cpg = row.names(annotation)
-  annotation = data.table::as.data.table(annotation)
-  
-
-  #saving hypo and hyper results individually
-  
-  result = foreach::foreach (
-    table = filtered_data,
-    .final = function(x)
-      stats::setNames(x, paste0(names(filtered_data),"_hypermethylated"))
-  ) %dopar% {
-    temp = dplyr::left_join(table[table$dif_current < 0,], annotation, by = "cpg")
-
-    data.table::data.table(
-      chr = temp$chr,
-      start = format(temp$pos - 1, scientific = FALSE),
-      end = format(temp$pos, scientific = FALSE),
-      name = temp$cpg
-    )
-  }
-  
-  result = c(result,
-                foreach::foreach (
-                  table = filtered_data,
-                  .final = function(x)
-                    stats::setNames(x, paste0(names(filtered_data),"_hypomethylated"))
-                ) %dopar% {
-                  temp = dplyr::left_join(table[table$dif_current > 0,], annotation, by = "cpg")
-                  data.table::data.table(
-                    chr = temp$chr,
-                    start = format(temp$pos - 1, scientific = FALSE),
-                    end = format(temp$pos, scientific = FALSE),
-                    name = temp$cpg
-                  )
-                } )
-  
-
-  result[["annotation"]] = data.table::data.table(
-    chr = annotation$chr,
-    start = format(annotation$pos - 1, scientific = FALSE),
-    end = format(annotation$pos, scientific = FALSE),
-    name = annotation$cpg
-  )
-  
-  result
-  
+   
 }
 
 
@@ -361,3 +357,25 @@ create_pca = function(Bvalues, pheno_info, pc_x = "PC1", pc_y = "PC2", group, co
       
       
 }
+
+
+create_plotqc = function(rgset, sample_names, badSampleCutoff = 10){
+  
+  plotly::ggplotly(
+    as.data.frame(minfi::getQC(minfi::preprocessRaw(rgset))) %>% 
+      dplyr::mutate(Sample = sample_names, Quality = ifelse(.data$mMed < badSampleCutoff | .data$uMed < badSampleCutoff, "Suboptimal", "OK")) %>% 
+      ggplot2::ggplot(ggplot2::aes_string(x="mMed",y="uMed", group="Sample", color = "Quality")) + 
+        ggplot2::geom_point() + 
+        ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult=1.20)) +
+        ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult=1.20)) +
+        ggplot2::scale_color_manual(values = c("black","darkred"))+ 
+        ggplot2::geom_abline(slope = 1, intercept = 0) +
+        ggplot2::geom_abline(slope = 1, intercept = 0.5, linetype="dotted", color="darkgrey") +
+        ggplot2::geom_abline(slope = 1, intercept = -0.5, linetype="dotted", color="darkgrey") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())
+  )
+  
+  
+}
+
