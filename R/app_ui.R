@@ -18,6 +18,7 @@ hclust_methods = c("single",
 
 
 `%dopar%` = foreach::`%dopar%`
+`%do%` = foreach::`%do%`
 `%>%` = magrittr::`%>%`
 
 #' The application User-Interface
@@ -41,9 +42,9 @@ app_ui <- function(request) {
             inputId = "fileinput_input",
             "Upload Compress Experiment Directory (zip):",
             multiple = FALSE,
-            accept = "application/zip"
+            accept = c("application/zip", "application/octet-stream", "application/x-zip-compressed")
           ),
-          #directoryInput("sample_directory", "Select Sample Directory:", value="/home/octavio/Documentos/Análisis DCDEX/Pruebas limma metilación/Arrays de metilación/"),
+          
           uiOutput("ui_button_input_load"),
           h3(),
           
@@ -51,13 +52,23 @@ app_ui <- function(request) {
             "typeof output.samples_table != 'undefined'",
             selectInput("select_input_samplenamevar", "", choices =
                           c()),
-            h3(),
-            checkboxGroupInput("selected_samples", "", c(), selected =
-                                 TRUE),
+
             h3(),
             selectInput("select_input_groupingvar", "", c()),
             h3(),
             selectInput("select_input_donorvar", "", c()),
+            h3(),
+            pickerInput(
+              inputId = "selected_samples",
+              label = "",
+              choices = c(),
+              options = list(
+                `actions-box` = TRUE,
+                size = 10,
+                `selected-text-format` = "count > 3"
+              ),
+              multiple = TRUE
+            ),
             h3(),
             actionButton("button_input_next", "Proceed to the next step")
           )
@@ -71,8 +82,8 @@ app_ui <- function(request) {
     
     
     tabPanel(
-      "Minfi Norm.",
-      titlePanel("Minfi Normalization"),
+      "Normalization",
+      titlePanel("Normalization"),
       sidebarLayout(
         sidebarPanel(
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
@@ -81,44 +92,21 @@ app_ui <- function(request) {
         ),
         mainPanel(
           tabsetPanel(
+            
+            tabPanel(
+              "Quality Control",
+              h4("Signal"),
+              plotly::plotlyOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner(),
+              h4("Bisulfite Conversion II"),
+              plotly::plotlyOutput("graph_minfi_bisulfiterawII")  %>% shinycssloaders::withSpinner()
+            ),
+            
             tabPanel(
               "Density plot",
               h4("Raw"),
               plotly::plotlyOutput("graph_minfi_densityplotraw") %>% shinycssloaders::withSpinner(),
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_densityplot") %>% shinycssloaders::withSpinner()
-            ),
-            
-            tabPanel(
-              "Principal Component Analysis",
-              h4("Processed"),
-              #table of PCA
-              plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
-              tableOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
-              column(6,
-                     selectInput(inputId = "select_minfi_pcaplot_pcx", choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), selected = "PC1", label = "Select x variable"),
-                     selectInput(inputId = "select_minfi_pcaplot_color", choices = c(), label = "Select color variable:")
-                     ),
-              column(6,
-                     selectInput(inputId = "select_minfi_pcaplot_pcy", choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), selected = "PC2", label = "Select y variable"))
-                     ),
-            
-            
-            tabPanel(
-              "Density Bean Plot",
-              h4("Raw"),
-              plotOutput("graph_minfi_densitybeanplotraw") %>% shinycssloaders::withSpinner(),
-              h4("Processed"),
-              plotOutput("graph_minfi_densitybeanplot") %>% shinycssloaders::withSpinner()
-            ),
-            
-            tabPanel(
-              "MDS plot",
-              h4("Raw"),
-              plotOutput("graph_minfi_mdsplotraw") %>% shinycssloaders::withSpinner(),
-              h4("Processed"),
-              plotOutput("graph_minfi_mdsplot") %>% shinycssloaders::withSpinner()
-              
             ),
             
             tabPanel(
@@ -130,6 +118,33 @@ app_ui <- function(request) {
             ),
             
             tabPanel(
+              "Principal Component Analysis",
+              h4("Processed"),
+              plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
+              tableOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
+              column(6,
+                     selectInput(inputId = "select_minfi_pcaplot_pcx", 
+                                 choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), 
+                                 selected = "PC1", label = "Select x variable"),
+                     
+                     selectInput(inputId = "select_minfi_pcaplot_color", choices = c(), 
+                                 label = "Select color variable:")
+                     ),
+              column(6,
+                     selectInput(inputId = "select_minfi_pcaplot_pcy", 
+                                 choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), 
+                                 selected = "PC2", 
+                                 label = "Select y variable"))
+                     ),
+            
+            tabPanel(
+              "Correlations",
+              h4("Processed"),
+              plotly::plotlyOutput("graph_minfi_corrplot") %>% shinycssloaders::withSpinner(),
+            ),
+            
+            
+            tabPanel(
               "SNPs Heatmap",
               h4("SNPs beta-values (Raw)"),
               plotly::plotlyOutput("graph_minfi_snps") %>% shinycssloaders::withSpinner()
@@ -138,53 +153,38 @@ app_ui <- function(request) {
             tabPanel(
               "Sex prediction",
               h4("plotSex"),
-              plotOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner()
-            ),
-            
-            tabPanel(
-              "QC plot",
-              h4("Raw"),
-              plotly::plotlyOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner()
+              plotly::plotlyOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner()
             )
-            
-            
           )
         )
       )
     ),
     
     tabPanel(
-      "Limma",
-      titlePanel("Limma parameters"),
+      "DMPs",
+      titlePanel("Differentially Methylated Positions"),
       sidebarLayout(
         sidebarPanel(
           width = 3,
           selectInput("select_limma_voi", "Select Variable of Interest", c()),
-          checkboxGroupInput(
-            "checkbox_limma_covariables",
-            "Select covariables to block",
-            c()
-          ),
+          
+          pickerInput(
+            inputId = "checkbox_limma_covariables",
+            label = "Select linear model covariables",
+            choices = c(),
+            multiple = TRUE,
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3")
+            ),
+
           #checkboxGroupInput("checkbox_limma_groups", "Select groups to compare", c()),
           
 
           switchInput(
             inputId = "select_limma_weights",
             label = "Array Weights", 
-            labelWidth = "80px",
-            value = FALSE,
-          ),
-          
-          switchInput(
-            inputId = "select_limma_trend",
-            label = "eBayes Trend", 
-            labelWidth = "80px",
-            value = FALSE,
-          ),
-          
-          switchInput(
-            inputId = "select_limma_robust",
-            label = "eBayes Robust", 
             labelWidth = "80px",
             value = FALSE,
           ),
@@ -203,8 +203,10 @@ app_ui <- function(request) {
             tabPanel(
               "Model diagnosis",
               value = "model_diagnosis",
+              h4("Sigma vs A plot"),
               plotOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
-              plotOutput("graph_limma_plotMA")
+              #h4("Log-intensity ratio vs Average Plot"),
+              #plotOutput("graph_limma_plotMA") %>% shinycssloaders::withSpinner()
             ),
             tabPanel(
               "Differential CpGs",
@@ -314,8 +316,9 @@ app_ui <- function(request) {
       h3("Download filtered bed files:"),
       downloadButton("download_export_filteredbeds"),
       p(
-        "Press to download the created filtered lists of contrasts, with the chosen criteria, in bed format. Useful to use with HOMER, GREAT... Be aware that EPIC is annotated
-        with hg19 genome."
+        "Press to download the created filtered lists of contrasts, 
+        with the chosen criteria, in bed format. Useful to use with HOMER, GREAT... 
+        Be aware that EPIC is annotated with hg19 genome."
       ),
       h3("Download Markdown Report:"),
       downloadButton("download_export_markdown"),
@@ -357,25 +360,5 @@ app_ui <- function(request) {
     )
     
   )
-  
-}
-
-#' Add external Resources to the Application
-#'
-#' This function is internally used to add external
-#' resources inside the Shiny application.
-#'
-#' @import shiny
-#' @importFrom golem add_resource_path activate_js favicon bundle_resources
-#' @noRd
-#' 
-golem_add_external_resources <- function() {
-  add_resource_path('www', app_sys('app/www'))
-  
-  tags$head(favicon(),
-            bundle_resources(path = app_sys('app/www'),
-                             app_title = 'shiny.epico.golem'))
-  # Add here other external resources
-  # for example, you can add shinyalert::useShinyalert() )
 }
 

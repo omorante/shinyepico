@@ -5,7 +5,8 @@ globalVariables("type")
 globalVariables("table")
 
 
-#calculation of global difs table
+# LIMMA CORE FUNCTIONS
+
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
   if (!is.null(Bvalues_totales$cpg)) {
     rownames(Bvalues_totales) = Bvalues_totales$cpg
@@ -20,9 +21,7 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
     isolate({
       single.means = data.frame(cpg = rownames(Bvalues_totales))
       nombre_media = paste("mean", grupo, sep = "_")
-      #nombre_sd = paste("sd",grupo,sep="_")
       single.means[nombre_media] = rowMeans(Bvalues_totales[, grupos == grupo])
-      #single.means[nombre_sd] = apply(Bvalues_totales[grupos == grupo], 1, sd) # We are not using standard deviation for now
       single.means[, -1, drop = FALSE]
     })
   }
@@ -50,10 +49,8 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
   
   doParallel::stopImplicitCluster()
   
-  cbind(all.dif, all.means) #cambiamos dplyr por cbind
+  cbind(all.dif, all.means)
   
-  
-  #all.dif.means[order(all.dif.means$cpg),] #desactivar orden alfabetico
 }
 
 
@@ -67,7 +64,7 @@ find_dif_cpgs = function (groups,
 
   doParallel::registerDoParallel(cores)
   
-  tabla_global = foreach::foreach(contrast = contrasts) %dopar% {
+  tabla_global = foreach::foreach(contrast = contrasts) %do% {
     isolate({
       contraste = limma::makeContrasts(contrasts = contrast, levels = design)
       fitting = limma::contrasts.fit(fit, contraste)
@@ -109,15 +106,13 @@ create_filtered_list = function(limma_list,
                                 p.value,
                                 sd_cort = Inf,
                                 cores) {
-  #global_difs = global_difs[order(global_difs$cpg),] #ordenamos global_difs para poder comparar
-  
+
   force(limma_list)
   force(global_difs)
   force(deltaB)
   force(adjp_max)
   force(p.value)
-  print("create_filtered_list")
-  
+
   doParallel::registerDoParallel(cores)
   
   filtered_list = foreach::foreach(cont = names(limma_list)) %dopar% {
@@ -126,24 +121,20 @@ create_filtered_list = function(limma_list,
                          limma::strsplit2(cont, "-")[1],
                          limma::strsplit2(cont, "-")[2],
                          sep = "_")
-      #sd_target1 = paste("sd",limma::strsplit2(cont,"-")[1],sep="_")
-      #sd_target2 = paste("sd",limma::strsplit2(cont,"-")[2],sep="_")
+      
       tt_global = limma_list[[cont]]
       
-      #tt_global = tt_global[order(tt_global$cpg),] #ordenamos
-      
-      
       tt_global$dif_current = global_difs[[dif_target]] # indicamos que contraste se aplica
-      #tt_global = tt_global[abs(global_difs[[dif_target]]) > deltaB & tt_global$adj.P.Val < adjp_max & tt_global$P.Value < p.value & global_difs[[sd_target1]] < sd_cort & global_difs[[sd_target2]] < sd_cort, ]
+    
       tt_global = tt_global[abs(global_difs[[dif_target]]) > deltaB &
                               tt_global$adj.P.Val < adjp_max &
-                              tt_global$P.Value < p.value,] #sin filtro de sd
+                              tt_global$P.Value < p.value,]
+        
       tt_global = tt_global[stats::complete.cases(tt_global), ]
       
       doParallel::stopImplicitCluster()
       
       tt_global
-      #dplyr::left_join(tt_global, global_difs, by="cpg")   #Por ahora, esta función devuelve solo la tabla filtrada procedente de topTable. En el futuro, si hace falta se le puede añadir anotación, global-difs...
     })
   }
   
@@ -156,6 +147,7 @@ create_filtered_list = function(limma_list,
 
 
 
+# DOWNLOAD HANDLER FUNCTIONS
 create_filtered_beds = function(filtered_data, annotation, cores) {
 
   doParallel::registerDoParallel(cores)
@@ -208,7 +200,8 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
   
 }
 
-#Graphs functions
+
+#GRAPHIC FUNCTIONS
 
 create_heatmap = function(plot_data,
                           factorgroups,
@@ -218,18 +211,7 @@ create_heatmap = function(plot_data,
                           distance = "pearson",
                           scale = "row",
                           static = FALSE) {
-  #filtered_data = create_filtered_list( findcpgdata, global_difs, deltaB=deltaB, adjp_max = adjp_max, p.value=p.value, sd_cort=sd_cort)
-  
-  
-  #filtered_data = filtered_data[contrasts2plot] # filter contrasts2plot
-  #dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
-  
-  #if (length(dif_cpgs) == 0 ){
-  #  message("No differences found with this criteria. Heatmap can't be plotted")
-  #  return("")
-  #}
-  
-  
+
   heatdata = as.matrix(plot_data)
   heatdata = heatdata[stats::complete.cases(heatdata),]
   
@@ -269,39 +251,33 @@ create_heatmap = function(plot_data,
       heatdata,
       col = colors.martin,
       Colv = Colv,
-      key.xlab = "B values"
-      ,
+      key.xlab = "B values",
       na.rm = TRUE,
       colsep = 0,
       rowsep = 0.001,
       sepcolor = "white",
-      sepwidth = c(0.05, 0.05)
-      ,
+      sepwidth = c(0.05, 0.05),
       colRow = NULL,
       colCol = NULL,
       cexRow = 1,
       cexCol = 1,
-      margins = c(15, 2)
-      ,
+      margins = c(15, 2),
       labCol = NULL,
       srtRow = NULL,
       srtCol = NULL,
       adjRow = c(0, NA),
-      adjCol = c(NA, 0)
-      ,
+      adjCol = c(NA, 0),
       offsetRow = 0.5,
       offsetCol = 0.5,
       key = TRUE,
       keysize = 1,
       key.title = "",
       key.ylab = "count",
-      density.info = "none"
-      ,
+      density.info = "none",
       trace = "none",
       labRow = "",
       scale = scale,
-      dendrogram = "both"
-      ,
+      dendrogram = "both",
       distfun = distfun,
       hclustfun = function(x)
         stats::hclust(x, method = clusteralg)
@@ -318,7 +294,7 @@ create_heatmap = function(plot_data,
       col = colors.martin,
       Colv = Colv,
       key.title = "",
-      na.rm = T,
+      na.rm = TRUE,
       dendogram = "both",
       scale = scale,
       distfun = distance,
@@ -351,7 +327,8 @@ create_pca = function(Bvalues, pheno_info, pc_x = "PC1", pc_y = "PC2", group, co
       pca_graph = plotly::ggplotly(ggplot2::ggplot(pca_data) + 
           ggplot2::geom_point(ggplot2::aes_string(x=pc_x, y=pc_y, group=group, color=color), size=3) +
           ggplot2::theme_bw()
-          )
+          ) %>%
+        plotly_config() 
       
       return(list(info=pca_info, graph=pca_graph))
       
@@ -359,6 +336,53 @@ create_pca = function(Bvalues, pheno_info, pc_x = "PC1", pc_y = "PC2", group, co
 }
 
 
+create_corrplot = function(Bvalues, sample_target_sheet){
+  
+  pca_data = stats::prcomp(t(stats::na.omit(Bvalues)))$x
+  
+  clean_sample_sheet = data.frame(apply(sample_target_sheet, 2, function(x) {
+    if(length(unique(x))>1 & length(unique(x)) < length(x)){return(x)}
+    else{return(NA)}
+  }), stringsAsFactors = FALSE)
+  
+  clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)]
+  
+  #converting columns to numeric if is possible, excluding Slide
+  suppressWarnings({
+    clean_sample_sheet = data.table::as.data.table(lapply(clean_sample_sheet, function(x){
+      if (!any(is.na(as.numeric(x)))) {
+        as.numeric(x)
+      }
+      else x
+     }))
+   })
+  
+  clean_sample_sheet[["Slide"]] = as.character(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
+  
+  cor_input = cbind(pca_data, clean_sample_sheet)
+  cor_data = as.data.frame(cor2(cor_input))
+  cor_data$Var1 = row.names(cor_data)
+  
+  data.table::setDT(cor_data)
+  
+  cor_data = data.table::melt(cor_data, id.vars="Var1", variable.name="Var2", value.name="cor" )
+  
+  cor_data = cor_data[cor_data$Var1 %in% colnames(pca_data),]
+  cor_data = cor_data[!(cor_data$Var2 %in% colnames(pca_data)),]
+  cor_data$Var1 = factor(cor_data$Var1, levels=colnames(pca_data))
+  
+  plotly::ggplotly(ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill="cor")) + ggplot2::geom_tile(color="darkgrey", size=1) +
+                     ggplot2::scale_fill_gradient2(high = "#6D9EC1", low = "#E46726", mid = "white", 
+                        midpoint = 0, limit = c(-1,1), space = "Lab", name="Correlation") +
+                     ggplot2::theme_bw() + 
+                     ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                                                                                    size = 12, hjust = 1)) ) %>% plotly_config()
+  
+
+
+}
+  
+  
 create_plotqc = function(rgset, sample_names, badSampleCutoff = 10){
   
   plotly::ggplotly(
@@ -374,8 +398,200 @@ create_plotqc = function(rgset, sample_names, badSampleCutoff = 10){
         ggplot2::geom_abline(slope = 1, intercept = -0.5, linetype="dotted", color="darkgrey") +
         ggplot2::theme_bw() +
         ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())
+  ) %>%
+    plotly_config()
+  
+  
+}
+
+create_densityplot = function(Bvalues, n){
+  
+  #Creating density plot using a sample of n CpGs
+  plotly::ggplotly(Bvalues[sample(seq_len(nrow(Bvalues)), n),] %>%
+            tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
+            ggplot2::ggplot(ggplot2::aes(x=.data$Bvalues, color=.data$sample)) + ggplot2::stat_density(position="identity", geom="line") + 
+            ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())) %>%
+            plotly_config()
+            
+}
+
+create_boxplot = function(Bvalues){
+  
+  plotly::ggplotly(Bvalues %>%
+                     tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
+                     ggplot2::ggplot(ggplot2::aes(x=.data$sample,y=.data$Bvalues)) + 
+                     ggplot2::geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2, notch=FALSE) + 
+                     ggplot2::theme_bw() + 
+                     ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())) %>%
+                  plotly_config()
+  
+}
+
+create_snpheatmap = function(snps, sample_names, color_groups){
+  
+  buylrd = c("#313695","#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8",
+             "#FFFFBF", "#FEE090","#FDAE61","#F46D43","#D73027","#A50026")
+  
+  
+  colors.martin = grDevices::colorRampPalette(buylrd)(100)
+  
+  colnames(snps) = sample_names
+  
+  heatmaply::heatmaply(
+    snps,
+    col = colors.martin,
+    Colv = TRUE,
+    key.title = "",
+    na.rm = TRUE,
+    dendogram = "both",
+    scale = "row",
+    col_side_colors = color_groups,
+    distfun = "pearson",
+    hclustfun = function(x)
+      stats::hclust(x, method = "average"),
+    seriate = "mean",
+    row_dend_left = TRUE,
+    showticklabels = c(TRUE, FALSE),
+    branches_lwd = 0.3,
+    plot_method = "plotly",
+    colorbar_xpos = -0.01,
+    colorbar_ypos = 0.3,
+    margins = c(25, 25, NA, 0)
+  ) %>% plotly_config()
+}
+
+
+create_bisulfiteplot = function(rgset, sample_names, threshold = 1.5){
+  
+    colnames(rgset) = sample_names
+
+    ctrlAddress = minfi::getControlAddress(rgset, controlType = "BISULFITE CONVERSION II")
+    ctlWide = as.matrix(minfi::getRed(rgset)[ctrlAddress, , drop = FALSE])
+    ctlR = reshape2::melt(ctlWide, varnames = c("address", "sample"))
+    ctlWide = as.matrix(minfi::getGreen(rgset)[ctrlAddress, , drop = FALSE])
+    ctlG = reshape2::melt(ctlWide, varnames = c("address", "sample"))
+    ctl = rbind(cbind(channel = "Red", ctlR), cbind(channel = "Green", 
+                                                     ctlG))
+  
+    plot_data = tidyr::pivot_wider(ctl, id_cols = 2:4, values_from = "value", names_from = "channel")
+    plot_data$Ratio = plot_data$Red / plot_data$Green
+    plot_data = stats::aggregate(stats::as.formula("Ratio ~ sample"), data = plot_data, FUN=min )
+    plot_data$Status = ifelse(plot_data$Ratio > threshold, "OK", "Failed")
+
+    plotly::ggplotly(ggplot2::ggplot(plot_data) + 
+                       ggplot2::geom_segment(ggplot2::aes_string(y = 0, x = "sample", yend = "Ratio", xend = "sample"), color = "darkgrey") +
+                       ggplot2::geom_point(ggplot2::aes_string(x="sample", y="Ratio", fill="Status"), size=4) +
+                       ggplot2::theme_bw() + 
+                       ggplot2::scale_fill_manual(values = c("#2a9d8f","#e76f51" )) + 
+                       ggplot2::geom_hline(yintercept=1.5, linetype="dashed") + 
+                       ggplot2::xlab("") + 
+                       ggplot2::ylab("Minimum Ratio Converted/Non-Converted") + 
+                       ggplot2::coord_flip() ) %>% plotly_config()
+    
+  
+  
+}
+
+create_sexplot = function(gset, sample_names){
+  
+  sex_info = as.data.frame(minfi::getSex(gset))
+  sex_info$sample = sample_names
+  
+  plotly::ggplotly(ggplot2::ggplot(sex_info, ggplot2::aes_string(x="xMed",y="yMed", color="predictedSex")) +
+             ggplot2::geom_point(size=1.5) + 
+             ggplot2::geom_abline(intercept= -2, slope=1, color="darkgrey", linetype="dashed") +
+             ggplot2::theme_bw()) %>% plotly_config()
+  
+}
+  
+plotly_config = function(plotly_object){
+  
+  plotly_object %>%
+  plotly::config(displaylogo = FALSE, modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"), 
+                   toImageButtonOptions = list(format = "svg")) %>% 
+  plotly::layout(xaxis=list(fixedrange = TRUE)) %>% 
+  plotly::layout(yaxis=list(fixedrange = TRUE))
+}
+
+
+#PLOT AUX FUNCTIONS
+
+cor2 = function(df){
+  
+  stopifnot(inherits(df, "data.frame"))
+  stopifnot(vapply(df, class, FUN.VALUE = character(1)) %in% 
+                                     c("integer"
+                                     , "numeric"
+                                     , "factor"
+                                     , "character"))
+  
+  cor_fun <- function(pos_1, pos_2){
+    
+    # both are numeric
+    if(class(df[[pos_1]]) %in% c("integer", "numeric") &&
+       class(df[[pos_2]]) %in% c("integer", "numeric")){
+      r <- stats::cor(df[[pos_1]]
+                      , df[[pos_2]]
+                      , use = "pairwise.complete.obs"
+      )
+    }
+    
+    # one is numeric and other is a factor/character
+    if(class(df[[pos_1]]) %in% c("integer", "numeric") &&
+       class(df[[pos_2]]) %in% c("factor", "character")){
+      r <- sqrt(
+        summary(
+          stats::lm(df[[pos_1]] ~ as.factor(df[[pos_2]])))[["r.squared"]])
+    }
+    
+    if(class(df[[pos_2]]) %in% c("integer", "numeric") &&
+       class(df[[pos_1]]) %in% c("factor", "character")){
+      r <- sqrt(
+        summary(
+          stats::lm(df[[pos_2]] ~ as.factor(df[[pos_1]])))[["r.squared"]])
+    }
+    
+    # both are factor/character
+    if(class(df[[pos_1]]) %in% c("factor", "character") &&
+       class(df[[pos_2]]) %in% c("factor", "character")){
+      r <- cramersV(df[[pos_1]], df[[pos_2]], simulate.p.value = TRUE)
+    }
+    
+    return(r)
+  } 
+  
+  cor_fun <- Vectorize(cor_fun)
+  
+  # now compute corr matrix
+  corrmat <- outer(seq_len(ncol(df))
+                   , seq_len(ncol(df))
+                   , function(x, y) cor_fun(x, y)
   )
   
+  rownames(corrmat) <- colnames(df)
+  colnames(corrmat) <- colnames(df)
   
+  return(corrmat)
+}
+
+
+cramersV = function (...) 
+{
+  test <- stats::chisq.test(...)
+  chi2 <- test$statistic
+  N <- sum(test$observed)
+  if (test$method == "Chi-squared test for given probabilities") {
+    ind <- which.min(test$expected)
+    max.dev <- test$expected
+    max.dev[ind] <- N - max.dev[ind]
+    max.chi2 <- sum(max.dev^2/test$expected)
+    V <- sqrt(chi2/max.chi2)
+  }
+  else {
+    k <- min(dim(test$observed))
+    V <- sqrt(chi2/(N * (k - 1)))
+  }
+  names(V) <- NULL
+  return(V)
 }
 

@@ -90,7 +90,7 @@ params$rval_sheet_target[,params$name_var]
 
 Before Minfi Normalization, RGChannelSet is filtered:
 
-```{r bad_probes, eval=F, echo=T}
+```{r bad_probes, eval=FALSE, echo=TRUE}
 RGSet [(rowMeans(as.matrix(detectionP(RGSet))) <0.01),]
 ```
 
@@ -191,8 +191,8 @@ __Processed (`r params$normalization_mode`)__
     snps = minfi::getSnpBeta(params$rval_rgset)
 
    colnames(snps) = params$rval_sheet_target[,params$name_var]
-   heatmaply::heatmaply(snps, col = colors.martin, Colv = T, key.title = "", na.rm = T, dendogram = "both", scale = "row", 
-                       col_side_colors = params$rval_sheet_target[,params$donor_var, drop=F], distfun = "pearson", hclustfun = function(x) hclust(x, method = "average"),
+   heatmaply::heatmaply(snps, col = colors.martin, Colv = TRUE, key.title = "", na.rm = TRUE, dendogram = "both", scale = "row", 
+                       col_side_colors = params$rval_sheet_target[,params$donor_var, drop=FALSE], distfun = "pearson", hclustfun = function(x) hclust(x, method = "average"),
                        seriate = "mean", row_dend_left = TRUE, showticklabels = c(TRUE, FALSE), branches_lwd = 0.3, plot_method = "plotly", colorbar_xpos = -0.01,
                        colorbar_ypos=0.3, margins=c(25,25,NA,0) )
         
@@ -222,7 +222,7 @@ After Minfi normalization, we obtained a GenomicRatioSet with some transformatio
 
 Moreover, we also removed SNP loci and added Sex information:
 
-```{r dropsnps, eval=F, echo=T}
+```{r dropsnps, eval=FALSE, echo=TRUE}
 
 minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
 
@@ -253,7 +253,7 @@ The relation variance/average of the fit model was:
 
 Using this model, the t-statistics and p.values are obtained for each contrast :
 
-```{r ebayes, eval=F, echo=T}
+```{r ebayes, eval=FALSE, echo=TRUE}
 contraste = makeContrasts(contrasts=contrast, levels = design)
   fitting = contrasts.fit(fit, contraste)
   fitting = eBayes(fitting, trend=trend, robust=robust)
