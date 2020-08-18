@@ -338,37 +338,37 @@ create_pca = function(Bvalues, pheno_info, pc_x = "PC1", pc_y = "PC2", group, co
 
 create_corrplot = function(Bvalues, sample_target_sheet){
   
-  pca_data = stats::prcomp(t(stats::na.omit(Bvalues)))$x
+  #bvalues should be a dataframe, sample_target_sheet should not have factors.
   
-  clean_sample_sheet = data.frame(apply(sample_target_sheet, 2, function(x) {
-    if(length(unique(x))>1 & length(unique(x)) < length(x)){return(x)}
-    else{return(NA)}
+  pca_data = as.data.frame(stats::prcomp(t(stats::na.omit(Bvalues)))$x)
+  
+  suppressWarnings({
+  clean_sample_sheet = as.data.frame(lapply(sample_target_sheet, function(x) {
+    if(sum(is.na(as.numeric(x))) < length(x)/1.5){return(as.numeric(x))} #if NAs produced with as.numeric is less than a third, we consider the variable numeric
+    else if(length(unique(x)) > 1 & length(unique(x)) < length(x)){return(as.factor(x))} #if the variable is a character, it should have unique values more than 1 and less than total
+    else{return(rep(NA, length(x)))} #if the requeriments are not fullfilled, we discard the variable
   }), stringsAsFactors = FALSE)
   
-  clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)]
+  })
   
-  #converting columns to numeric if is possible, excluding Slide
-  suppressWarnings({
-    clean_sample_sheet = data.table::as.data.table(lapply(clean_sample_sheet, function(x){
-      if (!any(is.na(as.numeric(x)))) {
-        as.numeric(x)
-      }
-      else x
-     }))
-   })
+  clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] #cleaning all NA variables
   
-  clean_sample_sheet[["Slide"]] = as.character(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
+  clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
   
-  cor_input = cbind(pca_data, clean_sample_sheet)
-  cor_data = as.data.frame(cor2(cor_input))
+  #cor_input = cbind(pca_data, clean_sample_sheet)
+  
+  cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
   cor_data$Var1 = row.names(cor_data)
   
   data.table::setDT(cor_data)
   
   cor_data = data.table::melt(cor_data, id.vars="Var1", variable.name="Var2", value.name="cor" )
   
-  cor_data = cor_data[cor_data$Var1 %in% colnames(pca_data),]
-  cor_data = cor_data[!(cor_data$Var2 %in% colnames(pca_data)),]
+  print(cor_data)
+  
+  #Filtering only variables vs PCs
+  #cor_data = cor_data[cor_data$Var1 %in% colnames(pca_data),]
+  #cor_data = cor_data[!(cor_data$Var2 %in% colnames(pca_data)),]
   cor_data$Var1 = factor(cor_data$Var1, levels=colnames(pca_data))
   
   plotly::ggplotly(ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill="cor")) + ggplot2::geom_tile(color="darkgrey", size=1) +
@@ -376,7 +376,7 @@ create_corrplot = function(Bvalues, sample_target_sheet){
                         midpoint = 0, limit = c(-1,1), space = "Lab", name="Correlation") +
                      ggplot2::theme_bw() + 
                      ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
-                                                                                    size = 12, hjust = 1)) ) %>% plotly_config()
+                                                                                    size = 12, hjust = 1)) ) %>% plotly_config(fixedrange = FALSE)
   
 
 
@@ -411,7 +411,7 @@ create_densityplot = function(Bvalues, n){
             tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
             ggplot2::ggplot(ggplot2::aes(x=.data$Bvalues, color=.data$sample)) + ggplot2::stat_density(position="identity", geom="line") + 
             ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())) %>%
-            plotly_config()
+            plotly_config() %>% plotly::toWebGL()
             
 }
 
@@ -479,14 +479,14 @@ create_bisulfiteplot = function(rgset, sample_names, threshold = 1.5){
     plot_data$Status = ifelse(plot_data$Ratio > threshold, "OK", "Failed")
 
     plotly::ggplotly(ggplot2::ggplot(plot_data) + 
-                       ggplot2::geom_segment(ggplot2::aes_string(y = 0, x = "sample", yend = "Ratio", xend = "sample"), color = "darkgrey") +
-                       ggplot2::geom_point(ggplot2::aes_string(x="sample", y="Ratio", fill="Status"), size=4) +
-                       ggplot2::theme_bw() + 
-                       ggplot2::scale_fill_manual(values = c("#2a9d8f","#e76f51" )) + 
-                       ggplot2::geom_hline(yintercept=1.5, linetype="dashed") + 
-                       ggplot2::xlab("") + 
-                       ggplot2::ylab("Minimum Ratio Converted/Non-Converted") + 
-                       ggplot2::coord_flip() ) %>% plotly_config()
+              ggplot2::geom_segment(ggplot2::aes_string(y = 0, x = "sample", yend = "Ratio", xend = "sample"), color = "darkgrey") +
+              ggplot2::geom_point(ggplot2::aes_string(x="sample", y="Ratio", fill="Status"), size=4) +
+              ggplot2::theme_bw() + 
+              ggplot2::scale_fill_manual(values = c("#2a9d8f","#e76f51" )) + 
+              ggplot2::geom_hline(yintercept=1.5, linetype="dashed") + 
+              ggplot2::xlab("") + 
+              ggplot2::ylab("Minimum Ratio Converted/Non-Converted") + 
+              ggplot2::coord_flip() ) %>% plotly_config()
     
   
   
@@ -498,63 +498,71 @@ create_sexplot = function(gset, sample_names){
   sex_info$sample = sample_names
   
   plotly::ggplotly(ggplot2::ggplot(sex_info, ggplot2::aes_string(x="xMed",y="yMed", color="predictedSex")) +
-             ggplot2::geom_point(size=1.5) + 
+             ggplot2::geom_point(size=2) + 
              ggplot2::geom_abline(intercept= -2, slope=1, color="darkgrey", linetype="dashed") +
              ggplot2::theme_bw()) %>% plotly_config()
   
 }
   
-plotly_config = function(plotly_object){
+plotly_config = function(plotly_object, fixedrange=TRUE){
   
   plotly_object %>%
   plotly::config(displaylogo = FALSE, modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d"), 
                    toImageButtonOptions = list(format = "svg")) %>% 
-  plotly::layout(xaxis=list(fixedrange = TRUE)) %>% 
-  plotly::layout(yaxis=list(fixedrange = TRUE))
+  plotly::layout(xaxis=list(fixedrange = fixedrange)) %>% 
+  plotly::layout(yaxis=list(fixedrange = fixedrange))
 }
 
 
 #PLOT AUX FUNCTIONS
 
-cor2 = function(df){
+cor3 = function(df1, df2){
+  #function based on cor2 function of https://gist.github.com/talegari
   
-  stopifnot(inherits(df, "data.frame"))
-  stopifnot(vapply(df, class, FUN.VALUE = character(1)) %in% 
-                                     c("integer"
-                                     , "numeric"
-                                     , "factor"
-                                     , "character"))
+  stopifnot(inherits(df1, "data.frame"))
+  stopifnot(vapply(df1, class, FUN.VALUE = character(1)) %in% 
+              c("integer"
+                , "numeric"
+                , "factor"
+                , "character"))
   
-  cor_fun <- function(pos_1, pos_2){
+  stopifnot(inherits(df2, "data.frame"))
+  stopifnot(vapply(df2, class, FUN.VALUE = character(1)) %in% 
+              c("integer"
+                , "numeric"
+                , "factor"
+                , "character"))
+  
+  cor_fun <- function(pos_df1, pos_df2){
     
     # both are numeric
-    if(class(df[[pos_1]]) %in% c("integer", "numeric") &&
-       class(df[[pos_2]]) %in% c("integer", "numeric")){
-      r <- stats::cor(df[[pos_1]]
-                      , df[[pos_2]]
+    if(class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
+       class(df2[[pos_df2]]) %in% c("integer", "numeric")){
+      r <- stats::cor(df1[[pos_df1]]
+                      , df2[[pos_df2]]
                       , use = "pairwise.complete.obs"
       )
     }
     
     # one is numeric and other is a factor/character
-    if(class(df[[pos_1]]) %in% c("integer", "numeric") &&
-       class(df[[pos_2]]) %in% c("factor", "character")){
+    if(class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
+       class(df2[[pos_df2]]) %in% c("factor", "character")){
       r <- sqrt(
         summary(
-          stats::lm(df[[pos_1]] ~ as.factor(df[[pos_2]])))[["r.squared"]])
+          stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["r.squared"]])
     }
     
-    if(class(df[[pos_2]]) %in% c("integer", "numeric") &&
-       class(df[[pos_1]]) %in% c("factor", "character")){
+    if(class(df2[[pos_df2]]) %in% c("integer", "numeric") &&
+       class(df1[[pos_df1]]) %in% c("factor", "character")){
       r <- sqrt(
         summary(
-          stats::lm(df[[pos_2]] ~ as.factor(df[[pos_1]])))[["r.squared"]])
+          stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["r.squared"]])
     }
     
     # both are factor/character
-    if(class(df[[pos_1]]) %in% c("factor", "character") &&
-       class(df[[pos_2]]) %in% c("factor", "character")){
-      r <- cramersV(df[[pos_1]], df[[pos_2]], simulate.p.value = TRUE)
+    if(class(df1[[pos_df1]]) %in% c("factor", "character") &&
+       class(df2[[pos_df2]]) %in% c("factor", "character")){
+      r <- cramersV(df1[[pos_df1]], df2[[pos_df2]], simulate.p.value = TRUE)
     }
     
     return(r)
@@ -563,13 +571,13 @@ cor2 = function(df){
   cor_fun <- Vectorize(cor_fun)
   
   # now compute corr matrix
-  corrmat <- outer(seq_len(ncol(df))
-                   , seq_len(ncol(df))
+  corrmat <- outer(seq_len(ncol(df1))
+                   , seq_len(ncol(df2))
                    , function(x, y) cor_fun(x, y)
   )
   
-  rownames(corrmat) <- colnames(df)
-  colnames(corrmat) <- colnames(df)
+  rownames(corrmat) <- colnames(df1)
+  colnames(corrmat) <- colnames(df2)
   
   return(corrmat)
 }

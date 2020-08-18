@@ -104,7 +104,7 @@ app_server = function(input, output, session) {
     #We need to check if this step works
     try({RGSet = minfi::read.metharray.exp(targets = targets, verbose = TRUE, force = TRUE)})
     
-    if (!exists("RGSet")){
+    if (!exists("RGSet", inherits = FALSE)){
       showModal(modalDialog(
         title = "reading error",
         "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
@@ -112,7 +112,7 @@ app_server = function(input, output, session) {
         footer = NULL))
     }
     
-    validate(need(exists("RGSet"), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
+    validate(need(exists("RGSet", inherits = FALSE), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
     
     #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
@@ -198,7 +198,7 @@ app_server = function(input, output, session) {
    })
     
     #check if normalization has worked
-    validate(need(exists("gset"), "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."))  
+    validate(need(exists("gset", inherits = FALSE), "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."))  
     
     #remove SNPs to proceed with the analysis and add sex column
     minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
@@ -336,7 +336,6 @@ app_server = function(input, output, session) {
       collapse = "+"
     )))
     
-    #Add check of variable and covariables. Variable must be categorical, covariables can't have a lot of categories
     validate(need(anyDuplicated(pdata[,input$select_limma_voi]) > 0, "Variable selected is not valid. Please, change the variable and try again"))
     
     if (length(input$checkbox_limma_covariables > 0)){
@@ -370,24 +369,27 @@ app_server = function(input, output, session) {
   #Calculation of limma model
   rval_fit = eventReactive(input$button_limma_calculatemodel, {
     
-    if (as.logical(input$select_limma_weights)){
-      try({weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())})
-    }
-    else { weights = NULL}
+    withProgress(message = "Generating linear model...",
+                 value = 3,
+                 max = 6,
+      {if (as.logical(input$select_limma_weights)){
+        try({weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())})
+      }
+        else { weights = NULL}
     
-    try({fit = limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)})
+      try({fit = limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)})
     
-    if (!exists("fit")){
-      rval_generated_limma_model(FALSE) #disable contrast button
-      showModal(modalDialog(
-        title = "lmFit error",
-        "lmFit model has failed. Please, check your options and try again.",
-        easyClose = TRUE,
-        footer = NULL))
-       
-    }
+      if (!exists("fit", inherits = FALSE)){
+        rval_generated_limma_model(FALSE) #disable contrast button
+        showModal(modalDialog(
+          title = "lmFit error",
+          "lmFit model has failed. Please, check your options and try again.",
+          easyClose = TRUE,
+          footer = NULL))
+          }
+    })
     
-    validate(need(exists("fit"), "lmFit model has failed. Please, check your options and try again.")) 
+    validate(need(exists("fit", inherits = FALSE), "lmFit model has failed. Please, check your options and try again.")) 
     
     fit #returning linear model
   })
@@ -396,10 +398,9 @@ app_server = function(input, output, session) {
   # rval_fit() has NAs, we remove the option to trend or robust in eBayes to prevent failure
   observeEvent(input$button_limma_calculatemodel, {
     
-    
-    if (any(is.na(rval_fit()$coefficients))) {
+    if (any(vapply(rval_fit(), function(x){any(is.na(unlist(x))|unlist(x)==Inf|unlist(x)==-Inf)}, logical(1)))) {
       
-      message("NAs detected, trend and robust options are disabled.")
+      message("NAs or Inf values detected, trend and robust options are disabled.")
       
       updateSwitchInput(session, "select_limma_trend", 
                         value = FALSE, 
@@ -408,11 +409,11 @@ app_server = function(input, output, session) {
       updateSwitchInput(session, "select_limma_robust", 
                         value = FALSE, 
                         disabled=TRUE)
-      
     }
+    
     else {
       
-      message("NAs not detected, trend and robust options are enabled")
+      message("NAs or Inf values not detected, trend and robust options are enabled")
       
       updateSwitchInput(session, "select_limma_trend", 
                         value = FALSE, 
@@ -468,15 +469,36 @@ app_server = function(input, output, session) {
   
   #Calculation of differences (eBayes)
   rval_finddifcpgs = eventReactive(input$button_limma_calculatedifs, {
-    find_dif_cpgs(
+    
+    try({dif_cpgs = find_dif_cpgs(
       rval_voi(),
       rval_design(),
       rval_fit(),
       rval_contrasts(),
       trend = as.logical(input$select_limma_trend),
       robust = as.logical(input$select_limma_robust),
-      cores = n_cores
-    )
+      cores = n_cores)
+      })
+    
+    if (!exists("dif_cpgs", inherits = FALSE)){
+      
+      showModal(modalDialog(
+        title = "Contrasts Calculation Error",
+        "An unexpected error has ocurred during contrasts calculation. Please, generate the model again. 
+        If the problem persists, report the error to the mantainer.",
+        easyClose = TRUE,
+        footer = NULL))
+  
+      rval_generated_limma_model(FALSE)
+    }
+    
+    validate(need(exists("dif_cpgs", inherits = FALSE), 
+                  "An unexpected error has ocurred during contrasts calculation. Please, generate the model again. 
+                  If the problem persists, report the error to the mantainer."))
+    
+    dif_cpgs
+    
+    
   })
   
   #Update of heatmap controls
@@ -621,6 +643,7 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
       {
+        
       rgset = rval_rgset()
       gset = rval_gset()
       fit = rval_fit()
@@ -647,7 +670,7 @@ app_server = function(input, output, session) {
       
       setProgress(value=3, message = "Compressing RObjects...")
       utils::zip(file, objects, flags = "-j9X")
-      })
+        })
     }
   )
   

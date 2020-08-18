@@ -37,7 +37,7 @@ app_ui <- function(request) {
       "Input",
       titlePanel("Input sheet file"),
       sidebarLayout(
-        sidebarPanel(
+        sidebarPanel(width = 3,
           fileInput(
             inputId = "fileinput_input",
             "Upload Compress Experiment Directory (zip):",
@@ -70,10 +70,10 @@ app_ui <- function(request) {
               multiple = TRUE
             ),
             h3(),
-            actionButton("button_input_next", "Proceed to the next step")
+            actionButton("button_input_next", "Continue")
           )
         ),
-        mainPanel(
+        mainPanel(width = 9,
           DT::DTOutput("samples_table") %>% shinycssloaders::withSpinner()
         )
       )
@@ -85,17 +85,17 @@ app_ui <- function(request) {
       "Normalization",
       titlePanel("Normalization"),
       sidebarLayout(
-        sidebarPanel(
+        sidebarPanel(width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
           #actionButton("button_minfi_check", "Check"),
           actionButton("button_minfi_select", "Select")
         ),
-        mainPanel(
+        mainPanel(width=9,
           tabsetPanel(
             
             tabPanel(
               "Quality Control",
-              h4("Signal"),
+              h4("Overall Signal"),
               plotly::plotlyOutput("graph_minfi_qcraw") %>% shinycssloaders::withSpinner(),
               h4("Bisulfite Conversion II"),
               plotly::plotlyOutput("graph_minfi_bisulfiterawII")  %>% shinycssloaders::withSpinner()
@@ -164,8 +164,7 @@ app_ui <- function(request) {
       "DMPs",
       titlePanel("Differentially Methylated Positions"),
       sidebarLayout(
-        sidebarPanel(
-          width = 3,
+        sidebarPanel(width = 3,
           selectInput("select_limma_voi", "Select Variable of Interest", c()),
           
           pickerInput(
@@ -196,8 +195,7 @@ app_ui <- function(request) {
           #actionButton("button_limma_calculatedifs", "Calculate Contrasts")
           
         ),
-        mainPanel(
-          width = 9,
+        mainPanel(width = 9,
           tabsetPanel(
             id = "tabset_limma",
             tabPanel(
