@@ -364,8 +364,6 @@ create_corrplot = function(Bvalues, sample_target_sheet){
   
   cor_data = data.table::melt(cor_data, id.vars="Var1", variable.name="Var2", value.name="cor" )
   
-  print(cor_data)
-  
   #Filtering only variables vs PCs
   #cor_data = cor_data[cor_data$Var1 %in% colnames(pca_data),]
   #cor_data = cor_data[!(cor_data$Var2 %in% colnames(pca_data)),]
@@ -404,26 +402,26 @@ create_plotqc = function(rgset, sample_names, badSampleCutoff = 10){
   
 }
 
-create_densityplot = function(Bvalues, n){
+create_densityplot = function(Bvalues, n=200000){
   
   #Creating density plot using a sample of n CpGs
   plotly::ggplotly(Bvalues[sample(seq_len(nrow(Bvalues)), n),] %>%
             tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
             ggplot2::ggplot(ggplot2::aes(x=.data$Bvalues, color=.data$sample)) + ggplot2::stat_density(position="identity", geom="line") + 
             ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())) %>%
-            plotly_config() %>% plotly::toWebGL()
+            plotly_config() #%>% plotly::toWebGL()
             
 }
 
-create_boxplot = function(Bvalues){
+create_boxplot = function(Bvalues, n=200000){
   
-  plotly::ggplotly(Bvalues %>%
-                     tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
-                     ggplot2::ggplot(ggplot2::aes(x=.data$sample,y=.data$Bvalues)) + 
-                     ggplot2::geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2, notch=FALSE) + 
-                     ggplot2::theme_bw() + 
-                     ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank())) %>%
-                  plotly_config()
+  Bvalues[sample(seq_len(nrow(Bvalues)), n),] %>%
+    tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)), names_to = "sample", values_to="Bvalues") %>% 
+    ggplot2::ggplot(ggplot2::aes(x=.data$sample,y=.data$Bvalues)) + 
+    ggplot2::geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2, notch=FALSE, fill="#56B1F7") + 
+    ggplot2::theme_bw() + 
+    ggplot2::theme(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank()) + 
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -45, hjust=0))
   
 }
 
@@ -503,6 +501,17 @@ create_sexplot = function(gset, sample_names){
              ggplot2::theme_bw()) %>% plotly_config()
   
 }
+
+create_plotSA = function(fit){
+  
+  plot_data = data.frame(Amean = fit$Amean, sigma = sqrt(fit$sigma))
+
+  plotly::ggplotly(ggplot2::ggplot(plot_data, ggplot2::aes_string(x="Amean", y="sigma") ) +
+             ggplot2::geom_bin2d(bins=500) + 
+             ggplot2::labs(x="Amean", y="sqrt(sigma)") + 
+             ggplot2::theme_bw()) %>% plotly_config()
+}
+  
   
 plotly_config = function(plotly_object, fixedrange=TRUE){
   

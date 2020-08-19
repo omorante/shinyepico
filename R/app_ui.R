@@ -29,13 +29,14 @@ hclust_methods = c("single",
 #' @import shinyWidgets
 #' @noRd
 app_ui <- function(request) {
+  
   navbarPage(
     "\u00C9PICo!",
     id = "navbar_epic",
     theme = shinythemes::shinytheme("sandstone") ,
     tabPanel(
       "Input",
-      titlePanel("Input sheet file"),
+      titlePanel("Load iDATs and sample sheet"),
       sidebarLayout(
         sidebarPanel(width = 3,
           fileInput(
@@ -182,7 +183,7 @@ app_ui <- function(request) {
           
 
           switchInput(
-            inputId = "select_limma_weights",
+              inputId = "select_limma_weights",
             label = "Array Weights", 
             labelWidth = "80px",
             value = FALSE,
@@ -202,7 +203,7 @@ app_ui <- function(request) {
               "Model diagnosis",
               value = "model_diagnosis",
               h4("Sigma vs A plot"),
-              plotOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
+              plotly::plotlyOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
               #h4("Log-intensity ratio vs Average Plot"),
               #plotOutput("graph_limma_plotMA") %>% shinycssloaders::withSpinner()
             ),
@@ -305,7 +306,7 @@ app_ui <- function(request) {
     
     tabPanel(
       "Export",
-      
+      shinyjs::useShinyjs(),
       h3("Download RObjects:"),
       downloadButton("download_export_robjects"),
       p(

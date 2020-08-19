@@ -3,7 +3,6 @@
 export(run_shinyepico)
 import(shiny)
 import(shinyWidgets)
-importFrom(config,get)
-importFrom(golem,with_golem_options)
 importFrom(rlang,.data)
 importFrom(shiny,shinyApp)
+importFrom(shiny,shinyOptions)

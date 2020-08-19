@@ -9,7 +9,7 @@
 #' @return None
 #' @examples {if(interactive()){run_shinyepico()}}
 #' @importFrom shiny shinyApp
-#' @importFrom golem with_golem_options
+#' @importFrom shiny shinyOptions
 #' @export
 #' 
 run_shinyepico <- function(
@@ -19,12 +19,14 @@ run_shinyepico <- function(
   port = NULL
 
 ) {
-  with_golem_options(
-    app = shinyApp(
-      ui = app_ui, 
-      server = app_server, options = list(host = host, port=port)
-    ), 
-    golem_opts = list(n_cores = n_cores, max_upload_size = max_upload_size * 1024^2)
-  )
+    
+    shinyOptions(n_cores = n_cores, 
+                 shiny.maxRequestSize = max_upload_size * 1024^2
+                 )
+  
+    shinyApp(
+     ui = app_ui, server = app_server, 
+     options = list(host = host, port=port, launch.browser=TRUE))  
+  
 }
 

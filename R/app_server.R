@@ -8,14 +8,15 @@
 #' @noRd
 
 app_server = function(input, output, session) {
-
   
   #PERFORMANCE SETTINGS
-  n_cores = golem::get_golem_options("n_cores")
-  options(shiny.maxRequestSize = golem::get_golem_options("max_upload_size"))
+  n_cores = getShinyOption("n_cores")
+  options(shiny.maxRequestSize = getShinyOption("shiny.maxRequestSize"))
   
   #INITIALIZE REACTIVE VARIABLES
   rval_generated_limma_model = reactiveVal(value = FALSE)
+  rval_analysis_finished = reactiveVal(value = FALSE)
+  
   
   #Load button only shows if file is uploaded
   output$ui_button_input_load = renderUI({
@@ -113,6 +114,10 @@ app_server = function(input, output, session) {
     }
     
     validate(need(exists("RGSet", inherits = FALSE), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
+    
+    #setting number of PCs
+    updateSelectInput(session, "select_minfi_pcaplot_pcx", choices = paste0("PC", seq_len(nrow(targets))), selected = "PC1")
+    updateSelectInput(session, "select_minfi_pcaplot_pcy", choices = paste0("PC", seq_len(nrow(targets))), selected = "PC2")
     
     #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
@@ -229,8 +234,11 @@ app_server = function(input, output, session) {
   # Minfi Graphics
   
   #Density plots
-  output$graph_minfi_densityplotraw = plotly::renderPlotly(create_densityplot(rval_rgset_getBeta(), 200000))
-  output$graph_minfi_densityplot =  plotly::renderPlotly(create_densityplot(rval_gset_getBeta(), 200000))
+  rval_plot_densityplotraw = reactive(create_densityplot(rval_rgset_getBeta(), 200000))
+  rval_plot_densityplot = reactive(create_densityplot(rval_gset_getBeta(), 200000))
+  
+  output$graph_minfi_densityplotraw = plotly::renderPlotly(rval_plot_densityplotraw())
+  output$graph_minfi_densityplot = plotly::renderPlotly(rval_plot_densityplot())
   
   #PCA
   rval_plot_pca = reactive(create_pca(Bvalues=rval_gset_getBeta(), pheno_info=rval_sheet_target(), group=input$select_input_samplenamevar, 
@@ -242,41 +250,47 @@ app_server = function(input, output, session) {
   
   #Correlations
   
-  output$graph_minfi_corrplot = plotly::renderPlotly(create_corrplot(rval_gset_getBeta(), rval_sheet_target()))
+  rval_plot_corrplot = reactive(create_corrplot(rval_gset_getBeta(), rval_sheet_target()))
+  
+  output$graph_minfi_corrplot = plotly::renderPlotly(rval_plot_corrplot())
   
   #Boxplots
-  output$graph_minfi_boxplotraw = renderCachedPlot(graphics::boxplot(as.matrix(rval_rgset_getBeta())),
-                                                  paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
   
-  output$graph_minfi_boxplot = renderCachedPlot(graphics::boxplot(as.matrix(rval_gset_getBeta())),
-                                               paste0(input$select_minfi_norm, "boxplot", input$selected_samples))
-  
-
+  rval_plot_boxplotraw = reactive(create_boxplot(rval_rgset_getBeta()))
+  rval_plot_boxplot = reactive(create_boxplot(rval_gset_getBeta()))
+ 
+  output$graph_minfi_boxplotraw = renderPlot(rval_plot_boxplotraw())
+  output$graph_minfi_boxplot = renderPlot(rval_plot_boxplot())
   
   
   #QC plots
-  output$graph_minfi_qcraw = plotly::renderPlotly(create_plotqc(rval_rgset(), rval_sheet_target()[,input$select_input_samplenamevar])) 
-  output$graph_minfi_bisulfiterawII = plotly::renderPlotly(create_bisulfiteplot(rval_rgset(), rval_sheet_target()[,input$select_input_samplenamevar]))
+  
+  rval_plot_qcraw = reactive(create_plotqc(rval_rgset(), rval_sheet_target()[,input$select_input_samplenamevar]))
+  rval_plot_bisulfiterawII = reactive(create_bisulfiteplot(rval_rgset(), rval_sheet_target()[,input$select_input_samplenamevar]))
+  
+  output$graph_minfi_qcraw = plotly::renderPlotly(rval_plot_qcraw()) 
+  output$graph_minfi_bisulfiterawII = plotly::renderPlotly(rval_plot_bisulfiterawII())
 
   #Sex prediction
-  #output$graph_minfi_sex = renderCachedPlot(minfi::plotSex(rval_gset(), 
-  #                                          id = rval_sheet_target()[, input$select_input_samplenamevar] ),
-  #                                          paste0(input$select_minfi_norm, "sex", input$selected_samples))
+
+  rval_plot_sexprediction = reactive(create_sexplot(rval_gset(), rval_sheet_target()[,input$select_input_samplenamevar]))
   
-  output$graph_minfi_sex = plotly::renderPlotly(create_sexplot(rval_gset(), rval_sheet_target()[,input$select_input_samplenamevar]))
+  output$graph_minfi_sex = plotly::renderPlotly(rval_plot_sexprediction())
   
   #SNPs heatmap
-  output$graph_minfi_snps = plotly::renderPlotly(create_snpheatmap(minfi::getSnpBeta(rval_rgset()), 
-                                                 rval_sheet_target()[, input$select_input_samplenamevar],
-                                                 rval_sheet_target()[, input$select_input_donorvar]))
+  
+  rval_plot_snpheatmap = reactive(create_snpheatmap(minfi::getSnpBeta(rval_rgset()), 
+                                                     rval_sheet_target()[, input$select_input_samplenamevar],
+                                                     rval_sheet_target()[, input$select_input_donorvar]))
+  
+  output$graph_minfi_snps = plotly::renderPlotly(rval_plot_snpheatmap())
   
   
   
   #Update of next form and move to Limma
   observeEvent(input$button_minfi_select,
                {
-                 
-                 
+                
                  updateSelectInput(
                    session,
                    "select_limma_voi",
@@ -381,6 +395,8 @@ app_server = function(input, output, session) {
     
       if (!exists("fit", inherits = FALSE)){
         rval_generated_limma_model(FALSE) #disable contrast button
+        rval_analysis_finished(FALSE) #disable download buttons
+        
         showModal(modalDialog(
           title = "lmFit error",
           "lmFit model has failed. Please, check your options and try again.",
@@ -457,8 +473,9 @@ app_server = function(input, output, session) {
   
   
   #render of plots and tables
-  #output$graph_limma_plotMA = renderPlot(limma::plotMA(rval_gset_getM(), main = ""))
-  output$graph_limma_plotSA = renderPlot(limma::plotSA(rval_fit()))
+  
+  rval_plot_plotSA = reactive(create_plotSA(rval_fit()))
+  output$graph_limma_plotSA = plotly::renderPlotly(rval_plot_plotSA())
   
   
   
@@ -490,20 +507,22 @@ app_server = function(input, output, session) {
         footer = NULL))
   
       rval_generated_limma_model(FALSE)
+      rval_analysis_finished(FALSE)
     }
     
     validate(need(exists("dif_cpgs", inherits = FALSE), 
                   "An unexpected error has ocurred during contrasts calculation. Please, generate the model again. 
                   If the problem persists, report the error to the mantainer."))
     
+    rval_analysis_finished(TRUE)
     dif_cpgs
-    
     
   })
   
   #Update of heatmap controls
   observeEvent(input$button_limma_calculatedifs, {
     updateTabsetPanel(session, "tabset_limma", "differential_cpgs")
+    
     updateSelectInput(
       session,
       "select_limma_groups2plot",
@@ -521,6 +540,9 @@ app_server = function(input, output, session) {
 
     #force rval_filteredlist
     rval_filteredlist()
+    
+    #click heatmap button to get default graph
+    shinyjs::click("button_limma_heatmapcalc")
   })
   
   #Calculation of filtered list
@@ -553,18 +575,24 @@ app_server = function(input, output, session) {
     join_table = rval_gset_getBeta()[dif_cpgs, ]
     join_table$cpg = NULL
     
-    validate(need(!(is.null(join_table)) & nrow(join_table) > 0,  "No differences were found with these criteria" ))
-    validate(need(nrow(join_table) <= 10000, "Too many differences with these criteria (>10000), they can not be plotted" )) 
+    #validate(need(!(is.null(join_table)) & nrow(join_table) > 0,  "No differences were found with these criteria" ))
+    #validate(need(nrow(join_table) <= 10000, "Too many differences with these criteria (>10000), they can not be plotted" )) 
     
-    join_table
+    #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap
+    if(is.null(join_table) | nrow(join_table) < 2 | nrow(join_table) > 10000)
+      NULL
+    else
+      join_table
+    
   })
   
   
   plot_heatmap = eventReactive(input$button_limma_heatmapcalc,
     
      {
-
-      
+       
+      validate(need(!is.null(rval_filteredlist2heatmap()), "Differences are not in the plotting range (<10000, >1)" )) 
+       
       create_heatmap(
       rval_filteredlist2heatmap(),
       factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
@@ -579,6 +607,7 @@ app_server = function(input, output, session) {
     )
    }
   )
+  
   make_table = eventReactive(
     input$button_limma_heatmapcalc,
     data.table::rbindlist(rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot],
@@ -623,11 +652,29 @@ app_server = function(input, output, session) {
   
   output$table_limma_difcpgs = renderTable(make_table())
   
-  
 
-  
-  
   #EXPORT
+  
+  #Disable or enable buttons depending on software state
+  
+  observeEvent(rval_analysis_finished(), 
+          if(rval_analysis_finished())
+            {
+              shinyjs::enable("download_export_robjects")
+              shinyjs::enable("download_export_filteredbeds")
+              shinyjs::enable("download_export_markdown")
+              shinyjs::enable("download_export_heatmaps")
+          }
+          
+          else
+            {
+              shinyjs::disable("download_export_robjects")
+              shinyjs::disable("download_export_filteredbeds")
+              shinyjs::disable("download_export_markdown")
+              shinyjs::disable("download_export_heatmaps")
+            }
+          )
+  
   rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
   
   #R Objects
@@ -715,41 +762,56 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 3,
        {
-       params = list(
-        name_var = input$select_input_samplenamevar,
-        grouping_var = input$select_input_groupingvar,
-        donor_var = input$select_input_donorvar,
-        normalization_mode = input$select_minfi_norm,
-        rval_rgset = rval_rgset(),
-        rval_gset = rval_gset(),
-        rval_sheet_target = rval_sheet_target(),
-        rval_fit = rval_fit(),
-        rval_design = rval_design(),
-        rval_filteredlist = rval_filteredlist(),
-        rval_filteredlist2heatmap = rval_filteredlist2heatmap(),
-        rval_contrasts = rval_contrasts(),
-        limma_ebayes_trend = input$select_limma_trend,
-        limma_ebayes_robust = input$select_limma_robust,
-        limma_voi = input$select_limma_voi,
-        limma_covar = input$checkbox_limma_covariables,
-        groups2plot = input$select_limma_groups2plot,
-        contrasts2plot = input$select_limma_contrasts2plot,
-        Colv = input$select_limma_colv,
-        clusteralg = input$select_limma_clusteralg,
-        distance = input$select_limma_clusterdist,
-        scale = input$select_limma_scale,
-        max_fdr = input$slider_limma_adjpvalue,
-        min_deltabeta = input$slider_limma_deltab,
-        max_pvalue = input$slider_limma_pvalue
-      )
       
-      print(file)
+      
+         params = list(
+           rval_sheet = rval_sheet(),
+           rval_sheet_target = rval_sheet_target(), 
+           name_var = input$select_input_samplenamevar,
+           grouping_var = input$select_input_groupingvar,
+           donor_var = input$select_input_donorvar,
+           normalization_mode = input$select_minfi_norm,
+           limma_voi = input$select_limma_voi,
+           limma_covar = input$checkbox_limma_covariables,
+           limma_arrayweights = input$select_limma_weights,
+           limma_ebayes_trend = input$select_limma_trend,
+           limma_ebayes_robust = input$select_limma_robust,
+           rval_design = rval_design(),
+           rval_contrasts = rval_contrasts(),
+           min_deltabeta = input$slider_limma_deltab,
+           max_fdr = input$slider_limma_adjpvalue,
+           max_pvalue = input$slider_limma_pvalue,
+           clusteralg = input$select_limma_clusteralg,
+           groups2plot = input$select_limma_groups2plot,
+           contrasts2plot = input$select_limma_contrasts2plot,
+           Colv = input$select_limma_colv,
+           distance = input$select_limma_clusterdist,
+           scale = input$select_limma_scale,
+           plot_densityplotraw = rval_plot_densityplotraw(),
+           plot_densityplot = rval_plot_densityplot(),
+           plot_pcaplot = rval_plot_pca()[["graph"]],
+           plot_heatmapsnps = rval_plot_snpheatmap(),
+           plot_corrplot = rval_plot_corrplot(),
+           plot_boxplotraw = rval_plot_boxplotraw(),
+           plot_boxplot = rval_plot_boxplot(),
+           plot_qcraw = rval_plot_qcraw(),
+           plot_bisulfiterawII = rval_plot_bisulfiterawII(),
+           plot_sexprediction = rval_plot_sexprediction(),
+           plot_snpheatmap = rval_plot_snpheatmap(),
+           plot_plotSA = rval_plot_plotSA(),
+           table_pcaplot = rval_plot_pca()[["info"]],
+           data_sexprediction = minfi::pData(rval_gset())[["predictedSex"]],
+           table_dmps = make_table(),
+           filteredlist2heatmap = rval_filteredlist2heatmap()
+         )
+      
       newenv = new.env(parent = globalenv())
       newenv$create_heatmap = create_heatmap
       
-      rmarkdown::render(
+      render_file = rmarkdown::render(
         input = system.file("report.Rmd", package = "shinyepico"),
         output_file = file,
+        run_pandoc = TRUE,
         params = params,
         envir = newenv
       )
