@@ -344,7 +344,7 @@ create_corrplot = function(Bvalues, sample_target_sheet){
   
   suppressWarnings({
   clean_sample_sheet = as.data.frame(lapply(sample_target_sheet, function(x) {
-    if(sum(is.na(as.numeric(x))) < length(x)/1.5){return(as.numeric(x))} #if NAs produced with as.numeric is less than a third, we consider the variable numeric
+    if(sum(is.na(as.numeric(x))) < length(x) * 0.75){return(as.numeric(x))} #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
     else if(length(unique(x)) > 1 & length(unique(x)) < length(x)){return(as.factor(x))} #if the variable is a character, it should have unique values more than 1 and less than total
     else{return(rep(NA, length(x)))} #if the requeriments are not fullfilled, we discard the variable
   }), stringsAsFactors = FALSE)
@@ -355,8 +355,6 @@ create_corrplot = function(Bvalues, sample_target_sheet){
   
   clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
   
-  #cor_input = cbind(pca_data, clean_sample_sheet)
-  
   cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
   cor_data$Var1 = row.names(cor_data)
   
@@ -364,9 +362,6 @@ create_corrplot = function(Bvalues, sample_target_sheet){
   
   cor_data = data.table::melt(cor_data, id.vars="Var1", variable.name="Var2", value.name="cor" )
   
-  #Filtering only variables vs PCs
-  #cor_data = cor_data[cor_data$Var1 %in% colnames(pca_data),]
-  #cor_data = cor_data[!(cor_data$Var2 %in% colnames(pca_data)),]
   cor_data$Var1 = factor(cor_data$Var1, levels=colnames(pca_data))
   
   plotly::ggplotly(ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill="cor")) + ggplot2::geom_tile(color="darkgrey", size=1) +
@@ -527,6 +522,8 @@ plotly_config = function(plotly_object, fixedrange=TRUE){
 
 cor3 = function(df1, df2){
   #function based on cor2 function of https://gist.github.com/talegari
+  #This function handle every possible combination of variable types to calculate correlations. However,
+  # we only used it to compare numeric variables (PCs) with numeric or factor variables.
   
   stopifnot(inherits(df1, "data.frame"))
   stopifnot(vapply(df1, class, FUN.VALUE = character(1)) %in% 

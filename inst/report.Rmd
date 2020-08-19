@@ -57,7 +57,7 @@ params:
   filteredlist2heatmap : NA
 ---
 
-This report was created with ÉPICo ShinyApp.<br>
+This report was created with ShinyÉPICo. <br>
 (c) 2020 Octavio Morante-Palacios
 
 ```{r setup, include=FALSE}
@@ -89,6 +89,7 @@ cat(params$rval_sheet[[params$name_var]][!(params$rval_sheet[[params$name_var]] 
 
 ```
 
+<br>
 
 ## Bad probes filtering
 
@@ -102,7 +103,7 @@ RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) <0.01),]
 
 ## QC and Array Normalization
 
-The selected normalization method of Minfi was `r params$normalization_mode`. In the next plots, we can see the comparison of the processed data with the raw data.
+The selected normalization method was __`r params$normalization_mode`__. In the next plots, we can see the comparison of the processed data with the raw data.
 
 <br>
 
@@ -173,11 +174,11 @@ Correlating principal components with variables we can determine if Beta values 
 params$plot_corrplot
 ```
 
-(Not useful variables are discarded and the variable type is autodetected. For more information about the methods please read the user guide)
+(Not useful variables are discarded and the variable type is autodetected. For more information about the methods please read the user guide.)
 
 ### SNPs Heatmap
 
-The methylation array has 65 specific SNP probes. These SNP probes are intended to be used for sample tracking and sample mixups. Each SNP probe ought to have values clustered around 3 distinct values corresponding to homo-, and hetero-zygotes.' Therefore, different samples of the same donor should cluster together.
+The methylation array has 65 specific SNP probes. These SNP probes are intended to be used for sample tracking and sample mixups. Each SNP probe ought to have values clustered around 3 distinct values corresponding to homo-, and hetero-zygotes. Therefore, different samples of the same donor should cluster together.
 
 __Processed (`r params$normalization_mode`)__
 
@@ -205,6 +206,7 @@ minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
 
 ```
 
+<br>
 
 ## Differentially Methylated Positions (DMPs) calculation
 
@@ -289,9 +291,18 @@ if(!is.null(params$filteredlist2heatmap))
   create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in%         params$groups2plot], levels = params$groups2plot), groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE) else
   cat("Differences are not in the plotting range (<10000, >1)")
   
+```
 
+<br>
 
+## System and analysis information
 
+This report was generated on __`r Sys.Date()`__ at __`r Sys.time()`__ .
+
+The session information was the following:
+
+```{r system_info, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+print(sessionInfo())
 ```
 
 
