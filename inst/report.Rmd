@@ -297,7 +297,7 @@ if(!is.null(params$filteredlist2heatmap))
 
 ## System and analysis information
 
-This report was generated on __`r Sys.Date()`__ at __`r Sys.time()`__ .
+This report was generated at __`r Sys.time()`__.
 
 The session information was the following:
 

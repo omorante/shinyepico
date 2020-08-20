@@ -137,6 +137,8 @@ app_ui <- function(request) {
                                  selected = "PC2", 
                                  label = "Select y variable"))
                      ),
+                    
+                     actionButton("button_pca_update", "Update"),
             
             tabPanel(
               "Correlations",
@@ -203,7 +205,7 @@ app_ui <- function(request) {
               "Model diagnosis",
               value = "model_diagnosis",
               h4("Sigma vs A plot"),
-              plotly::plotlyOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
+              plotOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
               #h4("Log-intensity ratio vs Average Plot"),
               #plotOutput("graph_limma_plotMA") %>% shinycssloaders::withSpinner()
             ),
@@ -347,13 +349,11 @@ app_ui <- function(request) {
       ),
       p(
         "\u00C9PICo! is a graphical interface based on Shiny. It is intended for importing and normalizing methylation EPIC array data, and also for following a statistical analysis to
-        detect differentially methylated CpGs, and plotting them in useful and customable heatmaps. For this purpose, several packages, such as minfi, limma, gplots, heatmaply, shinycssloaders,
-        doParallel and data.table, are used."
+        detect differentially methylated CpGs, and plotting them in useful and customable heatmaps."
       ),
       p(
         "For suggestions or bug reports, please send me an email or use the",
-        tags$a(href = "https://github.com/omorante", "GitHub"),
-        "forum."
+        tags$a(href = "https://github.com/omorante", "GitHub"), "forum."
       )
       
     )

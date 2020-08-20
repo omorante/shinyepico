@@ -241,8 +241,10 @@ app_server = function(input, output, session) {
   output$graph_minfi_densityplot = plotly::renderPlotly(rval_plot_densityplot())
   
   #PCA
-  rval_plot_pca = reactive(create_pca(Bvalues=rval_gset_getBeta(), pheno_info=rval_sheet_target(), group=input$select_input_samplenamevar, 
-                                      pc_x=input$select_minfi_pcaplot_pcx, pc_y=input$select_minfi_pcaplot_pcy, color=input$select_minfi_pcaplot_color))
+  rval_plot_pca = eventReactive(input$button_pca_update, 
+                      create_pca(Bvalues=rval_gset_getBeta(), pheno_info=rval_sheet_target(), 
+                          group=input$select_input_samplenamevar, pc_x=input$select_minfi_pcaplot_pcx, 
+                          pc_y=input$select_minfi_pcaplot_pcy, color=input$select_minfi_pcaplot_color))
   
   output$graph_minfi_pcaplot = plotly::renderPlotly(rval_plot_pca()[["graph"]])
   output$table_minfi_pcaplot = renderTable(rval_plot_pca()[["info"]], rownames = TRUE)
@@ -726,27 +728,33 @@ app_server = function(input, output, session) {
   
   #Filtered BEDs
   output$download_export_filteredbeds  = downloadHandler("filtered_beds.zip",
+                                                         
     content = function(file) {
       
-      filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), cores=n_cores)
+      withProgress(message = "Generating BED files...",
+                   value = 1,
+                   max = 4,
+      {
+      
+        filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), cores=n_cores)
 
       
-      lapply(names(filtered_beds), function(x) {
-        data.table::fwrite(
+        lapply(names(filtered_beds), function(x) {
+         data.table::fwrite(
           filtered_beds[[x]],
           file = paste0(dirname(file), "/", x, ".bed"),
           sep = "\t",
           quote = FALSE,
           col.names = FALSE,
-          row.names = FALSE
-        )
-      })
+          row.names = FALSE)
+         })
       
       objects = list.files(path = dirname(file),
                            full.names = TRUE,
                            pattern = "*.bed")
       
       utils::zip(file, objects, flags = "-j9X")
+      })
     }
   )
   
@@ -828,21 +836,28 @@ app_server = function(input, output, session) {
   output$download_export_heatmaps = downloadHandler(
     "Custom_heatmap.pdf",
     content = function(file) {
-      grDevices::pdf(file = file,
+      
+      withProgress(message = "Generating plot...",
+                   value = 1,
+                   max = 4,
+      {
+        grDevices::pdf(file = file,
                      height = 11.71,
                      width = 8.6)
-      create_heatmap(
-        rval_filteredlist2heatmap(),
-        factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot], levels =
-                                 input$select_limma_groups2plot),
-        groups2plot = rval_voi() %in% input$select_limma_groups2plot,
-        Colv = as.logical(input$select_limma_colv),
-        clusteralg = input$select_limma_clusteralg,
-        distance = input$select_limma_clusterdist,
-        scale = input$select_limma_scale,
-        static = TRUE
-      )
-      grDevices::dev.off()
+        create_heatmap(
+         rval_filteredlist2heatmap(),
+         factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot], 
+                                levels = input$select_limma_groups2plot),
+         groups2plot = rval_voi() %in% input$select_limma_groups2plot,
+         Colv = as.logical(input$select_limma_colv),
+         clusteralg = input$select_limma_clusteralg,
+         distance = input$select_limma_clusterdist,
+         scale = input$select_limma_scale,
+         static = TRUE)
+        
+       grDevices::dev.off()
+     })
     }
-  )
+   )
+  
 }
