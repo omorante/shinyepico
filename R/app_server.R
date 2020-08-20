@@ -580,14 +580,13 @@ app_server = function(input, output, session) {
     join_table = rval_gset_getBeta()[dif_cpgs, ]
     join_table$cpg = NULL
     
-    #validate(need(!(is.null(join_table)) & nrow(join_table) > 0,  "No differences were found with these criteria" ))
-    #validate(need(nrow(join_table) <= 10000, "Too many differences with these criteria (>10000), they can not be plotted" )) 
-    
-    #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap
+    #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
     if(is.null(join_table) | nrow(join_table) < 2 | nrow(join_table) > 10000)
-      NULL
+      {shinyjs::disable("download_export_heatmaps")
+      NULL}
     else
-      join_table
+      {shinyjs::enable("download_export_heatmaps")
+       join_table}
     
   })
   
