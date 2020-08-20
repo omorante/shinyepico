@@ -623,7 +623,7 @@ app_server = function(input, output, session) {
     
     count_df = data.table::rbindlist(rval_filteredlist(), idcol = "contrast")
     
-    if(ncol(count_df) > 0 & !is.null(count_df)){
+    if(nrow(count_df) > 0 & !is.null(count_df)){
       count_df = count_df %>% 
                dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
                dplyr::group_by(.data$contrast, .data$type)  %>%
