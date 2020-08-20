@@ -111,6 +111,8 @@ app_server = function(input, output, session) {
         "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
         easyClose = TRUE,
         footer = NULL))
+      
+      shinyjs::disable("button_minfi_select")
     }
     
     validate(need(exists("RGSet", inherits = FALSE), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
@@ -145,6 +147,8 @@ app_server = function(input, output, session) {
                               {rval_rgset()
                                 updateNavbarPage(session, "navbar_epic", "Normalization")
                               })
+        
+        shinyjs::enable("button_minfi_select")
       })
   
   
@@ -159,10 +163,6 @@ app_server = function(input, output, session) {
                  max = 4,
     {
       
-    if (is.null(rval_rgset())){
-      stop() # this function doesn't continue if rval_rgset doesn't exist.
-    }
-    
    try({
     if (input$select_minfi_norm == "Illumina") {
       gset = minfi::mapToGenome(minfi::ratioConvert( 
@@ -214,13 +214,13 @@ app_server = function(input, output, session) {
   
   
   #getBeta/getM reactives
-  rval_rgset_getBeta = reactive({
+  rval_rgset_getBeta = eventReactive(rval_rgset(), {
     bvalues = as.data.frame(minfi::getBeta(rval_rgset()))
     colnames(bvalues) = input$selected_samples
     bvalues
   })
   
-  rval_gset_getBeta = reactive({
+  rval_gset_getBeta = eventReactive(rval_gset(), {
     bvalues = as.data.frame(minfi::getBeta(rval_gset()))
     colnames(bvalues) = input$selected_samples
     bvalues
@@ -293,6 +293,9 @@ app_server = function(input, output, session) {
   observeEvent(input$button_minfi_select,
                {
                 
+                 #check if normalization has worked
+                 validate(need(!is.null(rval_gset()), "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."))  
+                 
                  updateSelectInput(
                    session,
                    "select_limma_voi",

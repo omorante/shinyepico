@@ -88,8 +88,7 @@ app_ui <- function(request) {
       sidebarLayout(
         sidebarPanel(width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
-          #actionButton("button_minfi_check", "Check"),
-          actionButton("button_minfi_select", "Select")
+          shinyjs::disabled(actionButton("button_minfi_select", "Select"))
         ),
         mainPanel(width=9,
           tabsetPanel(
@@ -135,10 +134,11 @@ app_ui <- function(request) {
                      selectInput(inputId = "select_minfi_pcaplot_pcy", 
                                  choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), 
                                  selected = "PC2", 
-                                 label = "Select y variable"))
+                                 label = "Select y variable")),
+                     actionButton("button_pca_update", "Update")
                      ),
                     
-                     actionButton("button_pca_update", "Update"),
+                     
             
             tabPanel(
               "Correlations",
