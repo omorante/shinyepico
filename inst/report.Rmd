@@ -268,10 +268,6 @@ For each contrast specified ( __`r paste(params$rval_contrasts, collapse=",")`__
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
 * Max. pvalue:   __`r params$max_pvalue`__
-* Column dendogram:  __`r params$Colv`__
-* Scale: __`r params$scale`__
-* Cluster Algorithm: __`r params$clusteralg`__
-* Distance: __`r params$distance`__
 
 ### Table with all contrasts
 
@@ -280,6 +276,11 @@ knitr::kable(params$table_dmps)
 ```
 
 ### Custom heatmap
+
+* Column dendogram:  __`r params$Colv`__
+* Scale: __`r params$scale`__
+* Cluster Algorithm: __`r params$clusteralg`__
+* Distance: __`r params$distance`__
 
 In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__  )
 
