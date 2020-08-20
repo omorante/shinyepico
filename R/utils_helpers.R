@@ -501,10 +501,10 @@ create_plotSA = function(fit){
   
   plot_data = data.frame(Amean = fit$Amean, sigma = sqrt(fit$sigma))
 
-  ggplot2::ggplot(plot_data, ggplot2::aes_string(x="Amean", y="sigma") ) +
+  ggplot2::ggplot(plot_data, ggplot2::aes_string(x="Amean", y="sigma")) +
       ggplot2::geom_bin2d(bins=500) + 
       ggplot2::labs(x="Amean", y="sqrt(sigma)") + 
-            ggplot2::theme_bw()
+      ggplot2::theme_bw()
 }
   
   

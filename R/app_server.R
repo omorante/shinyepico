@@ -480,7 +480,7 @@ app_server = function(input, output, session) {
   #render of plots and tables
   
   rval_plot_plotSA = reactive(create_plotSA(rval_fit()))
-  output$graph_limma_plotSA = plotly::renderPlotly(rval_plot_plotSA())
+  output$graph_limma_plotSA = renderPlot(rval_plot_plotSA())
   
   
   
@@ -621,16 +621,20 @@ app_server = function(input, output, session) {
                             Hypomethylated=0,
                             total=0)  
     
-    count_df = data.table::rbindlist(rval_filteredlist(), idcol = "contrast") %>% 
-                          dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
-                            dplyr::group_by(.data$contrast, .data$type)  %>%
-                            dplyr::summarise(CpGs = dplyr::n()) %>% 
-                            tidyr::complete(.data$contrast, .data$type, fill=list(CpGs=0)) %>%
-                            tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
-                            dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
-                            dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), ~ format(., digits=0)))
+    count_df = data.table::rbindlist(rval_filteredlist(), idcol = "contrast")
     
-    rbind(count_df, default_df[!(default_df[["contrast"]] %in% count_df[["contrast"]]),])
+    if(ncol(count_df) > 0 & !is.null(count_df)){
+      count_df = count_df %>% 
+               dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
+               dplyr::group_by(.data$contrast, .data$type)  %>%
+               dplyr::summarise(CpGs = dplyr::n()) %>% 
+               tidyr::complete(.data$contrast, .data$type, fill=list(CpGs=0)) %>%
+               tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
+               dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
+               dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), ~ format(., digits=0)))
+       }
+    
+    rbind(as.data.frame(count_df), default_df[!(default_df[["contrast"]] %in% count_df[["contrast"]]),])
     
     }
    )
