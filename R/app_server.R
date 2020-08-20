@@ -630,7 +630,7 @@ app_server = function(input, output, session) {
                             dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
                             dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), ~ format(., digits=0)))
     
-    rbind(count_df, default_df[default_df[["contrast"]]] %in% count_df[["contrast"]])
+    rbind(count_df, default_df[!(default_df[["contrast"]] %in% count_df[["contrast"]]),])
     
     }
    )
