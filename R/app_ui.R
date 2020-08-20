@@ -290,8 +290,7 @@ app_ui <- function(request) {
                     ),
                     
                   tags$br(),
-            
-                          shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                      shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
                   ),
                   
                   
