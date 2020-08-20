@@ -111,15 +111,15 @@ app_server = function(input, output, session) {
         "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
         easyClose = TRUE,
         footer = NULL))
-      
       shinyjs::disable("button_minfi_select")
     }
     
     validate(need(exists("RGSet", inherits = FALSE), "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"))  
     
-    #setting number of PCs
+    #setting number of PCs and clicking PCA button to obtain initial graph
     updateSelectInput(session, "select_minfi_pcaplot_pcx", choices = paste0("PC", seq_len(nrow(targets))), selected = "PC1")
     updateSelectInput(session, "select_minfi_pcaplot_pcy", choices = paste0("PC", seq_len(nrow(targets))), selected = "PC2")
+    shinyjs::click("button_pca_update")
     
     #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
@@ -241,7 +241,7 @@ app_server = function(input, output, session) {
   output$graph_minfi_densityplot = plotly::renderPlotly(rval_plot_densityplot())
   
   #PCA
-  rval_plot_pca = eventReactive(input$button_pca_update, 
+  rval_plot_pca = eventReactive(list(input$button_pca_update, input$select_minfi_norm), 
                       create_pca(Bvalues=rval_gset_getBeta(), pheno_info=rval_sheet_target(), 
                           group=input$select_input_samplenamevar, pc_x=input$select_minfi_pcaplot_pcx, 
                           pc_y=input$select_minfi_pcaplot_pcy, color=input$select_minfi_pcaplot_color))
@@ -312,16 +312,8 @@ app_server = function(input, output, session) {
                    selected = input$select_input_donorvar,
                  )
                  
-
+                 shinyjs::enable("button_limma_calculatemodel")
                  updateNavbarPage(session, "navbar_epic", "DMPs")
-                 
-                 #preparing next form
-                 updateSwitchInput(session, "select_limma_trend", 
-                                   disabled=FALSE)
-                 
-                 updateSwitchInput(session, "select_limma_trend", 
-                                   disabled=FALSE)
-                 
                })
   
   
@@ -513,6 +505,8 @@ app_server = function(input, output, session) {
   
       rval_generated_limma_model(FALSE)
       rval_analysis_finished(FALSE)
+      shinyjs::disable("button_limma_heatmapcalc")
+      
     }
     
     validate(need(exists("dif_cpgs", inherits = FALSE), 
@@ -520,6 +514,7 @@ app_server = function(input, output, session) {
                   If the problem persists, report the error to the mantainer."))
     
     rval_analysis_finished(TRUE)
+    
     dif_cpgs
     
   })
@@ -546,7 +541,8 @@ app_server = function(input, output, session) {
     #force rval_filteredlist
     rval_filteredlist()
     
-    #click heatmap button to get default graph
+    #enable and click heatmap button to get default graph
+    shinyjs::enable("button_limma_heatmapcalc")
     shinyjs::click("button_limma_heatmapcalc")
   })
   

@@ -228,19 +228,13 @@ create_heatmap = function(plot_data,
   }
   
   heatdata = heatdata[, sample_order]
-  message(sample_order)
-  
   
   buylrd = c("#313695", "#4575B4", "#74ADD1", "#ABD9E9", "#E0F3F8", "#FFFFBF","#FEE090",
              "#FDAE61", "#F46D43", "#D73027", "#A50026"
   )
   colors.martin = grDevices::colorRampPalette(buylrd)(100)
   
-  message("create_heatmap")
-  
-  
   if (static) {
-    message("Static plot selected")
     if (distance == "euclidean")
       distfun = stats::dist
     else
@@ -285,7 +279,6 @@ create_heatmap = function(plot_data,
   }
   
   else{
-    message("interactive plot selected")
     if (distance == "euclidean") {
       distance = stats::dist
     }

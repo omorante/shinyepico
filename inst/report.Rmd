@@ -287,9 +287,7 @@ In the custom heatmap the selected contrasts to plot were: __`r paste(params$con
 
 rval_voi = params$rval_sheet_target[[params$limma_voi]]
 
-if(!is.null(params$filteredlist2heatmap))
-  create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in%         params$groups2plot], levels = params$groups2plot), groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE) else
-  cat("Differences are not in the plotting range (<10000, >1)")
+if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE) else cat("Differences are not in the plotting range (<10000, >1)")
   
 ```
 

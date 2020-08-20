@@ -192,11 +192,9 @@ app_ui <- function(request) {
           ),
           
           
-          actionButton("button_limma_calculatemodel", "Generate Model"),
+          shinyjs::disabled(actionButton("button_limma_calculatemodel", "Generate Model")),
           tags$br(),
           uiOutput("button_limma_calculatedifs_container")
-          #actionButton("button_limma_calculatedifs", "Calculate Contrasts")
-          
         ),
         mainPanel(width = 9,
           tabsetPanel(
@@ -293,7 +291,7 @@ app_ui <- function(request) {
                     
                   tags$br(),
             
-                  actionButton("button_limma_heatmapcalc", "Update")
+                  shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
                   ),
                   
                   
