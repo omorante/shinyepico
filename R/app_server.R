@@ -614,8 +614,14 @@ app_server = function(input, output, session) {
   
   make_table = eventReactive(
     input$button_limma_heatmapcalc,
-    data.table::rbindlist(rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot],
-                          idcol = "contrast") %>% 
+    {
+    
+    default_df = data.frame(contrast=rval_contrasts(),
+                            Hypermethylated=0,
+                            Hypomethylated=0,
+                            total=0)  
+    
+    count_df = data.table::rbindlist(rval_filteredlist(), idcol = "contrast") %>% 
                           dplyr::mutate(type = factor(ifelse(.data$dif_current < 0, "Hypermethylated", "Hypomethylated"), levels = c("Hypermethylated","Hypomethylated"))) %>% 
                             dplyr::group_by(.data$contrast, .data$type)  %>%
                             dplyr::summarise(CpGs = dplyr::n()) %>% 
@@ -623,7 +629,12 @@ app_server = function(input, output, session) {
                             tidyr::pivot_wider(names_from = .data$type, values_from = .data$CpGs) %>% 
                             dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
                             dplyr::mutate(dplyr::across(c("Hypermethylated","Hypomethylated", "total"), ~ format(., digits=0)))
-  )
+    
+    rbind(count_df, default_df[default_df[["contrast"]]] %in% count_df[["contrast"]])
+    
+    }
+   )
+  
   
   observeEvent(input$button_limma_heatmapcalc, {
     #Render the correct plot depending on the selected

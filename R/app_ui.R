@@ -217,7 +217,7 @@ app_ui <- function(request) {
                 fluidPage(
                   h4("Heatmap"),
                   uiOutput("graph_limma_heatmapcontainer"),
-                  h4("CpGs selected with these filters:"),
+                  h4("DMP counts in each contrast:"),
                   tableOutput("table_limma_difcpgs") %>% shinycssloaders::withSpinner(),
                   column(
                     6,
