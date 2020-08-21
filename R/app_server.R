@@ -429,7 +429,6 @@ app_server = function(input, output, session) {
     
     #Bulding the design matrix
     design = stats::model.matrix(formula, data = pdata)
-    print(design)
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
     
     design
@@ -563,7 +562,7 @@ app_server = function(input, output, session) {
   
   rval_plot_plotSA = reactive(create_plotSA(rval_fit()))
   output$graph_limma_plotSA = renderPlot(rval_plot_plotSA())
-  
+  output$table_limma_design = renderTable(rval_design(), rownames = TRUE, digits = 0)
   
   
   #Calculation of global difs

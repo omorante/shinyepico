@@ -656,8 +656,8 @@ plotly_config = function(plotly_object, fixedrange = TRUE) {
 
 cor3 = function(df1, df2) {
   #function based on cor2 function of https://gist.github.com/talegari
-  #This function handle every possible combination of variable types to calculate correlations. However,
-  # we only used it to compare numeric variables (PCs) with numeric or factor variables.
+  #This function handle the comparison fo numeric variables (PCs) 
+  #with numeric or factor variables.
   
   stopifnot(inherits(df1, "data.frame"))
   stopifnot(

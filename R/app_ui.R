@@ -249,8 +249,8 @@ app_ui <- function(request) {
               value = "model_diagnosis",
               h4("Sigma vs A plot"),
               plotOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
-              #h4("Log-intensity ratio vs Average Plot"),
-              #plotOutput("graph_limma_plotMA") %>% shinycssloaders::withSpinner()
+              h4("Design matrix"),
+              tableOutput("table_limma_design") %>% shinycssloaders::withSpinner()
             ),
             tabPanel(
               "Differential CpGs",
