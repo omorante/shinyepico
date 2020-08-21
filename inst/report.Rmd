@@ -263,7 +263,7 @@ Where `trend` and `robust` are the options specified in the form. In this case, 
 
 ## Filtered results
 
-For each contrast specified ( __`r paste(params$rval_contrasts, collapse=",")`__ ) , the statistics for each CpG were generated and, after, filtered with these criteria:
+For each contrast ( __`r paste(params$rval_contrasts, collapse=", ")`__ ) , the statistics for each CpG were generated and, after, filtered with these criteria:
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__

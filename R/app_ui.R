@@ -1,6 +1,7 @@
 
 
-# ENVIRONMENT VARIABLES
+
+# AVAILABLE METHODS
 norm_options = c("Raw",
                  "Illumina",
                  "Funnorm",
@@ -29,7 +30,6 @@ hclust_methods = c("single",
 #' @import shinyWidgets
 #' @noRd
 app_ui <- function(request) {
-  
   navbarPage(
     "\u00C9PICo!",
     id = "navbar_epic",
@@ -38,12 +38,17 @@ app_ui <- function(request) {
       "Input",
       titlePanel("Load iDATs and sample sheet"),
       sidebarLayout(
-        sidebarPanel(width = 3,
+        sidebarPanel(
+          width = 3,
           fileInput(
             inputId = "fileinput_input",
             "Upload Compress Experiment Directory (zip):",
             multiple = FALSE,
-            accept = c("application/zip", "application/octet-stream", "application/x-zip-compressed")
+            accept = c(
+              "application/zip",
+              "application/octet-stream",
+              "application/x-zip-compressed"
+            )
           ),
           
           uiOutput("ui_button_input_load"),
@@ -53,7 +58,7 @@ app_ui <- function(request) {
             "typeof output.samples_table != 'undefined'",
             selectInput("select_input_samplenamevar", "", choices =
                           c()),
-
+            
             h3(),
             selectInput("select_input_groupingvar", "", c()),
             h3(),
@@ -74,7 +79,8 @@ app_ui <- function(request) {
             actionButton("button_input_next", "Continue")
           )
         ),
-        mainPanel(width = 9,
+        mainPanel(
+          width = 9,
           DT::DTOutput("samples_table") %>% shinycssloaders::withSpinner()
         )
       )
@@ -86,13 +92,14 @@ app_ui <- function(request) {
       "Normalization",
       titlePanel("Normalization"),
       sidebarLayout(
-        sidebarPanel(width = 3,
+        sidebarPanel(
+          width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
           shinyjs::disabled(actionButton("button_minfi_select", "Select"))
         ),
-        mainPanel(width=9,
+        mainPanel(
+          width = 9,
           tabsetPanel(
-            
             tabPanel(
               "Quality Control",
               h4("Overall Signal"),
@@ -122,23 +129,56 @@ app_ui <- function(request) {
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
               tableOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
-              column(6,
-                     selectInput(inputId = "select_minfi_pcaplot_pcx", 
-                                 choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), 
-                                 selected = "PC1", label = "Select x variable"),
-                     
-                     selectInput(inputId = "select_minfi_pcaplot_color", choices = c(), 
-                                 label = "Select color variable:")
-                     ),
-              column(6,
-                     selectInput(inputId = "select_minfi_pcaplot_pcy", 
-                                 choices = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"), 
-                                 selected = "PC2", 
-                                 label = "Select y variable")),
-                     actionButton("button_pca_update", "Update")
-                     ),
-                    
-                     
+              column(
+                6,
+                selectInput(
+                  inputId = "select_minfi_pcaplot_pcx",
+                  choices = c(
+                    "PC1",
+                    "PC2",
+                    "PC3",
+                    "PC4",
+                    "PC5",
+                    "PC6",
+                    "PC7",
+                    "PC8",
+                    "PC9",
+                    "PC10"
+                  ),
+                  selected = "PC1",
+                  label = "Select x variable"
+                ),
+                
+                selectInput(
+                  inputId = "select_minfi_pcaplot_color",
+                  choices = c(),
+                  label = "Select color variable:"
+                )
+              ),
+              column(
+                6,
+                selectInput(
+                  inputId = "select_minfi_pcaplot_pcy",
+                  choices = c(
+                    "PC1",
+                    "PC2",
+                    "PC3",
+                    "PC4",
+                    "PC5",
+                    "PC6",
+                    "PC7",
+                    "PC8",
+                    "PC9",
+                    "PC10"
+                  ),
+                  selected = "PC2",
+                  label = "Select y variable"
+                )
+              ),
+              actionButton("button_pca_update", "Update")
+            ),
+            
+            
             
             tabPanel(
               "Correlations",
@@ -167,7 +207,8 @@ app_ui <- function(request) {
       "DMPs",
       titlePanel("Differentially Methylated Positions"),
       sidebarLayout(
-        sidebarPanel(width = 3,
+        sidebarPanel(
+          width = 3,
           selectInput("select_limma_voi", "Select Variable of Interest", c()),
           
           pickerInput(
@@ -178,25 +219,29 @@ app_ui <- function(request) {
             options = list(
               `actions-box` = TRUE,
               size = 10,
-              `selected-text-format` = "count > 3")
-            ),
-
+              `selected-text-format` = "count > 3"
+            )
+          ),
+          
           #checkboxGroupInput("checkbox_limma_groups", "Select groups to compare", c()),
           
-
+          
           switchInput(
-              inputId = "select_limma_weights",
-            label = "Array Weights", 
+            inputId = "select_limma_weights",
+            label = "Array Weights",
             labelWidth = "80px",
             value = FALSE,
           ),
           
           
-          shinyjs::disabled(actionButton("button_limma_calculatemodel", "Generate Model")),
+          shinyjs::disabled(
+            actionButton("button_limma_calculatemodel", "Generate Model")
+          ),
           tags$br(),
           uiOutput("button_limma_calculatedifs_container")
         ),
-        mainPanel(width = 9,
+        mainPanel(
+          width = 9,
           tabsetPanel(
             id = "tabset_limma",
             tabPanel(
@@ -235,7 +280,7 @@ app_ui <- function(request) {
                     sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
                     sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
                     sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
-
+                    
                   ),
                   
                   h4("Clustering options", align =
@@ -275,7 +320,7 @@ app_ui <- function(request) {
                     
                     switchInput(
                       inputId = "select_limma_colv",
-                      label = "Column Dendogram", 
+                      label = "Column Dendogram",
                       labelWidth = "80px",
                       value = TRUE,
                     ),
@@ -284,13 +329,13 @@ app_ui <- function(request) {
                     
                     switchInput(
                       inputId = "select_limma_graphstatic",
-                      label = "Static Graph", 
+                      label = "Static Graph",
                       labelWidth = "80px",
                       value = TRUE,
                     ),
                     
-                  tags$br(),
-                      shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                    tags$br(),
+                    shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
                   ),
                   
                   
@@ -314,8 +359,8 @@ app_ui <- function(request) {
       h3("Download filtered bed files:"),
       downloadButton("download_export_filteredbeds"),
       p(
-        "Press to download the created filtered lists of contrasts, 
-        with the chosen criteria, in bed format. Useful to use with HOMER, GREAT... 
+        "Press to download the created filtered lists of contrasts,
+        with the chosen criteria, in bed format. Useful to use with HOMER, GREAT...
         Be aware that EPIC is annotated with hg19 genome."
       ),
       h3("Download Markdown Report:"),
@@ -350,11 +395,9 @@ app_ui <- function(request) {
       ),
       p(
         "For suggestions or bug reports, please send me an email or use the",
-        tags$a(href = "https://github.com/omorante", "GitHub"), "forum."
+        tags$a(href = "https://github.com/omorante", "GitHub"),
+        "forum."
       )
-      
     )
-    
   )
 }
-
