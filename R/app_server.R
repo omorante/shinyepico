@@ -67,19 +67,21 @@ app_server = function(input, output, session) {
       replacement = "_"
     )) #avoiding any "-" in the data
     
-    clean_sample_sheet = as.data.frame(lapply(clean_sample_sheet, function(x) {
-      if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
-        return(as.numeric(x))
-      } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
-      else if (length(unique(x)) > 1 &
-               length(unique(x)) < length(x)) {
-        return(as.factor(x))
-      } #if the variable is a character, it should have unique values more than 1 and less than total
-      else{
-        return(rep(NA, length(x)))
-      } #if the requeriments are not fullfilled, we discard the variable
-    }),
-    stringsAsFactors = FALSE)
+    suppressWarnings({
+      clean_sample_sheet = as.data.frame(lapply(clean_sample_sheet, function(x) {
+        if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
+          return(as.numeric(x))
+        } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
+        else if (length(unique(x)) > 1 &
+                 length(unique(x)) < length(x)) {
+          return(as.factor(x))
+        } #if the variable is a character, it should have unique values more than 1 and less than total
+        else{
+          return(rep(NA, length(x)))
+        } #if the requeriments are not fullfilled, we discard the variable
+      }),
+      stringsAsFactors = FALSE)
+    })
     
     clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as factor
     clean_sample_sheet[[input$select_input_donorvar]] = as.factor(clean_sample_sheet[[input$select_input_donorvar]]) #adding donorvar as factor
