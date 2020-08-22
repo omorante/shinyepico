@@ -57,6 +57,40 @@ app_server = function(input, output, session) {
                                     rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,])
   
   
+  rval_clean_sheet_target = eventReactive(rval_gset(),{
+    
+    clean_sample_sheet = data.table::as.data.table(apply(
+      minfi::pData(rval_gset()),
+      2,
+      sub,
+      pattern = "-",
+      replacement = "_"
+    )) #avoiding any "-" in the data
+    
+    clean_sample_sheet = as.data.frame(lapply(clean_sample_sheet, function(x) {
+      if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
+        return(as.numeric(x))
+      } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
+      else if (length(unique(x)) > 1 &
+               length(unique(x)) < length(x)) {
+        return(as.factor(x))
+      } #if the variable is a character, it should have unique values more than 1 and less than total
+      else{
+        return(rep(NA, length(x)))
+      } #if the requeriments are not fullfilled, we discard the variable
+    }),
+    stringsAsFactors = FALSE)
+    
+    clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as factor
+    clean_sample_sheet[[input$select_input_donorvar]] = as.factor(clean_sample_sheet[[input$select_input_donorvar]]) #adding donorvar as factor
+    clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] #cleaning all NA variables
+    
+    clean_sample_sheet
+  })
+  
+
+  
+  
   #When you press button_input_load, the form options are updated
   observeEvent(input$button_input_load, {
     
@@ -313,7 +347,13 @@ app_server = function(input, output, session) {
   
   #Correlations
   
-  rval_plot_corrplot = reactive(create_corrplot(rval_gset_getBeta(), minfi::pData(rval_gset())))
+  rval_plot_corrplot = reactive(
+    create_corrplot(
+      rval_gset_getBeta(),
+      rval_clean_sheet_target(),
+      rval_sheet_target()
+    )
+  )
   
   output$graph_minfi_corrplot = plotly::renderPlotly(rval_plot_corrplot()[["graph"]])
   output$table_minfi_corrplot = DT::renderDT(rval_plot_corrplot()[["info"]],
@@ -373,7 +413,7 @@ app_server = function(input, output, session) {
                    session,
                    "select_limma_voi",
                    label = "Select Variable of Interest",
-                   choices = colnames(minfi::pData(rval_gset())),
+                   choices = colnames(rval_clean_sheet_target()),
                    selected = input$select_input_groupingvar
                  )
                  
@@ -381,7 +421,7 @@ app_server = function(input, output, session) {
                    session,
                    "checkbox_limma_covariables",
                    label = "Select linear model covariables",
-                   choices = colnames(minfi::pData(rval_gset())),
+                   choices = colnames(rval_clean_sheet_target()),
                    selected = input$select_input_donorvar,
                  )
                  
@@ -399,28 +439,9 @@ app_server = function(input, output, session) {
   ))[, input$select_limma_voi]))) #add substitution of "-" for "_", avoiding conflicts
   
   #Design calculation
-  rval_design = reactive({
+  rval_design = eventReactive(input$button_limma_calculatemodel, {
     
     req(input$select_limma_voi) # a variable of interest is required
-    
-    pdata = data.table::as.data.table(apply(
-      minfi::pData(rval_gset()),
-      2,
-      sub,
-      pattern = "-",
-      replacement = "_"
-    )) #avoiding any "-" in the data
-    
-    #We convert to numeric variable any column of pdata with all numbers
-    suppressWarnings({
-      pdata = data.table::as.data.table(lapply(pdata, function(x) {
-        if (!any(is.na(as.numeric(x)))) {
-          as.numeric(x)
-        }
-        else
-          x
-      }))
-    })
     
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
@@ -429,27 +450,11 @@ app_server = function(input, output, session) {
       ),
       collapse = "+"
     )))
-    
-    validate(
-      need(
-        anyDuplicated(pdata[, input$select_limma_voi]) > 0,
-        "Variable selected is not valid. Please, change the variable and try again"
-      )
-    )
-    
-    if (length(input$checkbox_limma_covariables > 0)) {
-      validate(
-        need(
-          all(apply(pdata[, input$checkbox_limma_covariables, drop = FALSE], 2, anyDuplicated)) > 0,
-          "Covariable(s) selected are not valid. Please, change the covariable and try again"
-        )
-      )
-    }
-    
+  
     #Bulding the design matrix
-    design = stats::model.matrix(formula, data = pdata)
+    design = stats::model.matrix(formula, data = rval_clean_sheet_target())
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
-    row.names(design) = pdata[[input$select_input_samplenamevar]]
+    row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
       
     design
   })
@@ -587,7 +592,7 @@ app_server = function(input, output, session) {
   
   rval_plot_plotSA = reactive(create_plotSA(rval_fit()))
   output$graph_limma_plotSA = renderPlot(rval_plot_plotSA())
-  output$table_limma_design = renderTable(rval_design(), rownames = TRUE, digits = 0)
+  output$table_limma_design = renderTable(rval_design(), rownames = TRUE, digits = 2)
   
   
   #Calculation of global difs
@@ -661,7 +666,7 @@ app_server = function(input, output, session) {
     )
     
     # disable button to avoid repeat clicking
-    #shinyjs::disable("button_limma_calculatedifs")
+    shinyjs::disable("button_limma_calculatedifs")
     
     #force rval_filteredlist
     rval_filteredlist()
@@ -671,7 +676,7 @@ app_server = function(input, output, session) {
     shinyjs::click("button_limma_heatmapcalc")
     
     # enable again the button to allow repeat calculation
-    #shinyjs::enable("button_limma_calculatedifs") 
+    shinyjs::enable("button_limma_calculatedifs") 
     
   })
   

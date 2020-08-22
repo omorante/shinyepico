@@ -354,29 +354,10 @@ create_pca = function(Bvalues,
 }
 
 
-create_corrplot = function(Bvalues, sample_target_sheet) {
-  #bvalues should be a dataframe, sample_target_sheet should not have factors.
+create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
+  #bvalues should be a dataframe
   
   pca_data = as.data.frame(stats::prcomp(t(stats::na.omit(Bvalues)))$x)
-  
-  suppressWarnings({
-    clean_sample_sheet = as.data.frame(lapply(sample_target_sheet, function(x) {
-      if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
-        return(as.numeric(x))
-      } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
-      else if (length(unique(x)) > 1 &
-               length(unique(x)) < length(x)) {
-        return(as.factor(x))
-      } #if the variable is a character, it should have unique values more than 1 and less than total
-      else{
-        return(rep(NA, length(x)))
-      } #if the requeriments are not fullfilled, we discard the variable
-    }),
-    stringsAsFactors = FALSE)
-  })
-  
-  clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] #cleaning all NA variables
-  clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
   
   cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
   cor_data$Var1 = row.names(cor_data)
