@@ -60,7 +60,7 @@ app_server = function(input, output, session) {
   rval_clean_sheet_target = eventReactive(rval_gset(),{
     
     clean_sample_sheet = data.table::as.data.table(apply(
-      minfi::pData(rval_gset()),
+      as.data.frame(minfi::pData(rval_gset())),
       2,
       sub,
       pattern = "-",
@@ -338,7 +338,7 @@ app_server = function(input, output, session) {
     list(input$button_pca_update, input$select_minfi_norm),
     create_pca(
       Bvalues = rval_gset_getBeta(),
-      pheno_info = minfi::pData(rval_gset()),
+      pheno_info = as.data.frame(minfi::pData(rval_gset())),
       group = input$select_input_samplenamevar,
       pc_x = input$select_minfi_pcaplot_pcx,
       pc_y = input$select_minfi_pcaplot_pcy,
@@ -977,7 +977,7 @@ app_server = function(input, output, session) {
                        plot_plotSA = rval_plot_plotSA(),
                        table_pcaplot = rval_plot_pca()[["info"]],
                        table_corrplot = rval_plot_corrplot()[["info"]],
-                       data_sexprediction = minfi::pData(rval_gset())[["predictedSex"]],
+                       data_sexprediction = as.data.frame(minfi::pData(rval_gset()))[["predictedSex"]],
                        table_dmps = make_table(),
                        filteredlist2heatmap = rval_filteredlist2heatmap()
                      )
