@@ -53,7 +53,7 @@ app_server = function(input, output, session) {
   })
   
   
-  rval_sheet_target = eventReactive(input$button_input_load,
+  rval_sheet_target = eventReactive(input$button_input_next,
                                     rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,])
   
   
@@ -212,29 +212,32 @@ app_server = function(input, output, session) {
                      modalDialog(
                        title = "Variable error",
                        "Check if selected variables are correct. Sample Name Variable should not have duplicated values
-          and grouping variable should have groups greater than 1.",
+          and the variable of interest should have groups greater than 1.",
                        easyClose = TRUE,
                        footer = NULL
                      )
                    )
+                   shinyjs::enable("button_input_next")
                  }
-                 
-                 updateSelectInput(
-                   session,
-                   "select_minfi_pcaplot_color",
-                   choices = colnames(minfi::pData(rval_gset())),
-                   selected = input$select_input_donorvar
-                 )
-                 
-                 withProgress(message = "Loading data...",
-                              value = 2,
-                              max = 5,
-                              {
-                                rval_rgset()
-                                updateNavbarPage(session, "navbar_epic", "Normalization")
-                              })
-                 
-                 shinyjs::enable("button_minfi_select")
+                 else {
+                   updateSelectInput(
+                     session,
+                     "select_minfi_pcaplot_color",
+                     choices = c(colnames(rval_sheet_target()), "xMed","yMed","predictedSex"),
+                     selected = input$select_input_donorvar
+                   )
+                   
+                   withProgress(message = "Loading data...",
+                                value = 2,
+                                max = 5,
+                                {
+                                  rval_rgset()
+                                  updateNavbarPage(session, "navbar_epic", "Normalization")
+                                })
+                   
+                   shinyjs::enable("button_minfi_select")
+                   
+                 }
                })
   
   

@@ -157,6 +157,26 @@ __Processed (`r params$normalization_mode`)__
    params$plot_boxplot
 ```
 
+### SNPs Heatmap
+
+The methylation array has 65 specific SNP probes. These SNP probes are intended to be used for sample tracking and sample mixups. Each SNP probe ought to have values clustered around 3 distinct values corresponding to homo-, and hetero-zygotes. Therefore, different samples of the same donor should cluster together.
+
+__Processed (`r params$normalization_mode`)__
+
+```{r snps_heatmap, echo=FALSE, warning=FALSE, message = FALSE}
+params$plot_snpheatmap
+```
+
+### Sex Prediction
+
+Depending on the average chromosome Y signal and the average chromosome X signal is possible to predict the sex of the sample donors.
+
+```{r sex_prediction, echo=FALSE, warning=FALSE, message = FALSE}
+params$plot_sexprediction
+knitr::kable(data.frame(name=params$rval_sheet_target[[params$name_var]],sex=params$data_sexprediction))
+```
+
+
 ### Principal Component Analysis
 
 Plot of PCA is shown, with the selected principal components.
@@ -187,25 +207,6 @@ DT::datatable(params$table_corrplot, extensions = 'Buttons',
     c(10,25,50,"All"))))
 ```
 
-
-### SNPs Heatmap
-
-The methylation array has 65 specific SNP probes. These SNP probes are intended to be used for sample tracking and sample mixups. Each SNP probe ought to have values clustered around 3 distinct values corresponding to homo-, and hetero-zygotes. Therefore, different samples of the same donor should cluster together.
-
-__Processed (`r params$normalization_mode`)__
-
-```{r snps_heatmap, echo=FALSE, warning=FALSE, message = FALSE}
-params$plot_snpheatmap
-```
-
-### Sex Prediction
-
-Depending on the average chromosome Y signal and the average chromosome X signal is possible to predict the sex of the sample donors.
-
-```{r sex_prediction, echo=FALSE, warning=FALSE, message = FALSE}
-params$plot_sexprediction
-knitr::kable(data.frame(name=params$rval_sheet_target[[params$name_var]],sex=params$data_sexprediction))
-```
 
 ## Preprocessing 
 
