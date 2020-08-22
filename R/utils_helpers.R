@@ -373,11 +373,9 @@ create_corrplot = function(Bvalues, sample_target_sheet) {
       } #if the requeriments are not fullfilled, we discard the variable
     }),
     stringsAsFactors = FALSE)
-    
   })
   
   clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] #cleaning all NA variables
-  
   clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as character vector
   
   cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
@@ -394,7 +392,7 @@ create_corrplot = function(Bvalues, sample_target_sheet) {
   
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
   
-  plotly::ggplotly(
+  corr_graph = plotly::ggplotly(
     ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "cor")) + ggplot2::geom_tile(color =
                                                                                                         "darkgrey", size = 1) +
       ggplot2::scale_fill_gradient2(
@@ -415,12 +413,35 @@ create_corrplot = function(Bvalues, sample_target_sheet) {
           size = 12,
           hjust = 1
         )
-      )
+      ) +
+      ggplot2::labs(x = "", y = "")
   ) %>% plotly_config(fixedrange = FALSE)
   
   
+  corr_info = data.frame(
+    Variable = colnames(clean_sample_sheet),
+    Type = unlist(lapply(clean_sample_sheet, class))
+  )
   
-}
+  corr_info$Correlation = ifelse(corr_info$Type == "numeric", "Pearson", "R-squared")
+  
+  if (length(colnames(sample_target_sheet)[!(colnames(sample_target_sheet) %in% colnames(clean_sample_sheet))]) > 0)
+  {
+    corr_disc = data.frame(
+      Variable = colnames(sample_target_sheet)[!(colnames(sample_target_sheet) %in% colnames(clean_sample_sheet))],
+      Type = "Discarded",
+      Correlation = "None"
+    )
+  }
+  else{
+    corr_disc = data.frame()
+  }
+  
+  corr_info = rbind(corr_info, corr_disc)
+  
+  return(list(info = corr_info, graph = corr_graph))
+  
+  }
 
 
 create_plotqc = function(rgset, sample_names, badSampleCutoff = 10) {

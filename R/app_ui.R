@@ -58,7 +58,6 @@ app_ui <- function(request) {
             "typeof output.samples_table != 'undefined'",
             selectInput("select_input_samplenamevar", "", choices =
                           c()),
-            
             h3(),
             selectInput("select_input_groupingvar", "", c()),
             h3(),
@@ -125,6 +124,18 @@ app_ui <- function(request) {
             ),
             
             tabPanel(
+              "SNPs Heatmap",
+              h4("SNPs beta-values (Raw)"),
+              plotly::plotlyOutput("graph_minfi_snps") %>% shinycssloaders::withSpinner()
+            ),
+            
+            tabPanel(
+              "Sex prediction",
+              h4("plotSex"),
+              plotly::plotlyOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner()
+            ),
+            
+            tabPanel(
               "Principal Component Analysis",
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
@@ -133,19 +144,7 @@ app_ui <- function(request) {
                 6,
                 selectInput(
                   inputId = "select_minfi_pcaplot_pcx",
-                  choices = c(
-                    "PC1",
-                    "PC2",
-                    "PC3",
-                    "PC4",
-                    "PC5",
-                    "PC6",
-                    "PC7",
-                    "PC8",
-                    "PC9",
-                    "PC10"
-                  ),
-                  selected = "PC1",
+                  choices = c(),
                   label = "Select x variable"
                 ),
                 
@@ -159,44 +158,18 @@ app_ui <- function(request) {
                 6,
                 selectInput(
                   inputId = "select_minfi_pcaplot_pcy",
-                  choices = c(
-                    "PC1",
-                    "PC2",
-                    "PC3",
-                    "PC4",
-                    "PC5",
-                    "PC6",
-                    "PC7",
-                    "PC8",
-                    "PC9",
-                    "PC10"
-                  ),
-                  selected = "PC2",
+                  choices = c(),
                   label = "Select y variable"
                 )
               ),
               actionButton("button_pca_update", "Update")
             ),
             
-            
-            
             tabPanel(
               "Correlations",
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_corrplot") %>% shinycssloaders::withSpinner(),
-            ),
-            
-            
-            tabPanel(
-              "SNPs Heatmap",
-              h4("SNPs beta-values (Raw)"),
-              plotly::plotlyOutput("graph_minfi_snps") %>% shinycssloaders::withSpinner()
-            ),
-            
-            tabPanel(
-              "Sex prediction",
-              h4("plotSex"),
-              plotly::plotlyOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner()
+              DT::DTOutput("table_minfi_corrplot") %>% shinycssloaders::withSpinner()
             )
           )
         )

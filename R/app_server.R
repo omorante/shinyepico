@@ -25,8 +25,14 @@ app_server = function(input, output, session) {
       return()
   })
   
+  # Enable load button every time file input is updated
+  observeEvent(input$fileinput_input, shinyjs::enable("button_input_load"))
+  
   #When you press button_input_load, the data is unzipped and the metharray sheet is loaded
   rval_sheet = eventReactive(input$button_input_load, {
+    
+    shinyjs::disable("button_input_load") #disable the load button to avoid multiple clicks
+    
     utils::unzip(input$fileinput_input$datapath,
                  exdir = paste0(tempdir(), "/experiment_data"))
     
@@ -53,6 +59,7 @@ app_server = function(input, output, session) {
   
   #When you press button_input_load, the form options are updated
   observeEvent(input$button_input_load, {
+    
     updateSelectInput(
       session,
       "select_input_samplenamevar",
@@ -63,7 +70,7 @@ app_server = function(input, output, session) {
     updateSelectInput(
       session,
       "select_input_groupingvar",
-      label = "Select Grouping Variable:",
+      label = "Select Variable of Interest:",
       choices = colnames(rval_sheet())
     )
     updateSelectInput(
@@ -92,10 +99,13 @@ app_server = function(input, output, session) {
   
   
   #The dataframe is rendered
-  output$samples_table =  DT::renderDT(rval_sheet())
+  output$samples_table =  DT::renderDT(
+    rval_sheet(),
+    rownames = FALSE,
+    options = list(pageLength = 25, autoWidth = TRUE)
+  )
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
-  
   rval_rgset = eventReactive(input$button_input_next, {
     targets = rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,]
     
@@ -157,6 +167,8 @@ app_server = function(input, output, session) {
   #We change the page to the next one
   observeEvent(input$button_input_next,
                {
+                 shinyjs::disable("button_input_next") #disable button to avoid multiple clicks
+                 
                  #check if variables selected are correct
                  if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
                      anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
@@ -174,7 +186,7 @@ app_server = function(input, output, session) {
                  updateSelectInput(
                    session,
                    "select_minfi_pcaplot_color",
-                   choices = colnames(rval_sheet()),
+                   choices = colnames(minfi::pData(rval_gset())),
                    selected = input$select_input_donorvar
                  )
                  
@@ -287,7 +299,7 @@ app_server = function(input, output, session) {
     list(input$button_pca_update, input$select_minfi_norm),
     create_pca(
       Bvalues = rval_gset_getBeta(),
-      pheno_info = rval_sheet_target(),
+      pheno_info = minfi::pData(rval_gset()),
       group = input$select_input_samplenamevar,
       pc_x = input$select_minfi_pcaplot_pcx,
       pc_y = input$select_minfi_pcaplot_pcy,
@@ -301,9 +313,13 @@ app_server = function(input, output, session) {
   
   #Correlations
   
-  rval_plot_corrplot = reactive(create_corrplot(rval_gset_getBeta(), rval_sheet_target()))
+  rval_plot_corrplot = reactive(create_corrplot(rval_gset_getBeta(), minfi::pData(rval_gset())))
   
-  output$graph_minfi_corrplot = plotly::renderPlotly(rval_plot_corrplot())
+  output$graph_minfi_corrplot = plotly::renderPlotly(rval_plot_corrplot()[["graph"]])
+  output$table_minfi_corrplot = DT::renderDT(rval_plot_corrplot()[["info"]],
+                                             rownames = FALSE,
+                                             caption = "Autodetected variable types:",
+                                             options = list(pageLength = 10, autoWidth = TRUE))
   
   #Boxplots
   
@@ -384,6 +400,9 @@ app_server = function(input, output, session) {
   
   #Design calculation
   rval_design = reactive({
+    
+    req(input$select_limma_voi) # a variable of interest is required
+    
     pdata = data.table::as.data.table(apply(
       minfi::pData(rval_gset()),
       2,
@@ -430,7 +449,8 @@ app_server = function(input, output, session) {
     #Bulding the design matrix
     design = stats::model.matrix(formula, data = pdata)
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
-    
+    row.names(design) = pdata[[input$select_input_samplenamevar]]
+      
     design
   })
   
@@ -451,6 +471,9 @@ app_server = function(input, output, session) {
   
   #Calculation of limma model
   rval_fit = eventReactive(input$button_limma_calculatemodel, {
+    
+    shinyjs::disable("button_limma_calculatemodel") #disable button to avoid repeat clicking
+    
     withProgress(message = "Generating linear model...",
                  value = 3,
                  max = 6,
@@ -482,6 +505,8 @@ app_server = function(input, output, session) {
                      )
                    }
                  })
+    
+    shinyjs::enable("button_limma_calculatemodel") #enable button again to allow repeting calculation
     
     validate(need(
       exists("fit", inherits = FALSE),
@@ -635,16 +660,24 @@ app_server = function(input, output, session) {
       selected = rval_contrasts()
     )
     
+    # disable button to avoid repeat clicking
+    #shinyjs::disable("button_limma_calculatedifs")
+    
     #force rval_filteredlist
     rval_filteredlist()
     
     #enable and click heatmap button to get default graph
     shinyjs::enable("button_limma_heatmapcalc")
     shinyjs::click("button_limma_heatmapcalc")
+    
+    # enable again the button to allow repeat calculation
+    #shinyjs::enable("button_limma_calculatedifs") 
+    
   })
   
   #Calculation of filtered list
   rval_filteredlist = reactive({
+    
     withProgress(message = "Performing contrasts calculations...",
                  value = 1,
                  max = 6,
@@ -663,6 +696,7 @@ app_server = function(input, output, session) {
                      cores = n_cores
                    )
                  })
+    
   })
   
   
@@ -778,7 +812,7 @@ app_server = function(input, output, session) {
       output$graph_limma_heatmap_static = renderPlot(plot_heatmap())
   })
   
-  output$table_limma_difcpgs = renderTable(make_table())
+  output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
   
   #EXPORT
@@ -923,7 +957,7 @@ app_server = function(input, output, session) {
                        plot_densityplot = rval_plot_densityplot(),
                        plot_pcaplot = rval_plot_pca()[["graph"]],
                        plot_heatmapsnps = rval_plot_snpheatmap(),
-                       plot_corrplot = rval_plot_corrplot(),
+                       plot_corrplot = rval_plot_corrplot()[["graph"]],
                        plot_boxplotraw = rval_plot_boxplotraw(),
                        plot_boxplot = rval_plot_boxplot(),
                        plot_qcraw = rval_plot_qcraw(),
@@ -932,6 +966,7 @@ app_server = function(input, output, session) {
                        plot_snpheatmap = rval_plot_snpheatmap(),
                        plot_plotSA = rval_plot_plotSA(),
                        table_pcaplot = rval_plot_pca()[["info"]],
+                       table_corrplot = rval_plot_corrplot()[["info"]],
                        data_sexprediction = minfi::pData(rval_gset())[["predictedSex"]],
                        table_dmps = make_table(),
                        filteredlist2heatmap = rval_filteredlist2heatmap()

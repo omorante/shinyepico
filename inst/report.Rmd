@@ -50,7 +50,8 @@ params:
   plot_snpheatmap: NA
   plot_plotSA: NA
   
-  table_pcaplot: NA  
+  table_pcaplot: NA 
+  table_corrplot: NA 
   data_sexprediction: NA
   
   table_dmps: NA
@@ -76,6 +77,7 @@ Finally, the selected samples added to the RGSet file were:
 DT::datatable(params$rval_sheet_target, extensions = 'Buttons',
     options = list(dom = 'Blfrtip',
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    rownames = FALSE,
     lengthMenu = list(c(10,25,50,-1),
     c(10,25,50,"All"))))
 ```
@@ -174,7 +176,17 @@ Correlating principal components with variables we can determine if Beta values 
 params$plot_corrplot
 ```
 
-(Not useful variables are discarded and the variable type is autodetected. For more information about the methods please read the user guide.)
+Not useful variables are discarded and the variable type is autodetected. The autodetected variable types were:
+
+```{r corrtable, echo=FALSE, warning=FALSE, message = FALSE}
+DT::datatable(params$table_corrplot, extensions = 'Buttons',
+    options = list(dom = 'Blfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    rownames = FALSE,
+    lengthMenu = list(c(10,25,50,-1),
+    c(10,25,50,"All"))))
+```
+
 
 ### SNPs Heatmap
 
@@ -215,7 +227,7 @@ Then, the linear model was generated using __`r params$limma_voi`__ as variable 
 The resulting design matrix was:
 
 ```{r design, echo=FALSE, warning=FALSE, message = FALSE}
-  knitr::kable(params$rval_design)
+  knitr::kable(params$rval_design, row.names = TRUE)
 ```
 
 Optionally, ArrayWeights can be activated to weigh the value of each sample depending on their adjust to the linear model:
