@@ -846,16 +846,14 @@ app_server = function(input, output, session) {
                  shinyjs::disable("download_export_heatmaps")
                })
   
-  rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
-  
   #R Objects
-  
   
   output$download_export_robjects = downloadHandler(
     "R_Objects.zip",
     
     
     content = function(file) {
+      shinyjs::disable("download_export_robjects")
       withProgress(message = "Generating R Objects...",
                    value = 1,
                    max = 4,
@@ -867,7 +865,6 @@ app_server = function(input, output, session) {
                      ebayes_tables = rval_finddifcpgs()
                      bvalues = rval_gset_getBeta()
                      mvalues = rval_gset_getM()
-                     #annotation = rval_annotation()
                      global_difs = rval_globaldifs()
                      
                      
@@ -889,18 +886,20 @@ app_server = function(input, output, session) {
                      
                      setProgress(value = 3, message = "Compressing RObjects...")
                      utils::zip(file, objects, flags = "-j9X")
+                     shinyjs::enable("download_export_robjects")
                    })
     }
   )
   
   
-  
+  rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
   
   #Filtered BEDs
   output$download_export_filteredbeds  = downloadHandler(
     "filtered_beds.zip",
     
     content = function(file) {
+      shinyjs::disable("download_export_filteredbeds")
       withProgress(message = "Generating BED files...",
                    value = 1,
                    max = 4,
@@ -925,6 +924,8 @@ app_server = function(input, output, session) {
                                           pattern = "*.bed")
                      
                      utils::zip(file, objects, flags = "-j9X")
+                     shinyjs::enable("download_export_filteredbeds")
+                     
                    })
     }
   )
@@ -936,6 +937,7 @@ app_server = function(input, output, session) {
   output$download_export_markdown = downloadHandler(
     filename = "Markdown.html",
     content = function(file) {
+      shinyjs::disable("download_export_markdown")
       withProgress(message = "Generating Report...",
                    value = 1,
                    max = 3,
@@ -993,6 +995,8 @@ app_server = function(input, output, session) {
                        envir = newenv
                      )
                      
+                     shinyjs::enable("download_export_markdown")
+                     
                    })
     }
   )
@@ -1005,6 +1009,7 @@ app_server = function(input, output, session) {
   output$download_export_heatmaps = downloadHandler(
     "Custom_heatmap.pdf",
     content = function(file) {
+      shinyjs::disable("download_export_heatmaps")
       withProgress(message = "Generating plot...",
                    value = 1,
                    max = 4,
@@ -1023,8 +1028,8 @@ app_server = function(input, output, session) {
                        scale = input$select_limma_scale,
                        static = TRUE
                      )
-                     
                      grDevices::dev.off()
+                     shinyjs::enable("download_export_heatmaps")
                    })
     }
   )
