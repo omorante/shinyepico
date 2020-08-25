@@ -182,6 +182,8 @@ app_ui <- function(request) {
       sidebarLayout(
         sidebarPanel(
           width = 3,
+          h4("Linear Model Options"),
+          
           selectInput("select_limma_voi", "Select Variable of Interest", c()),
           
           pickerInput(
@@ -196,8 +198,17 @@ app_ui <- function(request) {
             )
           ),
           
-          #checkboxGroupInput("checkbox_limma_groups", "Select groups to compare", c()),
-          
+          pickerInput(
+            inputId = "checkbox_limma_interactions",
+            label = "Select linear model interactions",
+            choices = c(),
+            multiple = TRUE,
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3"
+            )
+          ),
           
           switchInput(
             inputId = "select_limma_weights",

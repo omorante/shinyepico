@@ -1,5 +1,5 @@
 ---
-title: "ShinyÉPICo: A graphical pipeline to analyze Illumina DNA methylation arrays"
+title: "ShinyÉPICo: the user's guide"
 author:
   - name: Octavio Morante-Palacios
     affiliation:
@@ -27,7 +27,13 @@ knitr::opts_chunk$set(
 
 # Introduction: What is ShinyÉPICo for?
 
+ShinyEPICO is a web application based on shiny and created to accelerate and to make easier the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. 
+
+It is intended as a 'graphical pipeline' since, throughout the analysis 
+
 # What I need to use ShinyÉPICo?
+
+#ShinyÉPICo workflow
 
 # Using ShinyÉPICO: example with real data
 

@@ -15,6 +15,7 @@ params:
   #DMP 
   limma_voi: NA
   limma_covar: NA
+  limma_inter: NA
   limma_arrayweights: NA
   limma_ebayes_trend: NA
   limma_ebayes_robust: NA
@@ -223,7 +224,7 @@ minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
 
 ## Differentially Methylated Positions (DMPs) calculation
 
-Then, the linear model was generated using __`r params$limma_voi`__ as variable of interest and __`r if(length(params$limma_covar) == 0) "None" else paste(params$limma_covar, collapse=", ")`__ as covariables to block.
+Then, the linear model was generated using __`r params$limma_voi`__ as variable of interest,  __`r if(length(params$limma_covar) == 0) "None" else paste(params$limma_covar, collapse=", ")`__ as covariable(s), and __`r if(length(params$limma_inter) == 0) "None" else paste(params$limma_inter, collapse=", ")`__ as interaction(s). 
 
 The resulting design matrix was:
 
@@ -295,7 +296,7 @@ knitr::kable(params$table_dmps)
 * Cluster Algorithm: __`r params$clusteralg`__
 * Distance: __`r params$distance`__
 
-In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__  )
+In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__ .
 
 ```{r filtered_table,echo=FALSE,message=FALSE, warning=FALSE, fig.width = 9, fig.height = 12}
 

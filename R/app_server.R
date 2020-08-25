@@ -38,6 +38,8 @@ app_server = function(input, output, session) {
     
     sheet = minfi::read.metharray.sheet(paste0(tempdir(), "/experiment_data"))
     
+    colnames(sheet) = make.names(colnames(sheet)) # fix possible not-valid colnames
+    
     #We check if sheet is correct
     #This is to prevent app crashes when zip updated is not correct.
     validate(
@@ -46,6 +48,13 @@ app_server = function(input, output, session) {
           any(colnames(sheet) %in% "Slide") &
           any(colnames(sheet) %in% "Array"),
         "SampleSheet is not correct. Please, check your samplesheet and your zip file."
+      )
+    )
+    
+    validate(
+      need(
+        anyDuplicated(colnames(sheet)) == 0,
+        "Repeated variable names are not allowed. Please, modify your sample sheet."
       )
     )
     
@@ -59,22 +68,14 @@ app_server = function(input, output, session) {
   
   rval_clean_sheet_target = eventReactive(rval_gset(),{
     
-    clean_sample_sheet = data.table::as.data.table(apply(
-      as.data.frame(minfi::pData(rval_gset())),
-      2,
-      sub,
-      pattern = "-",
-      replacement = "_"
-    )) #avoiding any "-" in the data
-    
     suppressWarnings({
-      clean_sample_sheet = as.data.frame(lapply(clean_sample_sheet, function(x) {
+      clean_sample_sheet = as.data.frame(lapply(minfi::pData(rval_gset()), function(x) {
         if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
           return(as.numeric(x))
         } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
         else if (length(unique(x)) > 1 &
                  length(unique(x)) < length(x)) {
-          return(as.factor(x))
+              return(as.factor(make.names(x))) #returning syntactically valid names
         } #if the variable is a character, it should have unique values more than 1 and less than total
         else{
           return(rep(NA, length(x)))
@@ -86,7 +87,7 @@ app_server = function(input, output, session) {
     clean_sample_sheet[["Slide"]] = as.factor(clean_sample_sheet[["Slide"]]) #adding Slide as factor
     clean_sample_sheet[[input$select_input_donorvar]] = as.factor(clean_sample_sheet[[input$select_input_donorvar]]) #adding donorvar as factor
     clean_sample_sheet = clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] #cleaning all NA variables
-    
+
     clean_sample_sheet
   })
   
@@ -430,6 +431,24 @@ app_server = function(input, output, session) {
                    selected = input$select_input_donorvar,
                  )
                  
+                 #possible interactions of variables:
+                 if (length(colnames(rval_clean_sheet_target()) > 2)) {
+                   interactions = combn(colnames(rval_clean_sheet_target()), 2)
+                   interactions = sprintf('%s:%s', interactions[1, ], interactions[2, ])
+                 }
+                 else {
+                   interactions = c()
+                 }
+                 
+                 
+                 updatePickerInput(
+                   session,
+                   "checkbox_limma_interactions",
+                   label = "Select linear model interactions",
+                   choices = interactions,
+                   selected = input$select_input_donorvar,
+                 )
+                 
                  shinyjs::enable("button_limma_calculatemodel")
                  updateNavbarPage(session, "navbar_epic", "DMPs")
                })
@@ -440,7 +459,7 @@ app_server = function(input, output, session) {
   #LIMMA
   
   #Variable of interest
-  rval_voi = reactive(factor(sub("-", "_", minfi::pData(rval_gset(
+  rval_voi = reactive(factor(make.names(minfi::pData(rval_gset(
   ))[, input$select_limma_voi]))) #add substitution of "-" for "_", avoiding conflicts
   
   #Design calculation
@@ -451,7 +470,8 @@ app_server = function(input, output, session) {
     formula = stats::as.formula(paste0("~ 0 + ", paste(
       c(
         input$select_limma_voi,
-        input$checkbox_limma_covariables
+        input$checkbox_limma_covariables,
+        input$checkbox_limma_interactions
       ),
       collapse = "+"
     )))
@@ -460,22 +480,16 @@ app_server = function(input, output, session) {
     design = stats::model.matrix(formula, data = rval_clean_sheet_target())
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
     row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
-      
+    colnames(design) = make.names(colnames(design), unique = TRUE)
+    
     design
   })
   
   #Calculation of contrasts
   rval_contrasts = reactive({
-    contrastes = c() #calculamos lista de contrastes de todos contra todos
-    valor = 1
-    all.groups = levels(rval_voi())
-    for (i in seq_len(length(all.groups) - 1)) {
-      for (z in seq_len((length(all.groups)) - valor)) {
-        contrastes = c(contrastes, paste(all.groups[i], all.groups[i + z], sep = "-"))
-      }
-      valor <- valor + 1
-    }
-    contrastes
+    conts = combn(levels(rval_voi()), 2)
+    
+    sprintf('%s-%s', conts[1,], conts[2,])
   })
   
   
@@ -570,6 +584,8 @@ app_server = function(input, output, session) {
     if (rval_generated_limma_model())
       return(tagList(
         br(),
+        
+        h4("Contrasts options"),
         
         switchInput(
           inputId = "select_limma_trend",
@@ -951,6 +967,7 @@ app_server = function(input, output, session) {
                        normalization_mode = input$select_minfi_norm,
                        limma_voi = input$select_limma_voi,
                        limma_covar = input$checkbox_limma_covariables,
+                       limma_inter = input$checkbox_limma_interactions,
                        limma_arrayweights = input$select_limma_weights,
                        limma_ebayes_trend = input$select_limma_trend,
                        limma_ebayes_robust = input$select_limma_robust,
