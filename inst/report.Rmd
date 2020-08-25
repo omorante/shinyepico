@@ -214,10 +214,10 @@ Not useful variables are discarded and the variable type is autodetected. The au
 ```{r corrtable, echo=FALSE, warning=FALSE, message = FALSE}
 DT::datatable(params$table_corrplot, extensions = 'Buttons',
     style = 'bootstrap',
+    rownames = FALSE,
     selection = "single",
     options = list(dom = 'Blfrtip',
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-    rownames = FALSE,
     lengthMenu = list(c(10,25,50,-1),
     c(10,25,50,"All"))))
 ```
