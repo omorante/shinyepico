@@ -1,6 +1,12 @@
 ---
 title: "ÉPICo analysis report"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      toc_collapsed: true
+  theme: sandstone
+  highlight: pygments
 params:
   #input 
   rval_sheet: NA
@@ -41,7 +47,6 @@ params:
   plot_densityplotraw: NA
   plot_densityplot: NA
   plot_pcaplot: NA
-  plot_heatmapsnps: NA
   plot_corrplot: NA
   plot_boxplotraw: NA
   plot_boxplot: NA
@@ -67,6 +72,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+```{css, echo=FALSE}
+pre, code {white-space:pre !important; overflow-x:auto
+```
 
 ## Variable and samples selection
 
@@ -76,11 +84,15 @@ Finally, the selected samples added to the RGSet file were:
 
 ```{r sample_sheet, echo=FALSE, warning=FALSE, message = FALSE}
 DT::datatable(params$rval_sheet_target, extensions = 'Buttons',
-    options = list(dom = 'Blfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    style = "bootstrap",
     rownames = FALSE,
-    lengthMenu = list(c(10,25,50,-1),
-    c(10,25,50,"All"))))
+    selection = "single",
+    options = list(dom = 'Blfrtip',
+    columnDefs = list(list(
+      targets = match("Basename",colnames(params$rval_sheet_target)) - 1, visible = FALSE)),
+     scrollX = TRUE,
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    lengthMenu = list(c(10,25,50,-1), c(10,25,50,"All"))))
 ```
 
 The following samples were excluded for the analysis:
@@ -201,6 +213,8 @@ Not useful variables are discarded and the variable type is autodetected. The au
 
 ```{r corrtable, echo=FALSE, warning=FALSE, message = FALSE}
 DT::datatable(params$table_corrplot, extensions = 'Buttons',
+    style = 'bootstrap',
+    selection = "single",
     options = list(dom = 'Blfrtip',
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
     rownames = FALSE,
@@ -209,7 +223,7 @@ DT::datatable(params$table_corrplot, extensions = 'Buttons',
 ```
 
 
-## Preprocessing 
+## Predict sex and drop SNPs 
 
 After Minfi normalization, we obtained a GenomicRatioSet with some transformations depending on the type of normalization chosen. To understand better the different classes of Minfi packages, and their relations depending of the normalization method, please read this [vignette](https://www.bioconductor.org/help/course-materials/2015/BioC2015/methylation450k.html) of Minfi creators (it is also valid for Illumina EPIC arrays).
 
@@ -229,15 +243,26 @@ Then, the linear model was generated using __`r params$limma_voi`__ as variable 
 The resulting design matrix was:
 
 ```{r design, echo=FALSE, warning=FALSE, message = FALSE}
-  knitr::kable(params$rval_design, row.names = TRUE)
+DT::datatable(
+  params$rval_design,
+  selection = "single",
+  rownames = TRUE,
+  style = "bootstrap",
+  class = "table-condensed",
+  options(list(
+    scrollX = TRUE,
+    lengthChange = FALSE,
+    searching = FALSE
+  ))
+)
 ```
 
 Optionally, ArrayWeights can be activated to weigh the value of each sample depending on their adjust to the linear model:
 
 ```{r limma, echo=TRUE, eval=FALSE}
 
-      if (as.logical(input$select_limma_weights)){
-        try({weights = limma::arrayWeights(rval_gset_getM(), design = design})
+      if (weights_option){
+        try({weights = limma::arrayWeights(MValues, design = design})
       }
         else { weights = NULL}
         
@@ -302,7 +327,7 @@ In the custom heatmap the selected contrasts to plot were: __`r paste(params$con
 
 rval_voi = params$rval_sheet_target[[params$limma_voi]]
 
-if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE) else cat("Differences are not in the plotting range (<10000, >1)")
+if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(rval_voi[rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE, ColSideColors = TRUE) else cat("Differences are not in the plotting range (<10000, >1)")
   
 ```
 

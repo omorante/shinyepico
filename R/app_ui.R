@@ -234,7 +234,7 @@ app_ui <- function(request) {
               h4("Sigma vs A plot"),
               plotOutput("graph_limma_plotSA") %>% shinycssloaders::withSpinner(),
               h4("Design matrix"),
-              tableOutput("table_limma_design") %>% shinycssloaders::withSpinner()
+              DT::DTOutput("table_limma_design") %>% shinycssloaders::withSpinner()
             ),
             tabPanel(
               "Differential CpGs",
@@ -255,7 +255,7 @@ app_ui <- function(request) {
                       "Contrasts to plot",
                       c(),
                       multiple = TRUE
-                    )
+                    ),
                   ),
                   
                   column(
@@ -307,6 +307,15 @@ app_ui <- function(request) {
                       label = "Column Dendogram",
                       labelWidth = "80px",
                       value = TRUE,
+                    ),
+                    
+                    tags$br(),
+                    
+                    switchInput(
+                      inputId = "select_limma_colsidecolors",
+                      label = "ColSideColors",
+                      labelWidth = "80px",
+                      value = FALSE,
                     ),
                     
                     tags$br(),

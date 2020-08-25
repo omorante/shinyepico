@@ -139,8 +139,20 @@ app_server = function(input, output, session) {
   output$samples_table =  DT::renderDT(
     rval_sheet(),
     rownames = FALSE,
-    options = list(pageLength = 25, autoWidth = TRUE)
+    selection = "single",
+    style = "bootstrap",
+    options = list(
+      pageLength = 10,
+      autoWidth = TRUE,
+      scrollX = TRUE,
+      columnDefs = list(list(
+       targets = match("Basename",colnames(rval_sheet())) - 1, visible = FALSE
+      ))
+    )
   )
+  
+  
+  
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
   rval_rgset = eventReactive(input$button_input_next, {
@@ -364,6 +376,8 @@ app_server = function(input, output, session) {
   output$graph_minfi_corrplot = plotly::renderPlotly(rval_plot_corrplot()[["graph"]])
   output$table_minfi_corrplot = DT::renderDT(rval_plot_corrplot()[["info"]],
                                              rownames = FALSE,
+                                             selection = "single",
+                                             style = "bootstrap",
                                              caption = "Autodetected variable types:",
                                              options = list(pageLength = 10, autoWidth = TRUE))
   
@@ -613,9 +627,20 @@ app_server = function(input, output, session) {
   
   rval_plot_plotSA = reactive(create_plotSA(rval_fit()))
   output$graph_limma_plotSA = renderPlot(rval_plot_plotSA())
-  output$table_limma_design = renderTable(rval_design(), rownames = TRUE, digits = 2)
+  output$table_limma_design =  DT::renderDT(
+    rval_design(),
+    rownames = TRUE,
+    selection = "single",
+    style = "bootstrap",
+    caption = "Autodetected variable types:",
+    options = list(
+      autoWidth = TRUE,
+      scrollX = TRUE,
+      lengthChange = FALSE,
+      searching=FALSE)
+    )
   
-  
+
   #Calculation of global difs
   rval_globaldifs = eventReactive(input$button_limma_calculatedifs, {
     calculate_global_difs(rval_gset_getBeta(), rval_voi(), rval_contrasts(), cores =
@@ -759,10 +784,10 @@ app_server = function(input, output, session) {
                                  create_heatmap(
                                    rval_filteredlist2heatmap(),
                                    factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
-                                                          levels =
-                                                            input$select_limma_groups2plot),
+                                                          levels = input$select_limma_groups2plot),
                                    groups2plot = rval_voi() %in% input$select_limma_groups2plot,
                                    Colv = as.logical(input$select_limma_colv),
+                                   ColSideColors = input$select_limma_colsidecolors,
                                    clusteralg = input$select_limma_clusteralg,
                                    distance = input$select_limma_clusterdist,
                                    scale = input$select_limma_scale,
@@ -985,7 +1010,6 @@ app_server = function(input, output, session) {
                        plot_densityplotraw = rval_plot_densityplotraw(),
                        plot_densityplot = rval_plot_densityplot(),
                        plot_pcaplot = rval_plot_pca()[["graph"]],
-                       plot_heatmapsnps = rval_plot_snpheatmap(),
                        plot_corrplot = rval_plot_corrplot()[["graph"]],
                        plot_boxplotraw = rval_plot_boxplotraw(),
                        plot_boxplot = rval_plot_boxplot(),

@@ -210,24 +210,33 @@ create_heatmap = function(plot_data,
                           factorgroups,
                           groups2plot,
                           Colv = TRUE,
+                          ColSideColors = FALSE,
                           clusteralg = "average",
                           distance = "pearson",
                           scale = "row",
                           static = FALSE) {
+  
   heatdata = as.matrix(plot_data)
   heatdata = heatdata[stats::complete.cases(heatdata), ]
-  
   class(heatdata) = "numeric"
   
   #subsetting heatdata groups2plot
   heatdata = heatdata[, groups2plot]
   
-  #order heatdata by groups
+  #optional colside colors
+  colside_scale = grDevices::rainbow(length(levels(factorgroups)))
+  names(colside_scale) = levels(factorgroups)
   
+  #order heatdata by groups
   sample_order = c()
+  color_order = c()
+  group_order = c()
   for (name in levels(factorgroups)) {
     sample_order = c(sample_order, colnames(heatdata)[factorgroups %in% name])
+    color_order = c(color_order, rep(colside_scale[[name]], length(colnames(heatdata)[factorgroups %in% name])))
+    group_order = c(group_order, rep(name, length(colnames(heatdata)[factorgroups %in% name])))
   }
+
   
   heatdata = heatdata[, sample_order]
   
@@ -245,6 +254,13 @@ create_heatmap = function(plot_data,
     "#A50026"
   )
   colors.martin = grDevices::colorRampPalette(buylrd)(100)
+
+  
+  if(!ColSideColors){
+    color_order = rlang::missing_arg()
+    group_order = rlang::missing_arg()
+  }
+
   
   if (static) {
     if (distance == "euclidean")
@@ -257,6 +273,7 @@ create_heatmap = function(plot_data,
       heatdata,
       col = colors.martin,
       Colv = Colv,
+      ColSideColors = color_order,
       key.xlab = "B values",
       na.rm = TRUE,
       colsep = 0,
@@ -291,6 +308,7 @@ create_heatmap = function(plot_data,
   }
   
   else{
+    
     if (distance == "euclidean") {
       distance = stats::dist
     }
@@ -298,13 +316,14 @@ create_heatmap = function(plot_data,
       heatdata,
       col = colors.martin,
       Colv = Colv,
+      col_side_colors = group_order,
       key.title = "",
       na.rm = TRUE,
       dendogram = "both",
       scale = scale,
       distfun = distance,
       hclustfun = function(x)
-        stats::hclust(x, method = clusteralg),
+      stats::hclust(x, method = clusteralg),
       seriate = "mean",
       row_dend_left = TRUE,
       showticklabels = c(TRUE, FALSE),
@@ -556,7 +575,7 @@ create_snpheatmap = function(snps, sample_names, color_groups) {
     plot_method = "plotly",
     colorbar_xpos = -0.01,
     colorbar_ypos = 0.3,
-    margins = c(25, 25, NA, 0)
+    margins = c(25, 25, NA, 0),
   ) %>% plotly_config()
 }
 
