@@ -360,9 +360,21 @@ app_server = function(input, output, session) {
   )
   
   output$graph_minfi_pcaplot = plotly::renderPlotly(rval_plot_pca()[["graph"]])
-  output$table_minfi_pcaplot = renderTable(rval_plot_pca()[["info"]], rownames = TRUE)
   
-  
+  output$table_minfi_pcaplot = DT::renderDT(
+    rval_plot_pca()[["info"]],
+    rownames = TRUE,
+    selection = "single",
+    style = "bootstrap",
+    caption = "Autodetected variable types:",
+    options = list(
+      autoWidth = TRUE,
+      paging = FALSE,
+      scrollX = TRUE,
+      lengthChange = FALSE,
+      searching=FALSE)
+  )
+    
   #Correlations
   
   rval_plot_corrplot = reactive(
@@ -919,7 +931,6 @@ app_server = function(input, output, session) {
                      save(design, file = paste(tempdir(), "design.RData", sep = "/"))
                      save(global_difs,
                           file = paste(tempdir(), "global_difs.RData", sep = "/"))
-                     #save(annotation,file=paste(tempdir(),"annotation.RData", sep="/"))
                      save(ebayes_tables,
                           file = paste(tempdir(), "ebayestables.RData", sep = "/"))
                      
@@ -1064,6 +1075,7 @@ app_server = function(input, output, session) {
                                               levels = input$select_limma_groups2plot),
                        groups2plot = rval_voi() %in% input$select_limma_groups2plot,
                        Colv = as.logical(input$select_limma_colv),
+                       ColSideColors = as.logical(input$select_limma_colsidecolors),
                        clusteralg = input$select_limma_clusteralg,
                        distance = input$select_limma_clusterdist,
                        scale = input$select_limma_scale,

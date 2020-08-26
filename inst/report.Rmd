@@ -7,6 +7,7 @@ output:
       toc_collapsed: true
   theme: sandstone
   highlight: pygments
+toc-title: "Table of contents"
 params:
   #input 
   rval_sheet: NA
@@ -73,7 +74,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{css, echo=FALSE}
-pre, code {white-space:pre !important; overflow-x:auto
+div, code {overflow-x:auto !important}
 ```
 
 ## Variable and samples selection
@@ -184,22 +185,37 @@ params$plot_snpheatmap
 
 Depending on the average chromosome Y signal and the average chromosome X signal is possible to predict the sex of the sample donors.
 
-```{r sex_prediction, echo=FALSE, warning=FALSE, message = FALSE}
+```{r sex_prediction_plot, echo=FALSE, warning=FALSE, message = FALSE}
 params$plot_sexprediction
-knitr::kable(data.frame(name=params$rval_sheet_target[[params$name_var]],sex=params$data_sexprediction))
 ```
 
+```{r sex_prediction_table, echo=FALSE, warning=FALSE, message = FALSE}
+knitr::kable(data.frame(name=params$rval_sheet_target[[params$name_var]],sex=params$data_sexprediction))
+```
 
 ### Principal Component Analysis
 
 Plot of PCA is shown, with the selected principal components.
 
-```{r pca, echo=FALSE, warning=FALSE, message = FALSE}
+```{r pca_plot, echo=FALSE, warning=FALSE, message = FALSE}
 params$plot_pcaplot
-knitr::kable(params$table_pcaplot)
-
 ```
 
+```{r pca_table, echo=FALSE, warning=FALSE, message = FALSE}
+DT::datatable(
+  params$table_pcaplot,
+  selection = "single",
+  rownames = TRUE,
+  style = "bootstrap",
+  class = "table-condensed",
+  options(list(
+    scrollX = TRUE,
+    lengthChange = FALSE,
+    paging = FALSE,
+    searching = FALSE
+  ))
+)
+```
 ### Correlations
 
 Correlating principal components with variables we can determine if Beta values are related to our variable of interest or other variables. This can also be useful to determine possible errors in the sample hybridization randomization and to select covariables to add to the linear model.
