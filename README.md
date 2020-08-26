@@ -1,13 +1,17 @@
+shinyÉPICo
+================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ShinyÉPICo
-
 <!-- badges: start -->
 
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![License: AGPL
+v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 <!-- badges: end -->
+
+<img src="/home/omorante/Documentos/R_projects/master/inst/images/logo.png" width="200px" />
+
+# Description
 
 ShinyÉPICo is a web interface based on Shiny that makes it easy to do
 differentially methylated CpGs analysis from Illumina EPIC or 450k DNA
@@ -18,7 +22,7 @@ plots to be able to choose properly. Moreover, you can select different
 options in the final heatmap and download an RMarkdown report with all
 the steps chosen.
 
-## System Requirements
+# System Requirements
 
 ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package
 dependencies are automatically tried to install when you install the
@@ -32,11 +36,12 @@ a smooth use of the application, but depending on the number of samples
 analyzed and whether they are EPIC or 450k, the needs may be lower or
 higher.
 
-## Installation and use
+# Installation and use
 
-To install ShinyEPICO, you have to use the GitHub repository. It is easy
+To install shinyÉPICo, you have to use the GitHub repository. It is easy
 to install it directly in R using the install\_github function from the
-remotes package:
+remotes package. It is highly recommended to update all packages when
+install\_github asks:
 
 ``` r
 install.packages("remotes")
@@ -51,6 +56,7 @@ library("shinyepico")
 run_shinyepico()
 ```
 
-You can assign the number of cores or the upload memory limit with the
-arguments of that function. The parallelization of this application does
-not have a great impact on the RAM memory consumption.
+You can assign the number of cores or change the upload memory limit
+with the arguments of that function. The parallelization of this
+application does not have a great impact on the RAM memory consumption
+and it is recommended even in low-end computers.
