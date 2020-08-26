@@ -3,7 +3,7 @@ title: "ÉPICo analysis report"
 output: 
   html_document:
     toc: true
-      toc_float:
+    toc_float:
       toc_collapsed: true
   theme: sandstone
   highlight: pygments
