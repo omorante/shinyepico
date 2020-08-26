@@ -31,7 +31,7 @@ hclust_methods = c("single",
 #' @noRd
 app_ui <- function(request) {
   navbarPage(
-    "\u00C9PICo!",
+    "shiny\u00C9PICo!",
     id = "navbar_epic",
     theme = shinythemes::shinytheme("sandstone") ,
     tabPanel(
@@ -127,7 +127,7 @@ app_ui <- function(request) {
               "SNPs Heatmap",
               h4("SNPs beta-values (Raw)"),
               plotly::plotlyOutput("graph_minfi_snps") %>% shinycssloaders::withSpinner()
-            ),
+             ),
             
             tabPanel(
               "Sex prediction",
@@ -374,22 +374,25 @@ app_ui <- function(request) {
       tags$head(tags$style(HTML(
         "a {color: #0275d8}"
       ))),
-      h1("\u00C9PICo!") ,
+      img(src = "images/logo.png",
+          width = 150), 
+      h1("shiny\u00C9PICo") ,
+      br(),
       h4(
-        tags$a(href = "https://www.gnu.org/licenses/gpl-3.0.html", "GNU GPLv3 License")
+        tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target="_blank")
       ),
       h4("\u00A9 2020 Octavio Morante-Palacios"),
       h4(
-        tags$a(href = "mailto:octaviompa@gmail.com?\u00C9PICo!", "octaviompa@gmail.com")
+        tags$a(href = "mailto:omorante@carrerasresearch.org?\u00C9PICo!", "omorante@carrerasresearch.org", target="_blank")
       ),
       p(
-        "\u00C9PICo! is a graphical interface based on Shiny. It is intended for importing and normalizing methylation EPIC array data, and also for following a statistical analysis to
+        "shiny\u00C9PICo is a graphical interface based on Shiny. It is intended for importing and normalizing Illumina DNA methylation arrays (450k or EPIC), exploring DNA methylation data and also for following a statistical analysis to
         detect differentially methylated CpGs, and plotting them in useful and customable heatmaps."
       ),
       p(
-        "For suggestions or bug reports, please send me an email or use the",
-        tags$a(href = "https://github.com/omorante", "GitHub"),
-        "forum."
+        "For suggestions or bug reports, please use the",
+        tags$a(href = "https://github.com/omorante/shinyepico/issues", "GitHub", target="_blank"),
+        "issues forum."
       )
     )
   )

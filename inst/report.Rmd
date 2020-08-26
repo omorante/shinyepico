@@ -4,7 +4,7 @@ output:
   html_document:
     toc: true
     toc_float:
-      collapsed: true
+        collapsed: true
   theme: sandstone
   highlight: pygments
 toc-title: "Table of contents"
