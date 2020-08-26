@@ -3,7 +3,7 @@ title: "ÉPICo analysis report"
 output: 
   html_document:
     toc: true
-    toc_float:
+      toc_float:
       toc_collapsed: true
   theme: sandstone
   highlight: pygments
@@ -91,7 +91,7 @@ DT::datatable(params$rval_sheet_target, extensions = 'Buttons',
     options = list(dom = 'Blfrtip',
     columnDefs = list(list(
       targets = match("Basename",colnames(params$rval_sheet_target)) - 1, visible = FALSE)),
-     scrollX = TRUE,
+     #scrollX = TRUE,
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
     lengthMenu = list(c(10,25,50,-1), c(10,25,50,"All"))))
 ```
@@ -209,7 +209,7 @@ DT::datatable(
   style = "bootstrap",
   class = "table-condensed",
   options(list(
-    scrollX = TRUE,
+    #scrollX = TRUE,
     lengthChange = FALSE,
     paging = FALSE,
     searching = FALSE
@@ -264,9 +264,8 @@ DT::datatable(
   selection = "single",
   rownames = TRUE,
   style = "bootstrap",
-  class = "table-condensed",
   options(list(
-    scrollX = TRUE,
+    #scrollX = TRUE,
     lengthChange = FALSE,
     searching = FALSE
   ))

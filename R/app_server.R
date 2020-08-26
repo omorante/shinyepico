@@ -644,7 +644,6 @@ app_server = function(input, output, session) {
     rownames = TRUE,
     selection = "single",
     style = "bootstrap",
-    caption = "Autodetected variable types:",
     options = list(
       autoWidth = TRUE,
       scrollX = TRUE,
