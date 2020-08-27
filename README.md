@@ -9,7 +9,7 @@ shinyÉPICo
 v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 <!-- badges: end -->
 
-<img src="/home/omorante/Documentos/R_projects/master/inst/images/logo.png" width="200px" />
+<img src="https://github.com/omorante/shinyepico/blob/master/inst/images/logo.png" width="200px" />
 
 # Description
 
@@ -31,7 +31,7 @@ package.
 Since the application allows to follow interactively all the analysis
 process, many objects have to be stored in RAM memory. Therefore, the
 application can be quite memory demanding, especially when trying to
-analyze a large number of samples. We recommend at least 16GB of RAM for
+analyze a large number of samples. We recommend at least 12GB of RAM for
 a smooth use of the application, but depending on the number of samples
 analyzed and whether they are EPIC or 450k, the needs may be lower or
 higher.

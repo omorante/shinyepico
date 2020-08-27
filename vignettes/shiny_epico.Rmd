@@ -1,20 +1,20 @@
 ---
-title: "ShinyÉPICo: the user's guide"
+title: "shinyÉPICo: the user's guide"
 author:
+      
   - name: Octavio Morante-Palacios
     affiliation:
-      - Josep Carreras Research Institute
+      - Epigenetics and Immune Disease Group, Josep Carreras Research Institute (IJC), 08916 Badalona, Barcelona, Spain and Germans Trias i Pujol Research Institute (IGTP), 08916 Badalona, Barcelona Spain
     email:
       - omorante@carrerasresearch.org
-      
 output:
+  BiocStyle::pdf_document: default
   BiocStyle::html_document:
     toc_float: true
-  BiocStyle::pdf_document: default
 vignette: >
   %\VignetteIndexEntry{shinyepico}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 
@@ -25,23 +25,130 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{css, echo=FALSE}
+div, code {overflow-x:auto !important}
+```
+
 # Introduction: What is ShinyÉPICo for?
 
-ShinyEPICO is a web application based on shiny and created to accelerate and to make easier the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. 
+shinyÉPICo is a web application based on shiny and created to accelerate and to make easier the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. For this purpose, shinyÉPICo uses, among others, the widely used minfi and limma packages.
 
-It is intended as a 'graphical pipeline' since, throughout the analysis 
+It is intended as a 'graphical pipeline' since, throughout the analysis, you can observe the result of the different options with multiple charts, and interactively modify decisions in current or prior steps. In addition, the application automates calculations that would otherwise take much more time and effort.
 
-# What I need to use ShinyÉPICo?
+shinyÉPICo is a fully graphical application and the calculations performed in R are done entirely on the server side. Therefore, the application can be used both on the local computer and through a web server, to which devices, such as computers, smartphones or tablets could be connected, without high RAM or CPU requirements.
 
-#ShinyÉPICo workflow
+The steps follow by the application includes the data importing, starting with iDAT files (Raw Illumina DNA methylation data), array normalization, quality control and data exploring, and differentially methylated positions (DMPs) calculation. Each step has multiple options and charts that we will describe along this manual.
 
-# Using ShinyÉPICO: example with real data
+## What I need to use ShinyÉPICo? 
 
-## Data Import
+ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package dependencies are automatically tried to install with the package install. You will need at least R 3.6 or higher. 
 
-## Sample selection
+Since the application allows to follow interactively all the analysis process, many objects have to be stored in RAM memory. Therefore, the application can be memory demanding, especially when trying to analyze a large number of samples at the same time. We recommend at least 12GB of RAM for a smooth use of the application, but depending on the number of samples analyzed and whether they are EPIC or 450k, the needs may be lower or higher.
+
+## How can I install it?
+
+At the moment, you can install the application through github using the 'remotes' R package:
+
+```{r eval=FALSE}
+install.packages("remotes")
+library("remotes")
+install_github("omorante/shinyepico")
+```
+
+It is highly recommended to update all packages when install_github asks to avoid problems during the use of the application. At the time this manual is written, the minimum versions required are:
+
+    R (>= 3.6.0),
+    DT (>= 0.15.0),
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylation450kmanifest,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    IlluminaHumanMethylationEPICmanifest,
+    data.table (>= 1.13.0),
+    doParallel (>= 1.0.0),
+    dplyr (>= 1.0.0),
+    foreach (>= 1.5.0),
+    ggplot2 (>= 3.3.0),
+    gplots (>= 3.0.0),
+    heatmaply (>= 1.1.0),
+    limma (>= 3.44.0),
+    minfi (>= 1.34.0),
+    plotly (>= 4.9.2),
+    reshape2 (>= 1.4.0),
+    rlang (>= 0.4.0),
+    rmarkdown (>= 2.3.0),
+    shiny (>= 1.5.0),
+    shinyWidgets (>= 0.5.0),
+    shinycssloaders (>= 0.3.0),
+    shinyjs (>= 1.1.0),
+    shinythemes (>= 1.1.0),
+    statmod (>= 1.4.0),
+    tidyr (>= 1.1.0)
+
+
+And, to run the application: 
+```{r eval=FALSE}
+library("shinyepico")
+run_shinyepico()
+```
+
+The function run_shinyepico has 4 parameters that can be modified:
+
+* **n_cores:** The application is partially compatible with parallel computing. This numeric parameter controls the number of cores and, by default, it is half of the detected cores. 
+* **max_upload_size:** By default, shiny applications have an upload limit (in MB), useful when the application is running in a web server. By default, this parameter is 2000MB.
+* **host:** IP used to deploy the application. By default, this parameter is your local IP (127.0.0.1) which means that only you, from your computer, will have access to the application. However, it is possible to make the app reachable to other computers in the same LAN changing the IP to 0.0.0.0.
+* **port:** Port used to deploy the application. By default, a random free port.
+
+
+# ShinyÉPICo workflow
+
+shinyÉPICO workflow is divided in tabs that summarize the different steps to follow:
+
+* **Data import**
+* **Quality control and array normalization**
+* **Differentially Methylated Positions calculation**
+* **Filtering and Heatmap customization**
+* **Data export**
+
+
+While it is possible to go back to previous steps and change options at any point in the process, some buttons are disabled until the steps to be able to perform them are completed. For example, you will not be able to generate a heatmap if you do not complete the normalization of the arrays and the calculation of the DMPs.
+
+In the next sections, we will discuss the different steps, and their options and charts, with a public DNA methylation array dataset.
+
+
+# Using ShinyÉPICO: an example with real data
+
+In this example, iDATs from xxx paper will be used to illustrate the steps. Although shinyÉPICo can be used with multiple groups and large cohorts, for this manual we have decided to use a minimal example that can be easily reproduced on almost any computer. Specifically, monocyte and monocyte-derived macrophages (produced with M-CSF) has been selected, only 6 samples (3 monocyte samples and 3 macrophage samples from 3 different donors).
+
+The .zip file of this dataset can be found in the "example_data" folder of the GitHub project. (Li_NAR_2019.zip)
+
+## Data Import and Sample Selection
+
+The first step in the shinyÉPICo workflow is prepare the data in the properly format. iDAT files should be compressed in a .zip file. The name of the files should follow the standard convention: **XXXXXXXXXXXX_YYYYYY_ZZZ.idat** being XXXXXXXXXXXX the Sentrix_ID, YYYYYY the Sentrix_Position and ZZZ Grn or Red (corresponding, respectively, to the Red and Green signal file).
+
+Moreover, a CSV (comma-separated) file with the annotation of the experiment should be included. It is mandatory to include the Sentrix_ID and Sentrix_Position columns that allows the software to find their respective iDAT files. Moreover, other columns should be added to reflect the different variables (e.g. sample name, health/disease, treatment/control, age, sex, hybridization day, etc.).
+
+Usually, iDATs and sample sheet are provided by the genomic units meeting these default features, and no additional work is required.
+
+One aspect to take into account is that shinyÉPICo autodetects the variable types (numerical or categorical) depending on whether or not they can be converted to numbers. Therefore, categorical variables should not use numbers.
+
+In the next table, you can see the sample sheet of the example dataset:
+
+```{r, echo=F}
+knitr::kable(read.csv("../example_data/Sample_Sheet.csv"))
+```
+
+It includes the Sentrix_ID and Sentrix_Position mandatory columns, and also other columns relevant for the experiment such as Sample_name, Sample_group and donor. 
+
+After selecting the proper column in each form field, and the samples to be included (in this example, all), it is possible to proceed with the next step.
+
+```{r, out.width = "200px", echo=FALSE}
+knitr::include_graphics("images/qcsignal.svg")
+```
 
 ## Array normalization and quality control
+
+  
+
 
 ## Differentially Methylated Positions calculation
 
@@ -54,3 +161,8 @@ It is intended as a 'graphical pipeline' since, throughout the analysis
 
 # References
 # Session info
+
+```{r echo=FALSE}
+sessionInfo()
+```
+

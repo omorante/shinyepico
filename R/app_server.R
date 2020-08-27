@@ -362,19 +362,21 @@ app_server = function(input, output, session) {
   output$graph_minfi_pcaplot = plotly::renderPlotly(rval_plot_pca()[["graph"]])
   
   output$table_minfi_pcaplot = DT::renderDT(
-    rval_plot_pca()[["info"]],
+    format(rval_plot_pca()[["info"]], digits = 2),
     rownames = TRUE,
     selection = "single",
     style = "bootstrap",
-    caption = "Autodetected variable types:",
     options = list(
       autoWidth = TRUE,
       paging = FALSE,
       scrollX = TRUE,
       lengthChange = FALSE,
-      searching=FALSE)
+      searching = FALSE,
+      info = FALSE,
+      ordering = FALSE
+    )
   )
-    
+  
   #Correlations
   
   rval_plot_corrplot = reactive(
@@ -415,6 +417,16 @@ app_server = function(input, output, session) {
   rval_plot_sexprediction = reactive(create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar]))
   
   output$graph_minfi_sex = plotly::renderPlotly(rval_plot_sexprediction())
+  output$table_minfi_sex = DT::renderDT(
+    data.frame(name = rval_sheet_target()[[input$select_input_samplenamevar]], sex = as.data.frame(minfi::pData(rval_gset(
+    )))[["predictedSex"]]),
+    rownames = FALSE,
+    selection = "single",
+    style = "bootstrap",
+    caption = "Predicted sex:",
+    options = list(pageLength = 10, scrollX = TRUE, autoWidth = TRUE)
+  )
+  
   
   #SNPs heatmap
   
@@ -459,7 +471,7 @@ app_server = function(input, output, session) {
                  
                  #possible interactions of variables:
                  if (length(colnames(rval_clean_sheet_target()) > 2)) {
-                   interactions = combn(colnames(rval_clean_sheet_target()), 2)
+                   interactions = utils::combn(colnames(rval_clean_sheet_target()), 2)
                    interactions = sprintf('%s:%s', interactions[1, ], interactions[2, ])
                  }
                  else {
@@ -513,7 +525,7 @@ app_server = function(input, output, session) {
   
   #Calculation of contrasts
   rval_contrasts = reactive({
-    conts = combn(levels(rval_voi()), 2)
+    conts = utils::combn(levels(rval_voi()), 2)
     
     sprintf('%s-%s', conts[1,], conts[2,])
   })
@@ -770,7 +782,7 @@ app_server = function(input, output, session) {
     
     #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
     if (is.null(join_table) |
-        nrow(join_table) < 2 | nrow(join_table) > 10000)
+        nrow(join_table) < 2 | nrow(join_table) > 12000)
     {
       shinyjs::disable("download_export_heatmaps")
       NULL
@@ -789,7 +801,7 @@ app_server = function(input, output, session) {
                                {
                                  validate(need(
                                    !is.null(rval_filteredlist2heatmap()),
-                                   "Differences are not in the plotting range (<10000, >1)"
+                                   "Differences are not in the plotting range (<12000, >1)"
                                  ))
                                  
                                  create_heatmap(
@@ -836,7 +848,7 @@ app_server = function(input, output, session) {
                                    dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
                                    dplyr::mutate(dplyr::across(
                                      c("Hypermethylated", "Hypomethylated", "total"),
-                                     ~ format(., digits = 0)
+                                     ~ format(., scientific = FALSE, digits = 0)
                                    ))
                                }
                                

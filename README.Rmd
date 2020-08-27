@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 ```{r, out.width = "200px", echo=FALSE}
-knitr::include_graphics("/home/omorante/Documentos/R_projects/master/inst/images/logo.png")
+knitr::include_graphics("https://github.com/omorante/shinyepico/blob/master/inst/images/logo.png")
 ```
 
 # Description 
@@ -31,7 +31,7 @@ ShinyÉPICo is a web interface based on Shiny that makes it easy to do different
 
 ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package dependencies are automatically tried to install when you install the package.
 
-Since the application allows to follow interactively all the analysis process, many objects have to be stored in RAM memory. Therefore, the application can be quite memory demanding, especially when trying to analyze a large number of samples. We recommend at least 16GB of RAM for a smooth use of the application, but depending on the number of samples analyzed and whether they are EPIC or 450k, the needs may be lower or higher. 
+Since the application allows to follow interactively all the analysis process, many objects have to be stored in RAM memory. Therefore, the application can be quite memory demanding, especially when trying to analyze a large number of samples. We recommend at least 12GB of RAM for a smooth use of the application, but depending on the number of samples analyzed and whether they are EPIC or 450k, the needs may be lower or higher. 
 
 # Installation and use
 

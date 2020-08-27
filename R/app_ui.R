@@ -131,15 +131,16 @@ app_ui <- function(request) {
             
             tabPanel(
               "Sex prediction",
-              h4("plotSex"),
-              plotly::plotlyOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner()
+              h4("X vs Y chromosomes signal plot"),
+              plotly::plotlyOutput("graph_minfi_sex") %>% shinycssloaders::withSpinner(),
+              DT::DTOutput("table_minfi_sex") %>% shinycssloaders::withSpinner()
             ),
             
             tabPanel(
               "Principal Component Analysis",
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
-              tableOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
+              DT::DTOutput("table_minfi_pcaplot") %>% shinycssloaders::withSpinner(),
               column(
                 6,
                 selectInput(

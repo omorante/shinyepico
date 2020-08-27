@@ -1,5 +1,5 @@
 ---
-title: "ÉPICo analysis report"
+title: "shinyÉPICo workflow report"
 output: 
   html_document:
     toc: true
@@ -65,7 +65,7 @@ params:
   filteredlist2heatmap : NA
 ---
 
-This report was created with ShinyÉPICo. <br>
+This report was created with shinyÉPICo. <br>
 (c) 2020 Octavio Morante-Palacios
 
 ```{r setup, include=FALSE}
@@ -203,7 +203,7 @@ params$plot_pcaplot
 
 ```{r pca_table, echo=FALSE, warning=FALSE, message = FALSE}
 DT::datatable(
-  params$table_pcaplot,
+  format(params$table_pcaplot, digits=2),
   selection = "single",
   rownames = TRUE,
   style = "bootstrap",
@@ -212,7 +212,9 @@ DT::datatable(
     #scrollX = TRUE,
     lengthChange = FALSE,
     paging = FALSE,
-    searching = FALSE
+    searching = FALSE,
+    info = FALSE,
+    ordering = FALSE
   ))
 )
 ```
