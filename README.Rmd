@@ -51,3 +51,10 @@ run_shinyepico()
 
 You can assign the number of cores or change the upload memory limit with the arguments of that function. The parallelization of this application does not have a great impact on the RAM memory consumption and it is recommended even in low-end computers.
 
+# Input data
+
+The first step in the shinyÉPICo workflow is prepare the data in the properly format. iDAT files should be compressed in a .zip file. The name of the files should follow the standard convention: **XXXXXXXXXXXX_YYYYYY_ZZZ.idat** being XXXXXXXXXXXX the Sentrix_ID, YYYYYY the Sentrix_Position and ZZZ Grn or Red (corresponding, respectively, to the Red and Green signal file).
+
+Moreover, a CSV (comma-separated) file with the annotation of the experiment should be included. It is mandatory to include the Sentrix_ID and Sentrix_Position columns that allows the software to find their respective iDAT files. Moreover, other columns should be added to reflect the different variables (e.g. sample name, health/disease, treatment/control, age, sex, hybridization day, etc.). Usually, iDATs and sample sheet are obtained meeting these features by default, and no additional work is required.
+
+You can find examples of both the sample sheet and the final .zip to upload to the application in the example_data folder.
