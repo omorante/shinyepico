@@ -1,37 +1,37 @@
-## Welcome to GitHub Pages
+# shinyÉPICo
 
-You can use the [editor on GitHub](https://github.com/omorante/shinyepico/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+![](https://github.com/omorante/shinyepico/blob/master/inst/images/logo.png)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+ShinyÉPICo is a web interface based on Shiny that makes it easy to do differentially methylated CpGs analysis from Illumina EPIC or 450k DNA methylation arrays. This program allows following a standard pipeline of normalization (with minfi package), model creation and statistical analysis (with limma package), with different options in each step and plots to be able to choose properly. Moreover, you can select different options in the final heatmap and download an RMarkdown report with all the steps chosen.
 
-### Markdown
+## System Requirements
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package dependencies are automatically tried to install when you install the package.
 
-```markdown
-Syntax highlighted code block
+Since the application allows to follow interactively all the analysis process, many objects have to be stored in RAM memory. Therefore, the application can be quite memory demanding, especially when trying to analyze a large number of samples. We recommend at least 12GB of RAM for a smooth use of the application, but depending on the number of samples analyzed and whether they are EPIC or 450k, the needs may be lower or higher.
 
-# Header 1
-## Header 2
-### Header 3
+## Installation and use
 
-- Bulleted
-- List
+To install shinyÉPICo, you have to use the GitHub repository. It is easy to install it directly in R using the install_github function from the remotes package. It is highly recommended to update all packages when install_github asks:
 
-1. Numbered
-2. List
+``` r
+install.packages("remotes")
+library("remotes")
+install_github("omorante/shinyepico")
+```
+To run the package:
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+``` r
+library("shinyepico")
+run_shinyepico()
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+You can assign the number of cores or change the upload memory limit with the arguments of that function. The parallelization of this application does not have a great impact on the RAM memory consumption and it is recommended even in low-end computers.
 
-### Jekyll Themes
+## Input data
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/omorante/shinyepico/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+The first step in the shinyÉPICo workflow is prepare the data in the properly format. iDAT files should be compressed in a .zip file. The name of the files should follow the standard convention: **XXXXXXXXXXXX_YYYYYY_ZZZ.idat** being XXXXXXXXXXXX the Sentrix_ID, YYYYYY the Sentrix_Position and ZZZ Grn or Red (corresponding, respectively, to the Red and Green signal file).
 
-### Support or Contact
+Moreover, a CSV (comma-separated) file with the annotation of the experiment should be included. It is mandatory to include the Sentrix_ID and Sentrix_Position columns that allows the software to find their respective iDAT files. Moreover, other columns should be added to reflect the different variables (e.g. sample name, health/disease, treatment/control, age, sex, hybridization day, etc.). Usually, iDATs and sample sheet are obtained meeting these features by default, and no additional work is required.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+You can find examples of both the sample sheet and the final .zip to upload to the application in the example_data folder.
