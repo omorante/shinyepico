@@ -28,6 +28,8 @@ ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package
 dependencies are automatically tried to install when you install the
 package.
 
+R 3.6 or higher with updated packages is required.
+
 Since the application allows to follow interactively all the analysis
 process, many objects have to be stored in RAM memory. Therefore, the
 application can be quite memory demanding, especially when trying to
@@ -40,8 +42,7 @@ higher.
 
 To install shinyÉPICo, you have to use the GitHub repository. It is easy
 to install it directly in R using the install\_github function from the
-remotes package. It is highly recommended to update all packages when
-install\_github asks:
+remotes package.
 
 ``` r
 install.packages("remotes")
@@ -56,10 +57,53 @@ library("shinyepico")
 run_shinyepico()
 ```
 
-You can assign the number of cores or change the upload memory limit
-with the arguments of that function. The parallelization of this
-application does not have a great impact on the RAM memory consumption
-and it is recommended even in low-end computers.
+It is highly recommended to update all packages when install\_github
+asks to avoid problems during the use of the application. The minimum
+versions required are:
+
+    DT (>= 0.15.0),
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylation450kmanifest,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    IlluminaHumanMethylationEPICmanifest,
+    data.table (>= 1.13.0),
+    doParallel (>= 1.0.0),
+    dplyr (>= 1.0.0),
+    foreach (>= 1.5.0),
+    ggplot2 (>= 3.3.0),
+    gplots (>= 3.0.0),
+    heatmaply (>= 1.1.0),
+    limma (>= 3.44.0),
+    minfi (>= 1.34.0),
+    plotly (>= 4.9.2),
+    reshape2 (>= 1.4.0),
+    rlang (>= 0.4.0),
+    rmarkdown (>= 2.3.0),
+    shiny (>= 1.5.0),
+    shinyWidgets (>= 0.5.0),
+    shinycssloaders (>= 0.3.0),
+    shinyjs (>= 1.1.0),
+    shinythemes (>= 1.1.0),
+    statmod (>= 1.4.0),
+    tidyr (>= 1.1.0)
+
+The function run\_shinyepico has 4 parameters that can be modified:
+
+  - **n\_cores:** The application is partially compatible with parallel
+    computing. This numeric parameter controls the number of cores and,
+    by default, it is half of the detected cores. The parallelization of
+    this application does not have a great impact on the RAM memory
+    consumption and it is recommended even in low-end computers.
+  - **max\_upload\_size:** By default, shiny applications have an upload
+    limit (in MB), useful when the application is running in a web
+    server. By default, this parameter is 2000MB.
+  - **host:** IP used to deploy the application. By default, this
+    parameter is your local IP (127.0.0.1) which means that only you,
+    from your computer, will have access to the application. However, it
+    is possible to make the app reachable to other computers in the same
+    LAN changing the IP to 0.0.0.0.
+  - **port:** Port used to deploy the application. By default, a random
+    free port.
 
 # Input data
 
