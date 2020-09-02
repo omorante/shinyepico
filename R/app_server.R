@@ -31,14 +31,19 @@ app_server = function(input, output, session) {
   #When you press button_input_load, the data is unzipped and the metharray sheet is loaded
   rval_sheet = eventReactive(input$button_input_load, {
     
+    #Check if updated file is .zip
+    validate(need(tools::file_ext(input$fileinput_input$datapath) == "zip", "File extension should be .zip"))
+    
     shinyjs::disable("button_input_load") #disable the load button to avoid multiple clicks
     
+    if (dir.exists(paste0(tempdir(), "/experiment_data"))) {
+      unlink(paste0(tempdir(), "/experiment_data"), recursive = TRUE) #remove current files in target directory
+    }
+        
     utils::unzip(input$fileinput_input$datapath,
-                 exdir = paste0(tempdir(), "/experiment_data"))
+                 exdir = paste0(tempdir(), "/experiment_data")) #extracting zip
     
     sheet = minfi::read.metharray.sheet(paste0(tempdir(), "/experiment_data"))
-    
-    colnames(sheet) = make.names(colnames(sheet)) # fix possible not-valid colnames
     
     #We check if sheet is correct
     #This is to prevent app crashes when zip updated is not correct.
@@ -57,6 +62,8 @@ app_server = function(input, output, session) {
         "Repeated variable names are not allowed. Please, modify your sample sheet."
       )
     )
+    
+    colnames(sheet) = make.names(colnames(sheet)) # fix possible not-valid colnames
     
     sheet
   })

@@ -1,6 +1,6 @@
 Package: shinyepico
 Title: ShinyEPICO!
-Version: 0.9.0
+Version: 0.9.1
 Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
 Description: ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays.
 License: AGPL-3 + file LICENSE
