@@ -1,8 +1,8 @@
 Package: shinyepico
-Title: ShinyEPICO!
-Version: 0.9.1
+Title: ShinyÉPICo
+Version: 0.9.2
 Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
-Description: ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays.
+Description: ShinyÉPICo: A graphical pipeline to analyze Illumina DNA methylation arrays.
 License: AGPL-3 + file LICENSE
 Depends: R (>= 3.6.0)
 Imports: 

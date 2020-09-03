@@ -123,6 +123,8 @@ app_server = function(input, output, session) {
       label = "Select Donor Variable:",
       choices = colnames(rval_sheet())
     )
+    
+    shinyjs::enable("button_input_next") #Enable button continue
   })
   
   
@@ -141,6 +143,8 @@ app_server = function(input, output, session) {
     choicesOpt = list(subtext = paste("Group: ", rval_sheet()[, input$select_input_groupingvar]))
   ))
   
+  #when samples selected are changed, continue button is enabled again
+  observeEvent(input$selected_samples, shinyjs::enable("button_input_next"))
   
   #The dataframe is rendered
   output$samples_table =  DT::renderDT(
@@ -379,8 +383,7 @@ app_server = function(input, output, session) {
       scrollX = TRUE,
       lengthChange = FALSE,
       searching = FALSE,
-      info = FALSE,
-      ordering = FALSE
+      info = FALSE
     )
   )
   
