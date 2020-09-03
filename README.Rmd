@@ -42,7 +42,7 @@ To install shinyÉPICo, you have to use the GitHub repository. It is easy to ins
 ``` r
 install.packages("remotes")
 library("remotes")
-install_github("omorante/shinyepico")
+install_github("omorante/shinyepico", upgrade="always")
 ```
 To run the package:
 

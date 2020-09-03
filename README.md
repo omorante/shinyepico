@@ -47,7 +47,7 @@ remotes package.
 ``` r
 install.packages("remotes")
 library("remotes")
-install_github("omorante/shinyepico")
+install_github("omorante/shinyepico", upgrade="always")
 ```
 
 To run the package:
