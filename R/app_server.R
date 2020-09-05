@@ -251,7 +251,7 @@ app_server = function(input, output, session) {
                      selected = input$select_input_donorvar
                    )
                    
-                   withProgress(message = "Loading data...",
+                   withProgress(message = "Reading array data...",
                                 value = 2,
                                 max = 5,
                                 {
@@ -1030,6 +1030,7 @@ app_server = function(input, output, session) {
                        limma_ebayes_robust = input$select_limma_robust,
                        rval_design = rval_design(),
                        rval_contrasts = rval_contrasts(),
+                       rval_voi = rval_voi(),
                        min_deltabeta = input$slider_limma_deltab,
                        max_fdr = input$slider_limma_adjpvalue,
                        max_pvalue = input$slider_limma_pvalue,
