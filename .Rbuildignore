@@ -10,4 +10,4 @@ $run_dev.*
 ^doc$
 ^Meta$
 ^example_data$
-
+^.github$
