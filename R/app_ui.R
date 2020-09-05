@@ -377,7 +377,7 @@ app_ui <- function(request) {
       img(src = "images/logo.png",
           width = 150), 
       h1("shiny\u00C9PICo") ,
-      h3("0.9.2"),
+      h3("0.9.3"),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target="_blank")
