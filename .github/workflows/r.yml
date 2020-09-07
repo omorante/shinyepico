@@ -16,14 +16,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        r-version: [3.6, 4.0]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        r-version: [4.0]
 
     steps:
-      - name: Set up Ubuntu dependencies
+      - name: Set up ubuntu dependencies
         run: sudo apt-get install libxml2-utils libcurl4-openssl-dev
+        if: matrix.os == 'ubuntu-latest'
+      - name: Set up macOS dependencies
+      - run:  brew install libxml2; brew install curl --with-openssl; brew link curl --force; brew link libxml2 --force
+        if: matrix.os == 'macos-latest'
       - uses: actions/checkout@v2
       - name: Set up R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@ffe45a39586f073cc2e9af79c4ba563b657dc6e3
