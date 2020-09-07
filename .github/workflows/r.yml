@@ -27,7 +27,7 @@ jobs:
         run: sudo apt-get install libxml2-utils libcurl4-openssl-dev
         if: matrix.os == 'ubuntu-latest'
       - name: Set up macOS dependencies
-        run:  brew install libxml2; brew install curl --with-openssl; brew link curl --force; brew link libxml2 --force
+        run:  brew install libxml2; brew install curl; brew link curl --force; brew link libxml2 --force
         if: matrix.os == 'macos-latest'
       - uses: actions/checkout@v2
       - name: Set up R ${{ matrix.r-version }}
