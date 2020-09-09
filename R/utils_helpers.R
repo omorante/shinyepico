@@ -203,14 +203,48 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
   
 }
 
+create_filtered_bed_clusters = function(dendro_data, annotation, cores) {
+  doParallel::registerDoParallel(cores)
+  
+  annotation$cpg = row.names(annotation)
+  annotation = data.table::as.data.table(annotation)
+  
+  #saving results by cluster
+  result = foreach::foreach (
+    cluster = unique(dendro_data),
+    .final = function(x)
+      stats::setNames(x, paste0("Cluster_", seq_along(
+        unique(dendro_data))))
+  ) %dopar% {
+    
+    temp = annotation[annotation$cpg %in% names(dendro_data)[dendro_data == cluster],]
+    
+    data.table::data.table(
+      chr = temp$chr,
+      start = format(temp$pos - 1, scientific = FALSE),
+      end = format(temp$pos, scientific = FALSE),
+      name = temp$cpg
+    )
+  }
+  
+  result[["annotation"]] = data.table::data.table(
+    chr = annotation$chr,
+    start = format(annotation$pos - 1, scientific = FALSE),
+    end = format(annotation$pos, scientific = FALSE),
+    name = annotation$cpg
+  )
+  
+  result
+  
+}
 
 #GRAPHIC FUNCTIONS
-
 create_heatmap = function(plot_data,
                           factorgroups,
                           groups2plot,
                           Colv = TRUE,
                           ColSideColors = FALSE,
+                          RowSideColors = NULL,
                           clusteralg = "average",
                           distance = "pearson",
                           scale = "row",
@@ -260,8 +294,12 @@ create_heatmap = function(plot_data,
     color_order = rlang::missing_arg()
     group_order = rlang::missing_arg()
   }
-
   
+  if(is.null(RowSideColors))
+    row_order = rlang::missing_arg()
+  else
+    row_order = RowSideColors
+
   if (static) {
     if (distance == "euclidean")
       distfun = stats::dist
@@ -274,6 +312,7 @@ create_heatmap = function(plot_data,
       col = colors.martin,
       Colv = Colv,
       ColSideColors = color_order,
+      RowSideColors = row_order,
       key.xlab = "B values",
       na.rm = TRUE,
       colsep = 0,
@@ -317,6 +356,7 @@ create_heatmap = function(plot_data,
       col = colors.martin,
       Colv = Colv,
       col_side_colors = group_order,
+      row_side_colors = row_order,
       key.title = "",
       na.rm = TRUE,
       dendogram = "both",
@@ -387,7 +427,7 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
     cor_data,
     id.vars = "Var1",
     variable.name = "Var2",
-    value.name = "cor"
+    value.name = "p.value"
   )
   
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
@@ -395,14 +435,12 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
   corr_graph = plotly::ggplotly(
     ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "cor")) + ggplot2::geom_tile(color =
                                                                                                         "darkgrey", size = 1) +
-      ggplot2::scale_fill_gradient2(
-        high = "#6D9EC1",
-        low = "#E46726",
-        mid = "white",
-        midpoint = 0,
-        limit = c(-1, 1),
+      ggplot2::scale_fill_gradient(
+        low = "#6D9EC1",
+        high = "white",
+        limit = c(0, 1),
         space = "Lab",
-        name = "Correlation"
+        name = "Correlation (p.value)"
       ) +
       ggplot2::theme_bw() +
       ggplot2::theme(
@@ -535,6 +573,55 @@ create_boxplot = function(Bvalues, n = 200000) {
                                                          0))
   
 }
+
+create_dendrogram = function(plot_data,
+                          factorgroups,
+                          groups2plot,
+                          clusteralg = "average",
+                          distance = "pearson",
+                          scale_selection = "row",
+                          k_number) {
+  
+  heatdata = as.matrix(plot_data)
+  heatdata = heatdata[stats::complete.cases(heatdata), ]
+  class(heatdata) = "numeric"
+  
+  #subsetting heatdata groups2plot
+  heatdata = heatdata[, groups2plot]
+  
+  #scaling data if option is selected
+  if(scale_selection=="row") 
+    heatdata = t(scale(t(heatdata)))
+  
+  
+  #order heatdata by groups
+  sample_order = c()
+  for (name in levels(factorgroups)) {
+    sample_order = c(sample_order, colnames(heatdata)[factorgroups %in% name])
+  }
+  
+  heatdata = heatdata[, sample_order]
+  
+  if (distance == "euclidean")
+    distfun = stats::dist
+  else
+    distfun = function(x) 
+      stats::as.dist(1 - stats::cor(t(x), method = distance))
+  
+  
+  distance = distfun(heatdata)
+  clustering = hclust(distance, clusteralg)
+  clusters = cutree(clustering, k=k_number)
+  
+  rowside_scale = grDevices::rainbow(length(unique(clusters)))
+
+  for(number in unique(clusters)){
+    clusters[clusters == number] = rowside_scale[number]
+  }
+  
+  clusters
+}
+
 
 create_snpheatmap = function(snps, sample_names, color_groups) {
   buylrd = c(
@@ -702,20 +789,20 @@ cor3 = function(df1, df2) {
     # both are numeric
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("integer", "numeric")) {
-      r <- stats::cor(df1[[pos_df1]]
+      r <- stats::cor.test(df1[[pos_df1]]
                       , df2[[pos_df2]]
-                      , use = "pairwise.complete.obs")
+                      , use = "pairwise.complete.obs")[["p.value"]]
     }
     
     # one is numeric and other is a factor/character
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["r.squared"]])
+      r <- sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["coefficients"]][2,4])
     }
     
     if (class(df2[[pos_df2]]) %in% c("integer", "numeric") &&
         class(df1[[pos_df1]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["r.squared"]])
+      r <- sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["coefficients"]][2,4])
     }
     
     return(r)

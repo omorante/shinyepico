@@ -31,6 +31,7 @@ params:
   rval_design: NA
   rval_contrasts: NA
   rval_voi: NA
+  rval_dendogram: NA
   
   #heatmap 
   min_deltabeta: NA
@@ -343,7 +344,7 @@ In the custom heatmap the selected contrasts to plot were: __`r paste(params$con
 
 ```{r filtered_table,echo=FALSE,message=FALSE, warning=FALSE, fig.width = 9, fig.height = 12}
 
-if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(params$rval_voi[params$rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = params$rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE, ColSideColors = TRUE) else cat("Differences are not in the plotting range (<12000, >1)")
+if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(params$rval_voi[params$rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = params$rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE, ColSideColors = TRUE, RowSideColors = params$rval_dendogram) else cat("Differences are not in the plotting range (<12000, >1)")
   
 ```
 

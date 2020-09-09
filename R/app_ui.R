@@ -271,7 +271,7 @@ app_ui <- function(request) {
                        "center"),
                   
                   column(
-                    6,
+                    4,
                     selectInput(
                       "select_limma_clusteralg",
                       "Clustering algorithm:",
@@ -298,25 +298,7 @@ app_ui <- function(request) {
                   ),
                   
                   column(
-                    6,
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_colv",
-                      label = "Column Dendogram",
-                      labelWidth = "80px",
-                      value = TRUE,
-                    ),
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_colsidecolors",
-                      label = "ColSideColors",
-                      labelWidth = "80px",
-                      value = FALSE,
-                    ),
+                    4,
                     
                     tags$br(),
                     
@@ -327,11 +309,48 @@ app_ui <- function(request) {
                       value = TRUE,
                     ),
                     
-                    tags$br(),
-                    shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                    switchInput(
+                      inputId = "select_limma_colv",
+                      label = "Column Dendogram",
+                      labelWidth = "80px",
+                      value = TRUE,
+                    ),
+                    
+                    switchInput(
+                      inputId = "select_limma_colsidecolors",
+                      label = "Column Colors",
+                      labelWidth = "80px",
+                      value = FALSE,
+                    )
+                    
                   ),
                   
-                  
+                  column(
+                    4,
+                    
+                    tags$br(),
+                    
+                    switchInput(
+                      inputId = "select_limma_rowsidecolors",
+                      label = "Row Colors",
+                      labelWidth = "80px",
+                      value = FALSE,
+                    ),
+                    
+                    conditionalPanel(
+                      "input.select_limma_rowsidecolors",
+                      numericInput(
+                        "select_limma_knumber",
+                        "Clusters number",
+                        value = 2,
+                        min = 1,
+                        max = 10,
+                        step = 1
+                      )
+                    ),
+                    
+                    shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                  ),
                   
                 )
               )
@@ -347,20 +366,23 @@ app_ui <- function(request) {
       h3("Download RObjects:"),
       downloadButton("download_export_robjects"),
       p(
-        "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc."
+        "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"
       ),
       h3("Download filtered bed files:"),
+      selectInput("select_export_bedtype",
+                  "Subsetting mode",
+                  c("by contrasts", "by heatmap cluster"),
+                  selected = "by contrast"),
       downloadButton("download_export_filteredbeds"),
       p(
-        "Press to download the created filtered lists of contrasts,
-        with the chosen criteria, in bed format. Useful to use with HOMER, GREAT...
-        Be aware that EPIC is annotated with hg19 genome."
+        "Press to download the created filtered lists of contrasts, or heatmap clusters,
+        with the chosen criteria, in bed format (hg19 genome)."
       ),
-      h3("Download Markdown Report:"),
+      h3("Download Workflow Report:"),
       downloadButton("download_export_markdown"),
       p(
-        "Press to download the RMarkdown report of all the steps follow and selected in the pipeline."
-      ),
+        "Press to download the report of all the steps follow and selected in the pipeline, and the results."
+      ), 
       h3("Download Heatmap:"),
       downloadButton("download_export_heatmaps"),
       p(
@@ -377,7 +399,7 @@ app_ui <- function(request) {
       img(src = "images/logo.png",
           width = 150), 
       h1("shiny\u00C9PICo") ,
-      h3("0.9.3"),
+      h3("1.0.0-dev"),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target="_blank")

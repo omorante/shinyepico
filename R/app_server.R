@@ -15,6 +15,7 @@ app_server = function(input, output, session) {
   #INITIALIZE REACTIVE VARIABLES
   rval_generated_limma_model = reactiveVal(value = FALSE)
   rval_analysis_finished = reactiveVal(value = FALSE)
+  rval_filteredlist2heatmap_valid = reactiveVal(value = FALSE)
   
   
   #Load button only shows if file is uploaded
@@ -794,17 +795,34 @@ app_server = function(input, output, session) {
     if (is.null(join_table) |
         nrow(join_table) < 2 | nrow(join_table) > 12000)
     {
+      rval_filteredlist2heatmap_valid(FALSE)
       shinyjs::disable("download_export_heatmaps")
       NULL
     }
     else
     {
       shinyjs::enable("download_export_heatmaps")
+      rval_filteredlist2heatmap_valid(TRUE)
       join_table
     }
     
   })
   
+  rval_dendrogram = eventReactive(input$button_limma_heatmapcalc,
+   {if(input$select_limma_rowsidecolors)
+    create_dendrogram(
+      rval_filteredlist2heatmap(),
+      factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
+                             levels = input$select_limma_groups2plot),
+      groups2plot = rval_voi() %in% input$select_limma_groups2plot,
+      clusteralg = input$select_limma_clusteralg,
+      distance = input$select_limma_clusterdist,
+      scale_selection = input$select_limma_scale,
+      k_number = input$select_limma_knumber)
+    else
+      NULL
+   }
+  )
   
   plot_heatmap = eventReactive(input$button_limma_heatmapcalc,
                                
@@ -821,6 +839,7 @@ app_server = function(input, output, session) {
                                    groups2plot = rval_voi() %in% input$select_limma_groups2plot,
                                    Colv = as.logical(input$select_limma_colv),
                                    ColSideColors = input$select_limma_colsidecolors,
+                                   RowSideColors = rval_dendrogram(),
                                    clusteralg = input$select_limma_clusteralg,
                                    distance = input$select_limma_clusterdist,
                                    scale = input$select_limma_scale,
@@ -967,6 +986,20 @@ app_server = function(input, output, session) {
   
   rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
   
+  observe({
+    if (rval_analysis_finished() &
+        input$select_export_bedtype == "by heatmap cluster" &
+        (
+          !rval_filteredlist2heatmap_valid() |
+          !as.logical(input$select_limma_rowsidecolors)
+        )) {
+      shinyjs::disable("download_export_filteredbeds")
+    } else if (rval_analysis_finished() &
+               input$select_export_bedtype == "by contrasts") {
+      shinyjs::enable("download_export_filteredbeds")
+    }
+  })
+  
   #Filtered BEDs
   output$download_export_filteredbeds  = downloadHandler(
     "filtered_beds.zip",
@@ -977,9 +1010,18 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
                    {
-                     filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), cores =
-                                                            n_cores)
                      
+                     if (input$select_export_bedtype == "by heatmap cluster") {
+                       
+                       filtered_beds = create_filtered_bed_clusters(dendro_data = rval_dendrogram(),
+                                                                    annotation = rval_annotation(),
+                                                                    cores = n_cores)
+                       
+                     }
+                     else{
+                       filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), 
+                                                            cores = n_cores)
+                     }
                      
                      lapply(names(filtered_beds), function(x) {
                        data.table::fwrite(
@@ -997,6 +1039,8 @@ app_server = function(input, output, session) {
                                           pattern = "*.bed")
                      
                      utils::zip(file, objects, flags = "-j9X")
+                     file.remove(objects) #removing objects after exporting
+                     
                      shinyjs::enable("download_export_filteredbeds")
                      
                    })
@@ -1008,7 +1052,7 @@ app_server = function(input, output, session) {
   
   
   output$download_export_markdown = downloadHandler(
-    filename = "Markdown.html",
+    filename = "Report.html",
     content = function(file) {
       shinyjs::disable("download_export_markdown")
       withProgress(message = "Generating Report...",
@@ -1098,6 +1142,7 @@ app_server = function(input, output, session) {
                        groups2plot = rval_voi() %in% input$select_limma_groups2plot,
                        Colv = as.logical(input$select_limma_colv),
                        ColSideColors = as.logical(input$select_limma_colsidecolors),
+                       RowSideColors = rval_dendrogram(),
                        clusteralg = input$select_limma_clusteralg,
                        distance = input$select_limma_clusterdist,
                        scale = input$select_limma_scale,
