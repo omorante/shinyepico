@@ -1097,6 +1097,7 @@ app_server = function(input, output, session) {
                        rval_design = rval_design(),
                        rval_contrasts = rval_contrasts(),
                        rval_voi = rval_voi(),
+                       rval_dendrogram = rval_dendrogram(),
                        min_deltabeta = input$slider_limma_deltab,
                        max_fdr = input$slider_limma_adjpvalue,
                        max_pvalue = input$slider_limma_pvalue,

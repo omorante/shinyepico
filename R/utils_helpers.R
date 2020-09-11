@@ -433,7 +433,7 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
   
   corr_graph = plotly::ggplotly(
-    ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "cor")) + ggplot2::geom_tile(color =
+    ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "p.value")) + ggplot2::geom_tile(color =
                                                                                                         "darkgrey", size = 1) +
       ggplot2::scale_fill_gradient(
         low = "#6D9EC1",
