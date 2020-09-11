@@ -243,6 +243,7 @@ app_ui <- function(request) {
                 style = 'max-width:800px;margin:auto;',
                 fluidPage(
                   h4("Heatmap"),
+                  textOutput("text_limma_heatmapcount"),
                   uiOutput("graph_limma_heatmapcontainer"),
                   h4("DMP counts in each contrast:"),
                   tableOutput("table_limma_difcpgs") %>% shinycssloaders::withSpinner(),
@@ -268,7 +269,7 @@ app_ui <- function(request) {
                   ),
                   
                   h4("Clustering options", align =
-                       "center"),
+                       "left"),
                   
                   column(
                     4,
@@ -344,7 +345,7 @@ app_ui <- function(request) {
                         "Clusters number",
                         value = 2,
                         min = 1,
-                        max = 10,
+                        max = Inf,
                         step = 1
                       )
                     ),

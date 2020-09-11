@@ -785,47 +785,71 @@ app_server = function(input, output, session) {
   })
   
   
-  rval_filteredlist2heatmap = reactive({
-    filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
-    dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
-    join_table = rval_gset_getBeta()[dif_cpgs,]
-    join_table$cpg = NULL
-    
-    #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
-    if (is.null(join_table) |
-        nrow(join_table) < 2 | nrow(join_table) > 12000)
+  rval_filteredlist2heatmap = reactive(
     {
-      rval_filteredlist2heatmap_valid(FALSE)
-      shinyjs::disable("download_export_heatmaps")
-      NULL
-    }
-    else
-    {
-      shinyjs::enable("download_export_heatmaps")
-      rval_filteredlist2heatmap_valid(TRUE)
-      join_table
-    }
-    
+      filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
+      dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
+      join_table = rval_gset_getBeta()[dif_cpgs, ]
+      join_table$cpg = NULL
+      
+      #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
+      if (is.null(join_table) |
+          nrow(join_table) < 2 | nrow(join_table) > 12000)
+      {
+        rval_filteredlist2heatmap_valid(FALSE)
+        shinyjs::disable("download_export_heatmaps")
+        NULL
+      }
+      else
+      {
+        shinyjs::enable("download_export_heatmaps")
+        rval_filteredlist2heatmap_valid(TRUE)
+        join_table
+      }
+      
   })
   
+  rval_cpgcount_heatmap = eventReactive(input$button_limma_heatmapcalc, nrow(rval_filteredlist2heatmap()))
+  
   rval_dendrogram = eventReactive(input$button_limma_heatmapcalc,
-   {if(input$select_limma_rowsidecolors)
-    create_dendrogram(
-      rval_filteredlist2heatmap(),
-      factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
-                             levels = input$select_limma_groups2plot),
-      groups2plot = rval_voi() %in% input$select_limma_groups2plot,
-      clusteralg = input$select_limma_clusteralg,
-      distance = input$select_limma_clusterdist,
-      scale_selection = input$select_limma_scale,
-      k_number = input$select_limma_knumber)
-    else
-      NULL
-   }
-  )
+                                  {
+                                    if (input$select_limma_rowsidecolors)
+                                      
+                                      #check if dendrogram cutting works (k should be minor than heatmap rows)
+                                      try({
+                                        dendrogram = create_dendrogram(
+                                          rval_filteredlist2heatmap(),
+                                          factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
+                                                                 levels = input$select_limma_groups2plot),
+                                          groups2plot = rval_voi() %in% input$select_limma_groups2plot,
+                                          clusteralg = input$select_limma_clusteralg,
+                                          distance = input$select_limma_clusterdist,
+                                          scale_selection = input$select_limma_scale,
+                                          k_number = input$select_limma_knumber
+                                        )
+                                      })
+                                    
+                                    else
+                                      dendrogram = NULL
+                                    
+                                    
+                                    if (!exists("dendrogram", inherits = FALSE)) {
+                                      dendrogram = NULL
+                                      showModal(
+                                        modalDialog(
+                                          title = "Row clustering error",
+                                          "An error has ocurred during cluster cutting from row dendrogram. Maybe the number of clusters selected is too high.",
+                                          easyClose = TRUE,
+                                          footer = NULL
+                                        )
+                                      )
+                                    }
+                                    
+                                    dendrogram #returning the dendrogram classification
+                                    
+                                  })
   
   plot_heatmap = eventReactive(input$button_limma_heatmapcalc,
-                               
                                {
                                  validate(need(
                                    !is.null(rval_filteredlist2heatmap()),
@@ -902,18 +926,18 @@ app_server = function(input, output, session) {
           plotOutput(
             "graph_limma_heatmap_static",
             width = "600px",
-            height = "630px"
+            height = "600px"
           ) %>% shinycssloaders::withSpinner()
         )
     })
-    
-    
     
     if (!as.logical(input$select_limma_graphstatic))
       output$graph_limma_heatmap_interactive = plotly::renderPlotly(plot_heatmap())
     else
       output$graph_limma_heatmap_static = renderPlot(plot_heatmap())
   })
+  
+  output$text_limma_heatmapcount = renderText(paste("CpGs in heatmap:", rval_cpgcount_heatmap()))
   
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
@@ -989,10 +1013,8 @@ app_server = function(input, output, session) {
   observe({
     if (rval_analysis_finished() &
         input$select_export_bedtype == "by heatmap cluster" &
-        (
-          !rval_filteredlist2heatmap_valid() |
-          !as.logical(input$select_limma_rowsidecolors)
-        )) {
+        (!rval_filteredlist2heatmap_valid() |
+         is.null(rval_dendrogram()))) {
       shinyjs::disable("download_export_filteredbeds")
     } else if (rval_analysis_finished() &
                input$select_export_bedtype == "by contrasts") {

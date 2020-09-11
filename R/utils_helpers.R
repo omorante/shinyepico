@@ -575,22 +575,21 @@ create_boxplot = function(Bvalues, n = 200000) {
 }
 
 create_dendrogram = function(plot_data,
-                          factorgroups,
-                          groups2plot,
-                          clusteralg = "average",
-                          distance = "pearson",
-                          scale_selection = "row",
-                          k_number) {
-  
+                             factorgroups,
+                             groups2plot,
+                             clusteralg = "average",
+                             distance = "pearson",
+                             scale_selection = "row",
+                             k_number) {
   heatdata = as.matrix(plot_data)
-  heatdata = heatdata[stats::complete.cases(heatdata), ]
+  heatdata = heatdata[stats::complete.cases(heatdata),]
   class(heatdata) = "numeric"
   
   #subsetting heatdata groups2plot
   heatdata = heatdata[, groups2plot]
   
   #scaling data if option is selected
-  if(scale_selection=="row") 
+  if (scale_selection == "row")
     heatdata = t(scale(t(heatdata)))
   
   
@@ -605,17 +604,17 @@ create_dendrogram = function(plot_data,
   if (distance == "euclidean")
     distfun = stats::dist
   else
-    distfun = function(x) 
+    distfun = function(x)
       stats::as.dist(1 - stats::cor(t(x), method = distance))
   
   
   distance = distfun(heatdata)
   clustering = hclust(distance, clusteralg)
-  clusters = cutree(clustering, k=k_number)
+  clusters = cutree(clustering, k = k_number)
   
   rowside_scale = grDevices::rainbow(length(unique(clusters)))
-
-  for(number in unique(clusters)){
+  
+  for (number in unique(clusters)) {
     clusters[clusters == number] = rowside_scale[number]
   }
   
