@@ -130,6 +130,8 @@ create_filtered_list = function(limma_list,
       
       tt_global = tt_global[stats::complete.cases(tt_global),]
       
+      data.table::setDT(tt_global)
+      
       doParallel::stopImplicitCluster()
       
       tt_global
@@ -162,7 +164,8 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
         names(filtered_data), "_hypermethylated"
       ))
   ) %dopar% {
-    temp = dplyr::left_join(table[table$dif_current < 0, ], annotation, by = "cpg")
+    temp = data.table::merge.data.table(table[table$dif_current < 0,], annotation, by = "cpg", all.x = TRUE)
+      dplyr::left_join(table[table$dif_current < 0, ], annotation, by = "cpg")
     
     data.table::data.table(
       chr = temp$chr,
@@ -181,7 +184,7 @@ create_filtered_beds = function(filtered_data, annotation, cores) {
           names(filtered_data), "_hypomethylated"
         ))
     ) %dopar% {
-      temp = dplyr::left_join(table[table$dif_current > 0, ], annotation, by = "cpg")
+      temp = data.table::merge.data.table(table[table$dif_current > 0, ], annotation, by = "cpg", all.x = TRUE)
       data.table::data.table(
         chr = temp$chr,
         start = format(temp$pos - 1, scientific = FALSE),
@@ -323,7 +326,7 @@ create_heatmap = function(plot_data,
       colCol = NULL,
       cexRow = 1,
       cexCol = 1,
-      margins = c(15, 2),
+      margins = c(12, 1),
       labCol = NULL,
       srtRow = NULL,
       srtCol = NULL,

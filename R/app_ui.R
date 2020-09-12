@@ -272,7 +272,7 @@ app_ui <- function(request) {
                        "left"),
                   
                   column(
-                    4,
+                    6,
                     selectInput(
                       "select_limma_clusteralg",
                       "Clustering algorithm:",
@@ -299,42 +299,42 @@ app_ui <- function(request) {
                   ),
                   
                   column(
-                    4,
+                    3,
                     
                     tags$br(),
                     
                     switchInput(
                       inputId = "select_limma_graphstatic",
                       label = "Static Graph",
-                      labelWidth = "80px",
+                      labelWidth = "100px",
                       value = TRUE,
                     ),
                     
                     switchInput(
                       inputId = "select_limma_colv",
-                      label = "Column Dendogram",
-                      labelWidth = "80px",
+                      label = "Column Dendro.",
+                      labelWidth = "100px",
                       value = TRUE,
                     ),
                     
                     switchInput(
                       inputId = "select_limma_colsidecolors",
                       label = "Column Colors",
-                      labelWidth = "80px",
+                      labelWidth = "100px",
                       value = FALSE,
                     )
                     
                   ),
                   
                   column(
-                    4,
+                    3,
                     
                     tags$br(),
                     
                     switchInput(
                       inputId = "select_limma_rowsidecolors",
                       label = "Row Colors",
-                      labelWidth = "80px",
+                      labelWidth = "100px",
                       value = FALSE,
                     ),
                     

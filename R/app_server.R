@@ -910,32 +910,34 @@ app_server = function(input, output, session) {
                              })
   
   
-  observeEvent(input$button_limma_heatmapcalc, {
-    #Render the correct plot depending on the selected
-    output$graph_limma_heatmapcontainer = renderUI({
-      if (!as.logical(input$select_limma_graphstatic))
-        return(
-          plotly::plotlyOutput(
-            "graph_limma_heatmap_interactive",
-            width = "600px",
-            height = "500px"
-          )  %>% shinycssloaders::withSpinner()
-        )
-      else
-        return(
-          plotOutput(
-            "graph_limma_heatmap_static",
-            width = "600px",
-            height = "600px"
-          ) %>% shinycssloaders::withSpinner()
-        )
-    })
-    
-    if (!as.logical(input$select_limma_graphstatic))
-      output$graph_limma_heatmap_interactive = plotly::renderPlotly(plot_heatmap())
-    else
-      output$graph_limma_heatmap_static = renderPlot(plot_heatmap())
-  })
+  
+  observeEvent(input$button_limma_heatmapcalc,
+               {
+                 #Render the correct plot depending on the selected
+                 output$graph_limma_heatmapcontainer = renderUI({
+                   if (!as.logical(input$select_limma_graphstatic))
+                     return(
+                       plotly::plotlyOutput(
+                         "graph_limma_heatmap_interactive",
+                         width = "600px",
+                         height = "500px"
+                       )  %>% shinycssloaders::withSpinner()
+                     )
+                   else
+                     return(
+                       plotOutput(
+                         "graph_limma_heatmap_static",
+                         width = "600px",
+                         height = "600px"
+                       ) %>% shinycssloaders::withSpinner()
+                     )
+                 })
+                 
+                 if (!as.logical(input$select_limma_graphstatic))
+                   output$graph_limma_heatmap_interactive = plotly::renderPlotly(plot_heatmap())
+                 else
+                   output$graph_limma_heatmap_static = renderPlot(plot_heatmap())
+               })
   
   output$text_limma_heatmapcount = renderText(paste("CpGs in heatmap:", rval_cpgcount_heatmap()))
   
