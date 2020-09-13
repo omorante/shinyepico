@@ -214,7 +214,7 @@ app_ui <- function(request) {
             inputId = "select_limma_weights",
             label = "Array Weights",
             labelWidth = "80px",
-            value = FALSE,
+            value = FALSE
           ),
           
           
@@ -245,7 +245,7 @@ app_ui <- function(request) {
                   h4("Heatmap"),
                   textOutput("text_limma_heatmapcount"),
                   uiOutput("graph_limma_heatmapcontainer"),
-                  h4("DMP counts in each contrast:"),
+                  h4("DMP counts in each contrast"),
                   tableOutput("table_limma_difcpgs") %>% shinycssloaders::withSpinner(),
                   column(
                     6,
@@ -256,7 +256,7 @@ app_ui <- function(request) {
                       "Contrasts to plot",
                       c(),
                       multiple = TRUE
-                    ),
+                    )
                   ),
                   
                   column(
@@ -295,7 +295,7 @@ app_ui <- function(request) {
                     ),
                     
                     selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
-                    tags$br(),
+                    tags$br()
                   ),
                   
                   column(
@@ -307,21 +307,21 @@ app_ui <- function(request) {
                       inputId = "select_limma_graphstatic",
                       label = "Static Graph",
                       labelWidth = "100px",
-                      value = TRUE,
+                      value = TRUE
                     ),
                     
                     switchInput(
                       inputId = "select_limma_colv",
                       label = "Column Dendro.",
                       labelWidth = "100px",
-                      value = TRUE,
+                      value = TRUE
                     ),
                     
                     switchInput(
                       inputId = "select_limma_colsidecolors",
                       label = "Column Colors",
                       labelWidth = "100px",
-                      value = FALSE,
+                      value = FALSE
                     )
                     
                   ),
@@ -335,7 +335,7 @@ app_ui <- function(request) {
                       inputId = "select_limma_rowsidecolors",
                       label = "Row Colors",
                       labelWidth = "100px",
-                      value = FALSE,
+                      value = FALSE
                     ),
                     
                     conditionalPanel(
@@ -351,7 +351,7 @@ app_ui <- function(request) {
                     ),
                     
                     shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
-                  ),
+                  )
                   
                 )
               )

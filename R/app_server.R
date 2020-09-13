@@ -1019,6 +1019,9 @@ app_server = function(input, output, session) {
          is.null(rval_dendrogram()))) {
       shinyjs::disable("download_export_filteredbeds")
     } else if (rval_analysis_finished() &
+             rval_filteredlist2heatmap_valid() & !is.null(rval_dendrogram())) {
+      shinyjs::enable("download_export_filteredbeds")
+    } else if (rval_analysis_finished() &
                input$select_export_bedtype == "by contrasts") {
       shinyjs::enable("download_export_filteredbeds")
     }
