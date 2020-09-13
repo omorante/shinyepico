@@ -1010,7 +1010,7 @@ app_server = function(input, output, session) {
   )
   
   
-  rval_annotation = reactive(minfi::getAnnotation(rval_gset()))
+  rval_annotation = reactive(as.data.frame(minfi::getAnnotation(rval_gset())))
   
   observe({
     if (rval_analysis_finished() &
@@ -1034,35 +1034,25 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
                    {
-                     
                      if (input$select_export_bedtype == "by heatmap cluster") {
-                       
-                       filtered_beds = create_filtered_bed_clusters(dendro_data = rval_dendrogram(),
-                                                                    annotation = rval_annotation(),
-                                                                    cores = n_cores)
+                       create_filtered_bed_clusters( dendro_data = rval_dendrogram(),
+                                                     annotation = rval_annotation(),
+                                                     directory = dirname(file)
+                       )
                        
                      }
                      else{
-                       filtered_beds = create_filtered_beds(rval_filteredlist(), rval_annotation(), 
-                                                            cores = n_cores)
+                       create_filtered_beds(rval_filteredlist(),
+                                            rval_annotation(),
+                                            directory = dirname(file))
                      }
-                     
-                     lapply(names(filtered_beds), function(x) {
-                       data.table::fwrite(
-                         filtered_beds[[x]],
-                         file = paste0(dirname(file), "/", x, ".bed"),
-                         sep = "\t",
-                         quote = FALSE,
-                         col.names = FALSE,
-                         row.names = FALSE
-                       )
-                     })
                      
                      objects = list.files(path = dirname(file),
                                           full.names = TRUE,
                                           pattern = "*.bed")
                      
                      utils::zip(file, objects, flags = "-j9X")
+                     
                      file.remove(objects) #removing objects after exporting
                      
                      shinyjs::enable("download_export_filteredbeds")

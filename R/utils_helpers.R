@@ -148,97 +148,75 @@ create_filtered_list = function(limma_list,
 
 
 # DOWNLOAD HANDLER FUNCTIONS
-create_filtered_beds = function(filtered_data, annotation, cores) {
-  doParallel::registerDoParallel(cores)
+fwrite_bed = function(bed_file, file_name){
+  
+  bed_file = data.table::data.table(
+    chr = bed_file$chr,
+    start = format(bed_file$pos - 1, scientific = FALSE),
+    end = format(bed_file$pos, scientific = FALSE),
+    name = bed_file$cpg
+  )
+  
+  data.table::fwrite(
+    bed_file,
+    file = file_name,
+    sep = "\t",
+    quote = FALSE,
+    col.names = FALSE,
+    row.names = FALSE
+  )
+}
+
+create_filtered_beds = function(filtered_data, annotation, directory) {
   
   annotation$cpg = row.names(annotation)
-  annotation = data.table::as.data.table(annotation)
-  
+  annotation = data.table::setDT(annotation)
   
   #saving hypo and hyper results individually
-  
-  result = foreach::foreach (
-    table = filtered_data,
-    .final = function(x)
-      stats::setNames(x, paste0(
-        names(filtered_data), "_hypermethylated"
-      ))
-  ) %dopar% {
-    temp = data.table::merge.data.table(table[table$dif_current < 0,], annotation, by = "cpg", all.x = TRUE)
-      dplyr::left_join(table[table$dif_current < 0, ], annotation, by = "cpg")
+  lapply(names(filtered_data), function(name) {
+    temp = data.table::merge.data.table(filtered_data[[name]][filtered_data[[name]]$dif_current < 0,],
+                                        annotation,
+                                        by = "cpg",
+                                        all.x = TRUE)
     
-    data.table::data.table(
-      chr = temp$chr,
-      start = format(temp$pos - 1, scientific = FALSE),
-      end = format(temp$pos, scientific = FALSE),
-      name = temp$cpg
-    )
-  }
+    fwrite_bed(temp,
+               file_name = paste0(directory, "/", name, "_hypermethylated.bed"))
+  })
   
-  result = c(
-    result,
-    foreach::foreach (
-      table = filtered_data,
-      .final = function(x)
-        stats::setNames(x, paste0(
-          names(filtered_data), "_hypomethylated"
-        ))
-    ) %dopar% {
-      temp = data.table::merge.data.table(table[table$dif_current > 0, ], annotation, by = "cpg", all.x = TRUE)
-      data.table::data.table(
-        chr = temp$chr,
-        start = format(temp$pos - 1, scientific = FALSE),
-        end = format(temp$pos, scientific = FALSE),
-        name = temp$cpg
-      )
-    }
-  )
+  lapply(names(filtered_data), function(name) {
+    temp = data.table::merge.data.table(filtered_data[[name]][filtered_data[[name]]$dif_current > 0, ],
+                                        annotation,
+                                        by = "cpg",
+                                        all.x = TRUE)
+    
+    fwrite_bed(temp,
+               file_name = paste0(directory, "/", name, "_hypomethylated.bed"))
+  })
   
   
-  result[["annotation"]] = data.table::data.table(
-    chr = annotation$chr,
-    start = format(annotation$pos - 1, scientific = FALSE),
-    end = format(annotation$pos, scientific = FALSE),
-    name = annotation$cpg
-  )
-  
-  result
+  fwrite_bed(annotation, file_name = paste0(directory, "/", "annotation.bed"))
   
 }
 
-create_filtered_bed_clusters = function(dendro_data, annotation, cores) {
-  doParallel::registerDoParallel(cores)
-  
+create_filtered_bed_clusters = function(dendro_data, annotation, directory) {
   annotation$cpg = row.names(annotation)
-  annotation = data.table::as.data.table(annotation)
+  annotation = data.table::setDT(annotation)
   
   #saving results by cluster
-  result = foreach::foreach (
-    cluster = unique(dendro_data),
-    .final = function(x)
-      stats::setNames(x, paste0("Cluster_", seq_along(
-        unique(dendro_data))))
-  ) %dopar% {
+  lapply(unique(dendro_data), function(cluster) {
+    temp = annotation[annotation$cpg %in% names(dendro_data)[dendro_data == cluster], ]
     
-    temp = annotation[annotation$cpg %in% names(dendro_data)[dendro_data == cluster],]
-    
-    data.table::data.table(
-      chr = temp$chr,
-      start = format(temp$pos - 1, scientific = FALSE),
-      end = format(temp$pos, scientific = FALSE),
-      name = temp$cpg
-    )
-  }
+    fwrite_bed(temp,
+               file_name = paste0(
+                 directory,
+                 "/",
+                 "Cluster_",
+                 which(unique(dendro_data) %in% cluster),
+                 ".bed"
+               ))
+  })
   
-  result[["annotation"]] = data.table::data.table(
-    chr = annotation$chr,
-    start = format(annotation$pos - 1, scientific = FALSE),
-    end = format(annotation$pos, scientific = FALSE),
-    name = annotation$cpg
-  )
-  
-  result
-  
+  fwrite_bed(annotation, file_name = paste0(directory, "/", "annotation.bed"))
 }
 
 #GRAPHIC FUNCTIONS
