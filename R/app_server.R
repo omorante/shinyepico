@@ -477,7 +477,7 @@ app_server = function(input, output, session) {
                    "checkbox_limma_covariables",
                    label = "Select linear model covariables",
                    choices = colnames(rval_clean_sheet_target()),
-                   selected = input$select_input_donorvar,
+                   selected = input$select_input_donorvar
                  )
                  
                  #possible interactions of variables:
@@ -495,7 +495,7 @@ app_server = function(input, output, session) {
                    "checkbox_limma_interactions",
                    label = "Select linear model interactions",
                    choices = interactions,
-                   selected = input$select_input_donorvar,
+                   selected = input$select_input_donorvar
                  )
                  
                  shinyjs::enable("button_limma_calculatemodel")
