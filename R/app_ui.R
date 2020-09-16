@@ -247,110 +247,123 @@ app_ui <- function(request) {
                   uiOutput("graph_limma_heatmapcontainer"),
                   h4("DMP counts in each contrast"),
                   tableOutput("table_limma_difcpgs") %>% shinycssloaders::withSpinner(),
-                  column(
-                    6,
-                    h4("Group options"),
-                    selectizeInput("select_limma_groups2plot", "Groups to plot", c(), multiple = TRUE),
-                    selectizeInput(
-                      "select_limma_contrasts2plot",
-                      "Contrasts to plot",
-                      c(),
-                      multiple = TRUE
-                    )
-                  ),
                   
-                  column(
-                    6,
-                    h4("Filtering options"),
-                    sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
-                    sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
-                    sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
+                  fluidRow(
+                    column(
+                      6,
+                      h4("Group options"),
+                      selectizeInput(
+                        "select_limma_groups2plot",
+                        "Groups to plot",
+                        c(),
+                        multiple = TRUE,
+                        options = list(plugins = list('remove_button', 'drag_drop'))
+                      ),
+                      
+                      selectizeInput(
+                        "select_limma_contrasts2plot",
+                        "Contrasts to plot",
+                        c(),
+                        multiple = TRUE,
+                        options = list(plugins = list('remove_button', 'drag_drop'))
+                      )
+                    ),
                     
+                    column(
+                      6,
+                      h4("Filtering options"),
+                      sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
+                      sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
+                      sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
+                      
+                    )
                   ),
                   
                   h4("Clustering options", align =
                        "left"),
                   
-                  column(
-                    6,
-                    selectInput(
-                      "select_limma_clusteralg",
-                      "Clustering algorithm:",
-                      c(
-                        "single",
-                        "complete",
-                        "average",
-                        "mcquitty",
-                        "median",
-                        "centroid"
+                  fluidRow(
+                    column(
+                      5,
+                      selectInput(
+                        "select_limma_clusteralg",
+                        "Clustering algorithm:",
+                        c(
+                          "single",
+                          "complete",
+                          "average",
+                          "mcquitty",
+                          "median",
+                          "centroid"
+                        ),
+                        "average"
                       ),
-                      "average"
+                      
+                      selectInput(
+                        "select_limma_clusterdist",
+                        "Distance Function:",
+                        c("pearson", "spearman", "kendall", "euclidean"),
+                        "pearson"
+                      ),
+                      
+                      selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                      tags$br()
                     ),
                     
-                    selectInput(
-                      "select_limma_clusterdist",
-                      "Distance Function:",
-                      c("pearson", "spearman", "kendall", "euclidean"),
-                      "pearson"
-                    ),
-                    
-                    selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
-                    tags$br()
-                  ),
-                  
-                  column(
-                    3,
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_graphstatic",
-                      label = "Static Graph",
-                      labelWidth = "100px",
-                      value = TRUE
-                    ),
-                    
-                    switchInput(
-                      inputId = "select_limma_colv",
-                      label = "Column Dendro.",
-                      labelWidth = "100px",
-                      value = TRUE
-                    ),
-                    
-                    switchInput(
-                      inputId = "select_limma_colsidecolors",
-                      label = "Column Colors",
-                      labelWidth = "100px",
-                      value = FALSE
-                    )
-                    
-                  ),
-                  
-                  column(
-                    3,
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_rowsidecolors",
-                      label = "Row Colors",
-                      labelWidth = "100px",
-                      value = FALSE
-                    ),
-                    
-                    conditionalPanel(
-                      "input.select_limma_rowsidecolors",
-                      numericInput(
-                        "select_limma_knumber",
-                        "Clusters number",
-                        value = 2,
-                        min = 1,
-                        max = Inf,
-                        step = 1
+                    column(
+                      3,
+                      offset=1,
+                      tags$br(),
+                      
+                      switchInput(
+                        inputId = "select_limma_graphstatic",
+                        label = "Static Graph",
+                        labelWidth = "100px",
+                        value = TRUE
+                      ),
+                      
+                      switchInput(
+                        inputId = "select_limma_colv",
+                        label = "Column Dendro.",
+                        labelWidth = "100px",
+                        value = TRUE
+                      ),
+                      
+                      switchInput(
+                        inputId = "select_limma_colsidecolors",
+                        label = "Column Colors",
+                        labelWidth = "100px",
+                        value = FALSE
                       )
+                      
                     ),
                     
-                    shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                    column(
+                      3,
+                      
+                      tags$br(),
+                      
+                      switchInput(
+                        inputId = "select_limma_rowsidecolors",
+                        label = "Row Colors",
+                        labelWidth = "100px",
+                        value = FALSE
+                      ),
+                      
+                      conditionalPanel(
+                        "input.select_limma_rowsidecolors",
+                        numericInput(
+                          "select_limma_knumber",
+                          "Clusters number",
+                          value = 2,
+                          min = 1,
+                          max = Inf,
+                          step = 1
+                        )
+                      ),
+                      
+                      shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                    )
                   )
                   
                 )
