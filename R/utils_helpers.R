@@ -21,7 +21,7 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
     isolate({
       single.means = data.frame(cpg = rownames(Bvalues_totales))
       nombre_media = paste("mean", grupo, sep = "_")
-      single.means[nombre_media] = rowMeans(Bvalues_totales[, grupos == grupo])
+      single.means[nombre_media] = rowMeans(Bvalues_totales[, grupos == grupo, drop=FALSE])
       single.means[,-1, drop = FALSE]
     })
   }

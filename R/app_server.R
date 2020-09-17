@@ -677,8 +677,32 @@ app_server = function(input, output, session) {
 
   #Calculation of global difs
   rval_globaldifs = eventReactive(input$button_limma_calculatedifs, {
-    calculate_global_difs(rval_gset_getBeta(), rval_voi(), rval_contrasts(), cores =
-                            n_cores)
+    try({
+      globaldifs = calculate_global_difs(rval_gset_getBeta(), rval_voi(), rval_contrasts(), cores =
+                                           n_cores)
+    })
+    
+    if (!exists("globaldifs", inherits = FALSE)) {
+      showModal(
+        modalDialog(
+          title = "Global difs calculation error",
+          "An unexpected error has ocurred during global diffs and means calculation. Please, check your selected samples.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+    }
+    
+    validate(
+      need(
+        exists("globaldifs", inherits = FALSE),
+        "An unexpected error has ocurred during global diffs and means calculation."
+      )
+    )
+    
+    globaldifs
+    
+    
   })
   
   #Calculation of differences (eBayes)
