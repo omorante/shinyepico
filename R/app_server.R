@@ -41,7 +41,7 @@ app_server = function(input, output, session) {
       unlink(paste0(tempdir(), "/experiment_data"), recursive = TRUE) #remove current files in target directory
     }
         
-    utils::unzip(input$fileinput_input$datapath,
+    zip::unzip(input$fileinput_input$datapath,
                  exdir = paste0(tempdir(), "/experiment_data")) #extracting zip
     
     sheet = minfi::read.metharray.sheet(paste0(tempdir(), "/experiment_data"))
@@ -1027,7 +1027,13 @@ app_server = function(input, output, session) {
                      objects = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
                      
                      setProgress(value = 3, message = "Compressing RObjects...")
-                     utils::zip(file, objects, flags = "-j9X")
+                     zip::zip(
+                       file,
+                       objects,
+                       recurse = FALSE,
+                       include_directories = FALSE,
+                       mode = "cherry-pick"
+                     )
                      shinyjs::enable("download_export_robjects")
                    })
     }
@@ -1078,7 +1084,13 @@ app_server = function(input, output, session) {
                                           full.names = TRUE,
                                           pattern = "*.bed")
                      
-                     utils::zip(file, objects, flags = "-j9X")
+                     zip::zip(
+                       file,
+                       objects,
+                       recurse = FALSE,
+                       include_directories = FALSE,
+                       mode = "cherry-pick"
+                     )
                      
                      file.remove(objects) #removing objects after exporting
                      
@@ -1090,8 +1102,6 @@ app_server = function(input, output, session) {
   
   
   #Markdown Report
-  
-  
   output$download_export_markdown = downloadHandler(
     filename = "Report.html",
     content = function(file) {
@@ -1161,11 +1171,7 @@ app_server = function(input, output, session) {
     }
   )
   
-  
-  
-  
   #custom heatmap
-  
   output$download_export_heatmaps = downloadHandler(
     "Custom_heatmap.pdf",
     content = function(file) {
