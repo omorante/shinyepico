@@ -408,7 +408,7 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
     cor_data,
     id.vars = "Var1",
     variable.name = "Var2",
-    value.name = "p.value"
+    value.name = "cor"
   )
   
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
