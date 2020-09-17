@@ -214,7 +214,7 @@ app_ui <- function(request) {
             inputId = "select_limma_weights",
             label = "Array Weights",
             labelWidth = "80px",
-            value = FALSE,
+            value = FALSE
           ),
           
           
@@ -243,95 +243,128 @@ app_ui <- function(request) {
                 style = 'max-width:800px;margin:auto;',
                 fluidPage(
                   h4("Heatmap"),
+                  textOutput("text_limma_heatmapcount"),
                   uiOutput("graph_limma_heatmapcontainer"),
-                  h4("DMP counts in each contrast:"),
+                  h4("DMP counts in each contrast"),
                   tableOutput("table_limma_difcpgs") %>% shinycssloaders::withSpinner(),
-                  column(
-                    6,
-                    h4("Group options"),
-                    selectizeInput("select_limma_groups2plot", "Groups to plot", c(), multiple = TRUE),
-                    selectizeInput(
-                      "select_limma_contrasts2plot",
-                      "Contrasts to plot",
-                      c(),
-                      multiple = TRUE
-                    ),
-                  ),
                   
-                  column(
-                    6,
-                    h4("Filtering options"),
-                    sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
-                    sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
-                    sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
+                  fluidRow(
+                    column(
+                      6,
+                      h4("Group options"),
+                      selectizeInput(
+                        "select_limma_groups2plot",
+                        "Groups to plot",
+                        c(),
+                        multiple = TRUE,
+                        options = list(plugins = list('remove_button', 'drag_drop'))
+                      ),
+                      
+                      selectizeInput(
+                        "select_limma_contrasts2plot",
+                        "Contrasts to plot",
+                        c(),
+                        multiple = TRUE,
+                        options = list(plugins = list('remove_button', 'drag_drop'))
+                      )
+                    ),
                     
+                    column(
+                      6,
+                      h4("Filtering options"),
+                      sliderInput("slider_limma_deltab", "Min. DeltaBeta", 0, 1, 0.2),
+                      sliderInput("slider_limma_adjpvalue", "Max. FDR", 0, 1, 0.05),
+                      sliderInput("slider_limma_pvalue", "Max. p-value", 0, 1, 1)
+                      
+                    )
                   ),
                   
                   h4("Clustering options", align =
-                       "center"),
+                       "left"),
                   
-                  column(
-                    6,
-                    selectInput(
-                      "select_limma_clusteralg",
-                      "Clustering algorithm:",
-                      c(
-                        "single",
-                        "complete",
-                        "average",
-                        "mcquitty",
-                        "median",
-                        "centroid"
+                  fluidRow(
+                    column(
+                      5,
+                      selectInput(
+                        "select_limma_clusteralg",
+                        "Clustering algorithm:",
+                        c(
+                          "single",
+                          "complete",
+                          "average",
+                          "mcquitty",
+                          "median",
+                          "centroid"
+                        ),
+                        "average"
                       ),
-                      "average"
+                      
+                      selectInput(
+                        "select_limma_clusterdist",
+                        "Distance Function:",
+                        c("pearson", "spearman", "kendall", "euclidean"),
+                        "pearson"
+                      ),
+                      
+                      selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                      tags$br()
                     ),
                     
-                    selectInput(
-                      "select_limma_clusterdist",
-                      "Distance Function:",
-                      c("pearson", "spearman", "kendall", "euclidean"),
-                      "pearson"
+                    column(
+                      3,
+                      offset=1,
+                      tags$br(),
+                      
+                      switchInput(
+                        inputId = "select_limma_graphstatic",
+                        label = "Static Graph",
+                        labelWidth = "100px",
+                        value = TRUE
+                      ),
+                      
+                      switchInput(
+                        inputId = "select_limma_colv",
+                        label = "Column Dendro.",
+                        labelWidth = "100px",
+                        value = TRUE
+                      ),
+                      
+                      switchInput(
+                        inputId = "select_limma_colsidecolors",
+                        label = "Column Colors",
+                        labelWidth = "100px",
+                        value = FALSE
+                      )
+                      
                     ),
                     
-                    selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
-                    tags$br(),
-                  ),
-                  
-                  column(
-                    6,
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_colv",
-                      label = "Column Dendogram",
-                      labelWidth = "80px",
-                      value = TRUE,
-                    ),
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_colsidecolors",
-                      label = "ColSideColors",
-                      labelWidth = "80px",
-                      value = FALSE,
-                    ),
-                    
-                    tags$br(),
-                    
-                    switchInput(
-                      inputId = "select_limma_graphstatic",
-                      label = "Static Graph",
-                      labelWidth = "80px",
-                      value = TRUE,
-                    ),
-                    
-                    tags$br(),
-                    shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
-                  ),
-                  
-                  
+                    column(
+                      3,
+                      
+                      tags$br(),
+                      
+                      switchInput(
+                        inputId = "select_limma_rowsidecolors",
+                        label = "Row Colors",
+                        labelWidth = "100px",
+                        value = FALSE
+                      ),
+                      
+                      conditionalPanel(
+                        "input.select_limma_rowsidecolors",
+                        numericInput(
+                          "select_limma_knumber",
+                          "Clusters number",
+                          value = 2,
+                          min = 1,
+                          max = Inf,
+                          step = 1
+                        )
+                      ),
+                      
+                      shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
+                    )
+                  )
                   
                 )
               )
@@ -347,20 +380,23 @@ app_ui <- function(request) {
       h3("Download RObjects:"),
       downloadButton("download_export_robjects"),
       p(
-        "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc."
+        "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"
       ),
       h3("Download filtered bed files:"),
+      selectInput("select_export_bedtype",
+                  "Subsetting mode",
+                  c("by contrasts", "by heatmap cluster"),
+                  selected = "by contrast"),
       downloadButton("download_export_filteredbeds"),
       p(
-        "Press to download the created filtered lists of contrasts,
-        with the chosen criteria, in bed format. Useful to use with HOMER, GREAT...
-        Be aware that EPIC is annotated with hg19 genome."
+        "Press to download the created filtered lists of contrasts, or heatmap clusters,
+        with the chosen criteria, in bed format (hg19 genome)."
       ),
-      h3("Download Markdown Report:"),
+      h3("Download Workflow Report:"),
       downloadButton("download_export_markdown"),
       p(
-        "Press to download the RMarkdown report of all the steps follow and selected in the pipeline."
-      ),
+        "Press to download the report of all the steps follow and selected in the pipeline, and the results."
+      ), 
       h3("Download Heatmap:"),
       downloadButton("download_export_heatmaps"),
       p(
@@ -377,7 +413,7 @@ app_ui <- function(request) {
       img(src = "images/logo.png",
           width = 150), 
       h1("shiny\u00C9PICo") ,
-      h3("0.9.3"),
+      h3("1.0.0"),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target="_blank")

@@ -21,7 +21,7 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
     isolate({
       single.means = data.frame(cpg = rownames(Bvalues_totales))
       nombre_media = paste("mean", grupo, sep = "_")
-      single.means[nombre_media] = rowMeans(Bvalues_totales[, grupos == grupo])
+      single.means[nombre_media] = rowMeans(Bvalues_totales[, grupos == grupo, drop=FALSE])
       single.means[,-1, drop = FALSE]
     })
   }
@@ -130,6 +130,8 @@ create_filtered_list = function(limma_list,
       
       tt_global = tt_global[stats::complete.cases(tt_global),]
       
+      data.table::setDT(tt_global)
+      
       doParallel::stopImplicitCluster()
       
       tt_global
@@ -146,71 +148,84 @@ create_filtered_list = function(limma_list,
 
 
 # DOWNLOAD HANDLER FUNCTIONS
-create_filtered_beds = function(filtered_data, annotation, cores) {
-  doParallel::registerDoParallel(cores)
+fwrite_bed = function(bed_file, file_name){
+  
+  bed_file = data.table::data.table(
+    chr = bed_file$chr,
+    start = format(bed_file$pos - 1, scientific = FALSE),
+    end = format(bed_file$pos, scientific = FALSE),
+    name = bed_file$cpg
+  )
+  
+  data.table::fwrite(
+    bed_file,
+    file = file_name,
+    sep = "\t",
+    quote = FALSE,
+    col.names = FALSE,
+    row.names = FALSE
+  )
+}
+
+create_filtered_beds = function(filtered_data, annotation, directory) {
   
   annotation$cpg = row.names(annotation)
-  annotation = data.table::as.data.table(annotation)
-  
+  annotation = data.table::setDT(annotation)
   
   #saving hypo and hyper results individually
-  
-  result = foreach::foreach (
-    table = filtered_data,
-    .final = function(x)
-      stats::setNames(x, paste0(
-        names(filtered_data), "_hypermethylated"
-      ))
-  ) %dopar% {
-    temp = dplyr::left_join(table[table$dif_current < 0, ], annotation, by = "cpg")
+  lapply(names(filtered_data), function(name) {
+    temp = data.table::merge.data.table(filtered_data[[name]][filtered_data[[name]]$dif_current < 0,],
+                                        annotation,
+                                        by = "cpg",
+                                        all.x = TRUE)
     
-    data.table::data.table(
-      chr = temp$chr,
-      start = format(temp$pos - 1, scientific = FALSE),
-      end = format(temp$pos, scientific = FALSE),
-      name = temp$cpg
-    )
-  }
+    fwrite_bed(temp,
+               file_name = paste0(directory, "/", name, "_hypermethylated.bed"))
+  })
   
-  result = c(
-    result,
-    foreach::foreach (
-      table = filtered_data,
-      .final = function(x)
-        stats::setNames(x, paste0(
-          names(filtered_data), "_hypomethylated"
-        ))
-    ) %dopar% {
-      temp = dplyr::left_join(table[table$dif_current > 0, ], annotation, by = "cpg")
-      data.table::data.table(
-        chr = temp$chr,
-        start = format(temp$pos - 1, scientific = FALSE),
-        end = format(temp$pos, scientific = FALSE),
-        name = temp$cpg
-      )
-    }
-  )
+  lapply(names(filtered_data), function(name) {
+    temp = data.table::merge.data.table(filtered_data[[name]][filtered_data[[name]]$dif_current > 0, ],
+                                        annotation,
+                                        by = "cpg",
+                                        all.x = TRUE)
+    
+    fwrite_bed(temp,
+               file_name = paste0(directory, "/", name, "_hypomethylated.bed"))
+  })
   
   
-  result[["annotation"]] = data.table::data.table(
-    chr = annotation$chr,
-    start = format(annotation$pos - 1, scientific = FALSE),
-    end = format(annotation$pos, scientific = FALSE),
-    name = annotation$cpg
-  )
-  
-  result
+  fwrite_bed(annotation, file_name = paste0(directory, "/", "annotation.bed"))
   
 }
 
+create_filtered_bed_clusters = function(dendro_data, annotation, directory) {
+  annotation$cpg = row.names(annotation)
+  annotation = data.table::setDT(annotation)
+  
+  #saving results by cluster
+  lapply(unique(dendro_data), function(cluster) {
+    temp = annotation[annotation$cpg %in% names(dendro_data)[dendro_data == cluster], ]
+    
+    fwrite_bed(temp,
+               file_name = paste0(
+                 directory,
+                 "/",
+                 "Cluster_",
+                 which(unique(dendro_data) %in% cluster),
+                 ".bed"
+               ))
+  })
+  
+  fwrite_bed(annotation, file_name = paste0(directory, "/", "annotation.bed"))
+}
 
 #GRAPHIC FUNCTIONS
-
 create_heatmap = function(plot_data,
                           factorgroups,
                           groups2plot,
                           Colv = TRUE,
                           ColSideColors = FALSE,
+                          RowSideColors = NULL,
                           clusteralg = "average",
                           distance = "pearson",
                           scale = "row",
@@ -260,8 +275,12 @@ create_heatmap = function(plot_data,
     color_order = rlang::missing_arg()
     group_order = rlang::missing_arg()
   }
-
   
+  if(is.null(RowSideColors))
+    row_order = rlang::missing_arg()
+  else
+    row_order = RowSideColors
+
   if (static) {
     if (distance == "euclidean")
       distfun = stats::dist
@@ -274,6 +293,7 @@ create_heatmap = function(plot_data,
       col = colors.martin,
       Colv = Colv,
       ColSideColors = color_order,
+      RowSideColors = row_order,
       key.xlab = "B values",
       na.rm = TRUE,
       colsep = 0,
@@ -284,7 +304,7 @@ create_heatmap = function(plot_data,
       colCol = NULL,
       cexRow = 1,
       cexCol = 1,
-      margins = c(15, 2),
+      margins = c(12, 1),
       labCol = NULL,
       srtRow = NULL,
       srtCol = NULL,
@@ -317,6 +337,7 @@ create_heatmap = function(plot_data,
       col = colors.martin,
       Colv = Colv,
       col_side_colors = group_order,
+      row_side_colors = row_order,
       key.title = "",
       na.rm = TRUE,
       dendogram = "both",
@@ -535,6 +556,54 @@ create_boxplot = function(Bvalues, n = 200000) {
                                                          0))
   
 }
+
+create_dendrogram = function(plot_data,
+                             factorgroups,
+                             groups2plot,
+                             clusteralg = "average",
+                             distance = "pearson",
+                             scale_selection = "row",
+                             k_number) {
+  heatdata = as.matrix(plot_data)
+  heatdata = heatdata[stats::complete.cases(heatdata),]
+  class(heatdata) = "numeric"
+  
+  #subsetting heatdata groups2plot
+  heatdata = heatdata[, groups2plot]
+  
+  #scaling data if option is selected
+  if (scale_selection == "row")
+    heatdata = t(scale(t(heatdata)))
+  
+  
+  #order heatdata by groups
+  sample_order = c()
+  for (name in levels(factorgroups)) {
+    sample_order = c(sample_order, colnames(heatdata)[factorgroups %in% name])
+  }
+  
+  heatdata = heatdata[, sample_order]
+  
+  if (distance == "euclidean")
+    distfun = stats::dist
+  else
+    distfun = function(x)
+      stats::as.dist(1 - stats::cor(t(x), method = distance))
+  
+  
+  distance = distfun(heatdata)
+  clustering = hclust(distance, clusteralg)
+  clusters = cutree(clustering, k = k_number)
+  
+  rowside_scale = grDevices::rainbow(length(unique(clusters)))
+  
+  for (number in unique(clusters)) {
+    clusters[clusters == number] = rowside_scale[number]
+  }
+  
+  clusters
+}
+
 
 create_snpheatmap = function(snps, sample_names, color_groups) {
   buylrd = c(

@@ -1,6 +1,6 @@
 Package: shinyepico
 Title: ShinyÉPICo
-Version: 0.9.3
+Version: 1.0.0
 Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
 Description: ShinyÉPICo: A graphical pipeline to analyze Illumina DNA methylation arrays.
 License: AGPL-3 + file LICENSE
@@ -30,7 +30,8 @@ Imports:
     shinyjs (>= 1.1.0),
     shinythemes (>= 1.1.0),
     statmod (>= 1.4.0),
-    tidyr (>= 1.1.0)
+    tidyr (>= 1.1.0),
+    zip (>= 2.1.0)
 Suggests:
     knitr
 Encoding: UTF-8
