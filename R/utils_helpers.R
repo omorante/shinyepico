@@ -414,14 +414,16 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
   
   corr_graph = plotly::ggplotly(
-    ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "p.value")) + ggplot2::geom_tile(color =
+    ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "cor")) + ggplot2::geom_tile(color =
                                                                                                         "darkgrey", size = 1) +
-      ggplot2::scale_fill_gradient(
-        low = "#6D9EC1",
-        high = "white",
-        limit = c(0, 1),
+      ggplot2::scale_fill_gradient2(
+        high = "#6D9EC1",
+        low = "#E46726",
+        mid = "white",
+        midpoint = 0,
+        limit = c(-1, 1),
         space = "Lab",
-        name = "Correlation (p.value)"
+        name = "Correlation"
       ) +
       ggplot2::theme_bw() +
       ggplot2::theme(
@@ -769,20 +771,20 @@ cor3 = function(df1, df2) {
     # both are numeric
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("integer", "numeric")) {
-      r <- stats::cor.test(df1[[pos_df1]]
+      r <- stats::cor(df1[[pos_df1]]
                       , df2[[pos_df2]]
-                      , use = "pairwise.complete.obs")[["p.value"]]
+                      , use = "pairwise.complete.obs")
     }
     
     # one is numeric and other is a factor/character
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["coefficients"]][2,4])
+      r <- sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["r.squared"]])
     }
     
     if (class(df2[[pos_df2]]) %in% c("integer", "numeric") &&
         class(df1[[pos_df1]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["coefficients"]][2,4])
+      r <- sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["r.squared"]])
     }
     
     return(r)
