@@ -1,4 +1,4 @@
-shinyÉPICo (developing version)
+shinyÉPICo
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -12,8 +12,6 @@ v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.or
 <img src="https://github.com/omorante/shinyepico/blob/master/inst/images/logo.png" width="200px" />
 
 # Description
-
-(This is a developing version of ShinyÉPICo. It has not been extensively tested.)
 
 ShinyÉPICo is a web interface based on Shiny that makes it easy to do
 differentially methylated CpGs analysis from Illumina EPIC or 450k DNA
@@ -49,7 +47,7 @@ remotes package.
 ``` r
 install.packages("remotes")
 library("remotes")
-install_github("omorante/shinyepico", upgrade="always", ref="dev")
+install_github("omorante/shinyepico", upgrade="always")
 ```
 
 To run the package:
