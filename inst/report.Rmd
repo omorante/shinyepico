@@ -349,6 +349,8 @@ if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2hea
   
 ```
 
+CpGs in heatmap:  __`r if(is.null(nrow(params$filteredlist2heatmap))) "None" else nrow(params$filteredlist2heatmap)`__ 
+
 <br>
 
 ## System and analysis information
