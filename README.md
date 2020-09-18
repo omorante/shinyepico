@@ -57,8 +57,7 @@ library("shinyepico")
 run_shinyepico()
 ```
 
-It is highly recommended to update all packages when install\_github
-asks to avoid problems during the use of the application. The minimum
+It is highly recommended to update all packages to avoid problems during the use of the application. The minimum
 versions required are:
 
     DT (>= 0.15.0),
@@ -85,7 +84,8 @@ versions required are:
     shinyjs (>= 1.1.0),
     shinythemes (>= 1.1.0),
     statmod (>= 1.4.0),
-    tidyr (>= 1.1.0)
+    tidyr (>= 1.1.0),
+    zip (>= 2.1.0)
 
 The function run\_shinyepico has 4 parameters that can be modified:
 
