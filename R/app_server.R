@@ -271,6 +271,10 @@ app_server = function(input, output, session) {
   
   #Calculation of minfi normalized data
   rval_gset = reactive({
+    
+    validate(need(!is.null(rval_rgset()),
+                  "Raw data has not been loaded yet."))
+        
     withProgress(message = "Normalization in progress..",
                  value = 1,
                  max = 4,
@@ -723,8 +727,8 @@ app_server = function(input, output, session) {
       showModal(
         modalDialog(
           title = "Contrasts Calculation Error",
-          "An unexpected error has ocurred during contrasts calculation. Please, generate the model again.
-        If the problem persists, report the error to the mantainer.",
+          "An unexpected error has ocurred during contrasts calculation. Please, generate the model again and check if it is correct.
+        If the problem persists, report the error to the maintainer",
           easyClose = TRUE,
           footer = NULL
         )
@@ -739,8 +743,8 @@ app_server = function(input, output, session) {
     validate(
       need(
         exists("dif_cpgs", inherits = FALSE),
-        "An unexpected error has ocurred during contrasts calculation. Please, generate the model again.
-                  If the problem persists, report the error to the mantainer."
+        "An unexpected error has ocurred during contrasts calculation. Please, generate the model again and check if it is correct.
+        If the problem persists, report the error to the maintainer"
       )
     )
     
@@ -949,12 +953,14 @@ app_server = function(input, output, session) {
                      )
                    else
                      return(
-                       plotOutput(
+                       div(
+                        min_width=400,
+                         plotOutput(
                          "graph_limma_heatmap_static",
-                         width = "600px",
+                         width = "100%",
                          height = "600px"
                        ) %>% shinycssloaders::withSpinner()
-                     )
+                     ))
                  })
                  
                  if (!as.logical(input$select_limma_graphstatic))

@@ -31,8 +31,10 @@ hclust_methods = c("single",
 #' @noRd
 app_ui <- function(request) {
   navbarPage(
-    "shiny\u00C9PICo!",
+    title = div(img(src = "images/logo_header.png", width=25, height=25), "shiny\u00C9PICo!"),
+    windowTitle = "shiny\u00C9PICo!",
     id = "navbar_epic",
+    collapsible = TRUE,
     theme = shinythemes::shinytheme("sandstone") ,
     tabPanel(
       "Input",
