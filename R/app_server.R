@@ -957,7 +957,7 @@ app_server = function(input, output, session) {
                         min_width=400,
                          plotOutput(
                          "graph_limma_heatmap_static",
-                         width = "100%",
+                         width = "600px",
                          height = "600px"
                        ) %>% shinycssloaders::withSpinner()
                      ))

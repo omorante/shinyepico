@@ -31,8 +31,14 @@ hclust_methods = c("single",
 #' @noRd
 app_ui <- function(request) {
   navbarPage(
-    title = div(img(src = "images/logo_header.png", width=25, height=25), "shiny\u00C9PICo!"),
-    windowTitle = "shiny\u00C9PICo!",
+    title = div(style = "padding: 1px 0px; width: '100%'",
+                img(
+                  src = "images/logo_header.png",
+                  width = 25,
+                  height = 25
+                ),
+                "shiny\u00C9PICo!"),
+    windowTitle = HTML("shiny\u00C9PICo!</title><link rel='icon' type='image/gif/png' href='images/favicon.ico'>"),
     id = "navbar_epic",
     collapsible = TRUE,
     theme = shinythemes::shinytheme("sandstone") ,
