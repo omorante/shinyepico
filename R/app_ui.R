@@ -260,6 +260,7 @@ app_ui <- function(request) {
                     column(
                       6,
                       h4("Group options"),
+                      
                       selectizeInput(
                         "select_limma_groups2plot",
                         "Groups to plot",
@@ -274,7 +275,16 @@ app_ui <- function(request) {
                         c(),
                         multiple = TRUE,
                         options = list(plugins = list('remove_button', 'drag_drop'))
-                      )
+                      ),
+                      
+                      h4("Data options"),
+                      
+                      switchInput(
+                        inputId = "select_limma_removebatch",
+                        label = "Remove Batch Effect",
+                        labelWidth = "100px",
+                        value = FALSE
+                      ),
                     ),
                     
                     column(

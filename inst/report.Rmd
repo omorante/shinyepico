@@ -43,7 +43,7 @@ params:
   Colv: NA
   distance: NA
   scale: NA
-  
+  removebatch: NA
   
   #plots
 
@@ -340,6 +340,8 @@ knitr::kable(params$table_dmps)
 * Scale: __`r params$scale`__
 * Cluster Algorithm: __`r params$clusteralg`__
 * Distance: __`r params$distance`__
+
+The data used for the representation are  __`r if(!params$removebatch) "the normalized beta values" else "the normalized beta values after removing covariable effects on the data (with the limma removeBatchEffect function), preserving the variable of interest"`__.
 
 In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__ .
 

@@ -335,6 +335,7 @@ app_server = function(input, output, session) {
   })
   
   
+
   #getBeta/getM reactives
   rval_rgset_getBeta = eventReactive(rval_rgset(), {
     bvalues = as.data.frame(minfi::getBeta(rval_rgset()))
@@ -513,7 +514,7 @@ app_server = function(input, output, session) {
   
   #Variable of interest
   rval_voi = reactive(factor(make.names(minfi::pData(rval_gset(
-  ))[, input$select_limma_voi]))) #add substitution of "-" for "_", avoiding conflicts
+  ))[, input$select_limma_voi])))
   
   #Design calculation
   rval_design = eventReactive(input$button_limma_calculatemodel, {
@@ -830,7 +831,25 @@ app_server = function(input, output, session) {
     {
       filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
       dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
-      join_table = rval_gset_getBeta()[dif_cpgs, ]
+      
+      #If remove batch option is enabled, limma:removebatcheffects is applied using the design info data.
+      if (!input$select_limma_removebatch)
+      {
+        join_table = rval_gset_getBeta()[dif_cpgs,]
+      }
+      else
+      {
+        voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
+        covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
+        join_table = as.data.frame(
+          limma::removeBatchEffect(
+            rval_gset_getBeta(),
+            design = voi_design,
+            covariates = covariables_design
+          )[dif_cpgs,]
+        )
+      }
+        
       join_table$cpg = NULL
       
       #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
@@ -1155,6 +1174,7 @@ app_server = function(input, output, session) {
                        Colv = input$select_limma_colv,
                        distance = input$select_limma_clusterdist,
                        scale = input$select_limma_scale,
+                       removebatch = input$select_limma_removebatch,
                        plot_densityplotraw = rval_plot_densityplotraw(),
                        plot_densityplot = rval_plot_densityplot(),
                        plot_pcaplot = rval_plot_pca()[["graph"]],
