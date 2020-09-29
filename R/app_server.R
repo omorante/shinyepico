@@ -793,6 +793,21 @@ app_server = function(input, output, session) {
     #force rval_filteredlist
     rval_filteredlist()
     
+    #enable or disable removebatch option
+    covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
+    
+    if (ncol(covariables_design) > 0)
+      updateSwitchInput(session,
+                        "select_limma_removebatch",
+                        value = FALSE,
+                        disabled = FALSE)
+    else
+      updateSwitchInput(session,
+                        "select_limma_removebatch",
+                        value = FALSE,
+                        disabled = TRUE)
+
+    
     #enable and click heatmap button to get default graph
     shinyjs::enable("button_limma_heatmapcalc")
     shinyjs::click("button_limma_heatmapcalc")
@@ -841,6 +856,7 @@ app_server = function(input, output, session) {
       {
         voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
         covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
+        
         join_table = as.data.frame(
           limma::removeBatchEffect(
             rval_gset_getBeta(),
@@ -1009,7 +1025,6 @@ app_server = function(input, output, session) {
   #EXPORT
   
   #Disable or enable buttons depending on software state
-  
   observeEvent(rval_analysis_finished(),
                if (rval_analysis_finished())
                {

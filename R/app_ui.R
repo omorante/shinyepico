@@ -283,7 +283,8 @@ app_ui <- function(request) {
                         inputId = "select_limma_removebatch",
                         label = "Remove Batch Effect",
                         labelWidth = "100px",
-                        value = FALSE
+                        value = FALSE,
+                        disabled = TRUE
                       ),
                     ),
                     
