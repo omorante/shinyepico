@@ -535,6 +535,19 @@ app_server = function(input, output, session) {
     row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
     colnames(design) = make.names(colnames(design), unique = TRUE)
     
+    #checking colinearity
+    if (qr(design)$rank < ncol(design)) {
+      showModal(
+        modalDialog(
+          title = "Colinearity warning",
+          "The design matrix presents colinear columns. Even though it is possible to try to continue the analysis, checking the selected covariables is recommended.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+      
+    }
+    
     design
   })
   
