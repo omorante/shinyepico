@@ -282,7 +282,7 @@ app_server = function(input, output, session) {
                    try({
                      if (input$select_minfi_norm == "Illumina") {
                        gset = minfi::mapToGenome(minfi::ratioConvert(
-                         type = "Illumina",
+                         betaThreshold = 0.001,
                          minfi::preprocessIllumina(
                            rval_rgset(),
                            bg.correct = TRUE,
