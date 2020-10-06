@@ -327,11 +327,24 @@ app_server = function(input, output, session) {
                      )
                    )
                    
+                   #prior CpG probes
+                   probes = length(minfi::featureNames(gset))
+                   
                    #remove SNPs to proceed with the analysis and add sex column
-                   minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
+                   if (input$select_minfi_dropsnps)
+                    gset = minfi::dropLociWithSnps(gset, maf = 0)
+                   
+                   #remove CpHs
+                   if (input$select_minfi_dropcphs)
+                    gset = minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
+                   
+                   #Info CpGs removed
+                   message(paste(probes - length(minfi::featureNames(gset)), "probes were filtered out."))
+
+                   #Add sex info
+                   minfi::addSex(gset)
                    
                  })
-    
   })
   
   
@@ -1170,6 +1183,8 @@ app_server = function(input, output, session) {
                        grouping_var = input$select_input_groupingvar,
                        donor_var = input$select_input_donorvar,
                        normalization_mode = input$select_minfi_norm,
+                       dropsnps = input$select_minfi_dropsnps,
+                       dropcphs = input$select_minfi_dropcphs,
                        limma_voi = input$select_limma_voi,
                        limma_covar = input$checkbox_limma_covariables,
                        limma_inter = input$checkbox_limma_interactions,

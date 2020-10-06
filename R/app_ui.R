@@ -101,6 +101,21 @@ app_ui <- function(request) {
         sidebarPanel(
           width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
+          
+          switchInput(
+            inputId = "select_minfi_dropsnps",
+            label = "Drop SNPs",
+            labelWidth = "80px",
+            value = TRUE
+          ),
+          
+          switchInput(
+            inputId = "select_minfi_dropcphs",
+            label = "Drop CpHs",
+            labelWidth = "80px",
+            value = FALSE
+          ),
+          
           shinyjs::disabled(actionButton("button_minfi_select", "Select"))
         ),
         mainPanel(
@@ -381,6 +396,7 @@ app_ui <- function(request) {
                         )
                       ),
                       
+
                       shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
                     )
                   )
