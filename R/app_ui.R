@@ -50,7 +50,7 @@ app_ui <- function(request) {
           width = 3,
           fileInput(
             inputId = "fileinput_input",
-            "Upload Compress Experiment Directory (zip):",
+            "Upload Compressed Experiment Directory (zip)",
             multiple = FALSE,
             accept = c(
               "application/zip",
@@ -113,7 +113,7 @@ app_ui <- function(request) {
             inputId = "select_minfi_dropcphs",
             label = "Drop CpHs",
             labelWidth = "80px",
-            value = FALSE
+            value = TRUE
           ),
           
           shinyjs::disabled(actionButton("button_minfi_select", "Select"))
@@ -174,7 +174,7 @@ app_ui <- function(request) {
                 selectInput(
                   inputId = "select_minfi_pcaplot_color",
                   choices = c(),
-                  label = "Select color variable:"
+                  label = "Select color variable"
                 )
               ),
               column(
@@ -321,7 +321,7 @@ app_ui <- function(request) {
                       5,
                       selectInput(
                         "select_limma_clusteralg",
-                        "Clustering algorithm:",
+                        "Clustering algorithm",
                         c(
                           "single",
                           "complete",
@@ -335,12 +335,12 @@ app_ui <- function(request) {
                       
                       selectInput(
                         "select_limma_clusterdist",
-                        "Distance Function:",
+                        "Distance Function",
                         c("pearson", "spearman", "kendall", "euclidean"),
                         "pearson"
                       ),
                       
-                      selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                      selectInput("select_limma_scale", "Scale", c("row", "none"), "row"),
                       tags$br()
                     ),
                     
@@ -412,12 +412,12 @@ app_ui <- function(request) {
     tabPanel(
       "Export",
       shinyjs::useShinyjs(),
-      h3("Download RObjects:"),
+      h3("Download RObjects"),
       downloadButton("download_export_robjects"),
       p(
         "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"
       ),
-      h3("Download filtered bed files:"),
+      h3("Download filtered bed files"),
       selectInput("select_export_bedtype",
                   "Subsetting mode",
                   c("by contrasts", "by heatmap cluster"),
@@ -427,12 +427,12 @@ app_ui <- function(request) {
         "Press to download the created filtered lists of contrasts, or heatmap clusters,
         with the chosen criteria, in bed format (hg19 genome)."
       ),
-      h3("Download Workflow Report:"),
+      h3("Download Workflow Report"),
       downloadButton("download_export_markdown"),
       p(
         "Press to download the report of all the steps follow and selected in the pipeline, and the results."
       ), 
-      h3("Download Heatmap:"),
+      h3("Download Heatmap"),
       downloadButton("download_export_heatmaps"),
       p(
         "Press to download the custom heatmap in the gplots::heatmap.2 version."
