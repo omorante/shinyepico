@@ -115,8 +115,16 @@ app_ui <- function(request) {
             labelWidth = "80px",
             value = TRUE
           ),
-
+          
+          switchInput(
+            inputId = "select_minfi_chromosomes",
+            label = "Drop X/Y Chromosomes",
+            labelWidth = "80px",
+            value = FALSE
+          ),
+          
           shinyjs::disabled(actionButton("button_minfi_select", "Select"))
+          
         ),
         mainPanel(
           width = 9,

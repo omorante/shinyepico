@@ -168,7 +168,6 @@ app_server = function(input, output, session) {
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
   rval_rgset = eventReactive(input$button_input_next, {
-    
     #Prior check to test variable selection
     if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
         anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
@@ -192,9 +191,9 @@ app_server = function(input, output, session) {
       anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) > 0,
       "Grouping variable should have groups greater than 1"
     ))
-
+    
     #disable button to avoid multiple clicks
-    shinyjs::disable("button_input_next") 
+    shinyjs::disable("button_input_next")
     
     
     #We need to check if this step works
@@ -208,31 +207,33 @@ app_server = function(input, output, session) {
                                                        force = TRUE)
                    })
                    
+                   
+                   
+                   
+                   if (!exists("RGSet", inherits = FALSE)) {
+                     showModal(
+                       modalDialog(
+                         title = "reading error",
+                         "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
+                         easyClose = TRUE,
+                         footer = NULL
+                       )
+                     )
+                     shinyjs::disable("button_minfi_select")
+                     shinyjs::disable("button_minfi_check")
+                   }
+                   
+                   validate(
+                     need(
+                       exists("RGSet", inherits = FALSE),
+                       "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"
+                     )
+                   )
+                   
+                   #we return RGSet filtered by the standard detection threshold of Pvalue, 0.01
+                   RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
                  })
     
-    
-    if (!exists("RGSet", inherits = FALSE)) {
-      showModal(
-        modalDialog(
-          title = "reading error",
-          "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
-          easyClose = TRUE,
-          footer = NULL
-        )
-      )
-      shinyjs::disable("button_minfi_select")
-      shinyjs::disable("button_minfi_check")
-    }
-    
-    validate(
-      need(
-        exists("RGSet", inherits = FALSE),
-        "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"
-      )
-    )
-    
-    #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
-    RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
   })
   
   #We change the page to the next one
@@ -363,14 +364,22 @@ app_server = function(input, output, session) {
                    if (input$select_minfi_dropcphs)
                     gset = minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
                    
+                   #Add sex info
+                    gset = minfi::addSex(gset)
+                   
+                   #remove chromosomes
+                   if(input$select_minfi_chromosomes){
+                     gset = gset[rownames(getAnnotation(gset))[!(getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
+                   }
+                   
                    #Info CpGs removed
                    message(paste(probes - length(minfi::featureNames(gset)), "probes were filtered out."))
                    
                    #enable button
                    shinyjs::enable("button_minfi_select") 
 
-                   #Add sex info
-                   minfi::addSex(gset)
+                   #return gset
+                   gset
                    
                  })
   })
