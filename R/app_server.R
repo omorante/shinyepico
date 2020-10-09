@@ -168,7 +168,20 @@ app_server = function(input, output, session) {
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
   rval_rgset = eventReactive(input$button_input_next, {
-    targets = rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,]
+    
+    #Prior check to test variable selection
+    if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
+        anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
+      showModal(
+        modalDialog(
+          title = "Variable error",
+          "Check if selected variables are correct. Sample Name Variable should not have duplicated values
+          and the variable of interest should have groups greater than 1.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+    }
     
     #Check prior conditions to read data
     validate(need(
@@ -179,13 +192,24 @@ app_server = function(input, output, session) {
       anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) > 0,
       "Grouping variable should have groups greater than 1"
     ))
+
+    #disable button to avoid multiple clicks
+    shinyjs::disable("button_input_next") 
+    
     
     #We need to check if this step works
-    try({
-      RGSet = minfi::read.metharray.exp(targets = targets,
-                                        verbose = TRUE,
-                                        force = TRUE)
-    })
+    withProgress(message = "Reading array data...",
+                 value = 2,
+                 max = 5,
+                 {
+                   try({
+                     RGSet = minfi::read.metharray.exp(targets = rval_sheet_target(),
+                                                       verbose = TRUE,
+                                                       force = TRUE)
+                   })
+                   
+                 })
+    
     
     if (!exists("RGSet", inherits = FALSE)) {
       showModal(
@@ -197,6 +221,7 @@ app_server = function(input, output, session) {
         )
       )
       shinyjs::disable("button_minfi_select")
+      shinyjs::disable("button_minfi_check")
     }
     
     validate(
@@ -206,21 +231,6 @@ app_server = function(input, output, session) {
       )
     )
     
-    #setting number of PCs and clicking PCA button to obtain initial graph
-    updateSelectInput(
-      session,
-      "select_minfi_pcaplot_pcx",
-      choices = paste0("PC", seq_len(nrow(targets))),
-      selected = "PC1"
-    )
-    updateSelectInput(
-      session,
-      "select_minfi_pcaplot_pcy",
-      choices = paste0("PC", seq_len(nrow(targets))),
-      selected = "PC2"
-    )
-    shinyjs::click("button_pca_update")
-    
     #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
     RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
   })
@@ -228,41 +238,41 @@ app_server = function(input, output, session) {
   #We change the page to the next one
   observeEvent(input$button_input_next,
                {
-                 shinyjs::disable("button_input_next") #disable button to avoid multiple clicks
+                 #check if rgset is loaded
+                 req(rval_rgset())
                  
-                 #check if variables selected are correct
-                 if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
-                     anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
-                   showModal(
-                     modalDialog(
-                       title = "Variable error",
-                       "Check if selected variables are correct. Sample Name Variable should not have duplicated values
-          and the variable of interest should have groups greater than 1.",
-                       easyClose = TRUE,
-                       footer = NULL
-                     )
-                   )
-                   shinyjs::enable("button_input_next")
-                 }
-                 else {
-                   updateSelectInput(
-                     session,
-                     "select_minfi_pcaplot_color",
-                     choices = c(colnames(rval_sheet_target()), "xMed","yMed","predictedSex"),
-                     selected = input$select_input_donorvar
-                   )
+                 #update PCA parameters
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_pcx",
+                   choices = paste0("PC", seq_len(nrow(rval_sheet_target()))),
+                   selected = "PC1"
+                 )
+                 
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_pcy",
+                   choices = paste0("PC", seq_len(nrow(rval_sheet_target()))),
+                   selected = "PC2"
+                 )
+                 
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_color",
+                   choices = c(colnames(rval_sheet_target()),
+                               "xMed",
+                               "yMed",
+                               "predictedSex"),
                    
-                   withProgress(message = "Reading array data...",
-                                value = 2,
-                                max = 5,
-                                {
-                                  rval_rgset()
-                                  updateNavbarPage(session, "navbar_epic", "Normalization")
-                                })
-                   
-                   shinyjs::enable("button_minfi_select")
-                   
-                 }
+                   selected = input$select_input_groupingvar
+                 )
+                 
+                 shinyjs::click("button_pca_update")
+                 
+                 
+                 shinyjs::enable("button_minfi_select")
+                 shinyjs::enable("button_minfi_check")
+                 updateNavbarPage(session, "navbar_epic", "Normalization")
                })
   
   
@@ -270,12 +280,14 @@ app_server = function(input, output, session) {
   
   
   #Calculation of minfi normalized data
-  rval_gset = reactive({
+  rval_gset = eventReactive(list(input$button_minfi_select, rval_rgset()), {
     
     validate(need(!is.null(rval_rgset()),
                   "Raw data has not been loaded yet."))
-        
-    withProgress(message = "Normalization in progress..",
+    
+    shinyjs::disable("button_minfi_select") #disable button to avoid repeat clicking
+    
+    withProgress(message = "Normalization in progress...",
                  value = 1,
                  max = 4,
                  {
@@ -320,6 +332,19 @@ app_server = function(input, output, session) {
                    })
                    
                    #check if normalization has worked
+                   
+                   if(!exists("gset", inherits = FALSE)) {
+                     showModal(
+                       modalDialog(
+                         title = "Normalization failure",
+                         "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer.",
+                         easyClose = TRUE,
+                         footer = NULL
+                       )
+                     )
+                     shinyjs::enable("button_minfi_select") 
+                   }
+                   
                    validate(
                      need(
                        exists("gset", inherits = FALSE),
@@ -340,6 +365,9 @@ app_server = function(input, output, session) {
                    
                    #Info CpGs removed
                    message(paste(probes - length(minfi::featureNames(gset)), "probes were filtered out."))
+                   
+                   #enable button
+                   shinyjs::enable("button_minfi_select") 
 
                    #Add sex info
                    minfi::addSex(gset)
@@ -474,13 +502,8 @@ app_server = function(input, output, session) {
   #Update of next form and move to Limma
   observeEvent(input$button_minfi_select,
                {
-                 #check if normalization has worked
-                 validate(
-                   need(
-                     !is.null(rval_gset()),
-                     "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."
-                   )
-                 )
+                 #check if normalization has been performed
+                 req(rval_gset())
                  
                  updateSelectInput(
                    session,
@@ -517,7 +540,6 @@ app_server = function(input, output, session) {
                  )
                  
                  shinyjs::enable("button_limma_calculatemodel")
-                 updateNavbarPage(session, "navbar_epic", "DMPs")
                })
   
   

@@ -115,7 +115,7 @@ app_ui <- function(request) {
             labelWidth = "80px",
             value = TRUE
           ),
-          
+
           shinyjs::disabled(actionButton("button_minfi_select", "Select"))
         ),
         mainPanel(

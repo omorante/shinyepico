@@ -708,7 +708,7 @@ create_sexplot = function(gset, sample_names) {
       sex_info,
       ggplot2::aes_string(x = "xMed", y = "yMed", color = "predictedSex")
     ) +
-      ggplot2::geom_point(size = 2) +
+      ggplot2::geom_point(size = 3) +
       ggplot2::geom_abline(
         intercept = -2,
         slope = 1,
