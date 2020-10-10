@@ -358,7 +358,7 @@ app_server = function(input, output, session) {
                    
                    #remove SNPs to proceed with the analysis and add sex column
                    if (input$select_minfi_dropsnps)
-                    gset = minfi::dropLociWithSnps(gset, maf = 0)
+                    gset = minfi::dropLociWithSnps(gset, maf = input$slider_minfi_maf)
                    
                    #remove CpHs
                    if (input$select_minfi_dropcphs)
@@ -385,6 +385,14 @@ app_server = function(input, output, session) {
   })
   
   
+  #filtered probes info
+  
+  rval_gsetprobes = eventReactive(input$button_minfi_select,{
+    req(rval_gset())
+    length(minfi::featureNames(rval_gset()))
+  })
+  
+  output$text_minfi_probes = renderText(paste(rval_gsetprobes(),"positions after normalization"))
 
   #getBeta/getM reactives
   rval_rgset_getBeta = eventReactive(rval_rgset(), {
@@ -480,7 +488,10 @@ app_server = function(input, output, session) {
   
   #Sex prediction
   
-  rval_plot_sexprediction = reactive(create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar]))
+  rval_plot_sexprediction = reactive({
+    req(rval_gset())
+    create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar])
+  })
   
   output$graph_minfi_sex = plotly::renderPlotly(rval_plot_sexprediction())
   output$table_minfi_sex = DT::renderDT(
@@ -1216,6 +1227,9 @@ app_server = function(input, output, session) {
                        normalization_mode = input$select_minfi_norm,
                        dropsnps = input$select_minfi_dropsnps,
                        dropcphs = input$select_minfi_dropcphs,
+                       dropsex = input$select_minfi_chromosomes,
+                       maf = input$slider_minfi_maf,
+                       probes = rval_gsetprobes(),
                        limma_voi = input$select_limma_voi,
                        limma_covar = input$checkbox_limma_covariables,
                        limma_inter = input$checkbox_limma_interactions,

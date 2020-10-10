@@ -102,28 +102,48 @@ app_ui <- function(request) {
           width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
           
-          switchInput(
-            inputId = "select_minfi_dropsnps",
-            label = "Drop SNPs",
-            labelWidth = "80px",
-            value = TRUE
+          div(
+            margin_left="50px",
+            switchInput(
+              inputId = "select_minfi_dropcphs",
+              label = "Drop CpHs",
+              labelWidth = "fit",
+              value = TRUE,
+              inline = TRUE
+            ),
+            
+            switchInput(
+              inputId = "select_minfi_dropsnps",
+              label = "Drop SNPs",
+              labelWidth = "fit",
+              value = TRUE,
+              inline = TRUE
+            )
           ),
           
-          switchInput(
-            inputId = "select_minfi_dropcphs",
-            label = "Drop CpHs",
-            labelWidth = "80px",
-            value = TRUE
+          conditionalPanel(
+            "input.select_minfi_dropsnps",
+            sliderInput(
+              inputId = "slider_minfi_maf",
+              label = "Minimum MAF to filter",
+              min = 0,
+              max = 1,
+              step = 0.01,
+              value = 0,
+              width = "75%"
+            )
           ),
           
           switchInput(
             inputId = "select_minfi_chromosomes",
-            label = "Drop X/Y Chromosomes",
-            labelWidth = "80px",
+            label = "Drop X/Y Chr.",
+            labelWidth = "fit",
             value = FALSE
           ),
           
-          shinyjs::disabled(actionButton("button_minfi_select", "Select"))
+          shinyjs::disabled(actionButton("button_minfi_select", "Select")),
+          h4(),
+          textOutput("text_minfi_probes")
           
         ),
         mainPanel(

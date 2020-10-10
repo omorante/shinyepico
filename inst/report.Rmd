@@ -20,6 +20,9 @@ params:
   normalization_mode: NA
   dropsnps: NA
   dropcphs: NA
+  dropsex: NA
+  maf: NA
+  probes: NA
   
   #DMP 
   limma_voi: NA
@@ -251,8 +254,10 @@ DT::datatable(params$table_corrplot, extensions = 'Buttons',
 After Minfi normalization, we obtained a GenomicRatioSet with some transformations depending on the type of normalization chosen. To understand better the different classes of Minfi packages, and their relations depending of the normalization method, please read this [vignette](https://www.bioconductor.org/help/course-materials/2015/BioC2015/methylation450k.html) of Minfi creators (it is also valid for Illumina EPIC arrays).
 
 Options selected:
-* Drop SNPs: __`r params$dropsnps`__
+
+* Drop SNPs: __`r params$dropsnps`__ *`r if(params$dropsnps) paste('minimum MAF filtered:', params$maf)`*
 * Drop CpHs: __`r params$dropcphs`__
+* Drop X/Y Chromosomes: __`r params$dropsex`__
 
 Moreover, we also removed SNP loci and/or CpHs if these options are selected:
 
@@ -272,6 +277,9 @@ Finally, we added sex information:
 minfi::addSex(gset)
 
 ```
+
+
+After normalization, __`r params$probes`__ DNA methylation positions remained.
 
 <br>
 
