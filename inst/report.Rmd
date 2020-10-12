@@ -119,7 +119,7 @@ cat(params$rval_sheet[[params$name_var]][!(params$rval_sheet[[params$name_var]] 
 Before Minfi Normalization, probes in RGChannelSet are filtered using a standard p.value threshold (0.01):
 
 ```{r bad_probes, eval=FALSE, echo=TRUE}
-RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) <0.01),]
+RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
 ```
 
 <br>
@@ -259,7 +259,7 @@ Options selected:
 * Drop CpHs: __`r params$dropcphs`__
 * Drop X/Y Chromosomes: __`r params$dropsex`__
 
-Moreover, we also removed SNP loci and/or CpHs if these options are selected:
+Moreover, we also removed SNP loci, CpHs and X/Y chromosome positions if these options are selected:
 
 ```{r dropsnps, eval=FALSE, echo=TRUE}
 minfi::dropLociWithSnps(gset, maf = 0))
@@ -269,6 +269,10 @@ minfi::dropLociWithSnps(gset, maf = 0))
 ```{r dropcphs, eval=FALSE, echo=TRUE}
 minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
 
+```
+
+```{r dropsex, eval=FALSE, echo=TRUE}
+gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
 ```
 
 Finally, we added sex information:

@@ -220,7 +220,6 @@ app_server = function(input, output, session) {
                        )
                      )
                      shinyjs::disable("button_minfi_select")
-                     shinyjs::disable("button_minfi_check")
                    }
                    
                    validate(
@@ -268,11 +267,7 @@ app_server = function(input, output, session) {
                    selected = input$select_input_groupingvar
                  )
                  
-                 shinyjs::click("button_pca_update")
-                 
-                 
                  shinyjs::enable("button_minfi_select")
-                 shinyjs::enable("button_minfi_check")
                  updateNavbarPage(session, "navbar_epic", "Normalization")
                })
   
@@ -281,7 +276,7 @@ app_server = function(input, output, session) {
   
   
   #Calculation of minfi normalized data
-  rval_gset = eventReactive(list(input$button_minfi_select, rval_rgset()), {
+  rval_gset = eventReactive(input$button_minfi_select, {
     
     validate(need(!is.null(rval_rgset()),
                   "Raw data has not been loaded yet."))
@@ -369,7 +364,7 @@ app_server = function(input, output, session) {
                    
                    #remove chromosomes
                    if(input$select_minfi_chromosomes){
-                     gset = gset[rownames(getAnnotation(gset))[!(getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
+                     gset = gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
                    }
                    
                    #Info CpGs removed
@@ -423,7 +418,7 @@ app_server = function(input, output, session) {
   
   #PCA
   rval_plot_pca = eventReactive(
-    list(input$button_pca_update, input$select_minfi_norm),
+    list(input$button_pca_update, input$button_minfi_select),
     create_pca(
       Bvalues = rval_gset_getBeta(),
       pheno_info = as.data.frame(minfi::pData(rval_gset())),
@@ -493,15 +488,24 @@ app_server = function(input, output, session) {
     create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar])
   })
   
+  rval_plot_sextable = reactive({
+    req(rval_gset())
+    data.frame(name = rval_sheet_target()[[input$select_input_samplenamevar]], sex = as.data.frame(minfi::pData(rval_gset()))[["predictedSex"]])
+  })
+  
   output$graph_minfi_sex = plotly::renderPlotly(rval_plot_sexprediction())
+  
   output$table_minfi_sex = DT::renderDT(
-    data.frame(name = rval_sheet_target()[[input$select_input_samplenamevar]], sex = as.data.frame(minfi::pData(rval_gset(
-    )))[["predictedSex"]]),
+    rval_plot_sextable(),
     rownames = FALSE,
     selection = "single",
     style = "bootstrap",
     caption = "Predicted sex:",
-    options = list(pageLength = 10, scrollX = TRUE, autoWidth = TRUE)
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE,
+      autoWidth = TRUE
+    )
   )
   
   
