@@ -1,5 +1,5 @@
 ---
-title: "shinyÉPICo workflow report"
+title: "shinyÉPICo Workflow Report"
 output: 
   html_document:
     toc: true
@@ -18,6 +18,11 @@ params:
   
   #normalization 
   normalization_mode: NA
+  dropsnps: NA
+  dropcphs: NA
+  dropsex: NA
+  maf: NA
+  probes: NA
   
   #DMP 
   limma_voi: NA
@@ -43,7 +48,7 @@ params:
   Colv: NA
   distance: NA
   scale: NA
-  
+  removebatch: NA
   
   #plots
 
@@ -67,8 +72,14 @@ params:
   filteredlist2heatmap : NA
 ---
 
-This report was created with shinyÉPICo. <br>
-(c) 2020 Octavio Morante-Palacios
+```{r, out.width = "150px", echo=FALSE}
+knitr::include_graphics("images/logo.png")
+```
+<br>
+This report was created with shinyÉPICo. 
+<br>
+&copy; 2020 Octavio Morante-Palacios
+<br>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -114,7 +125,7 @@ cat(params$rval_sheet[[params$name_var]][!(params$rval_sheet[[params$name_var]] 
 Before Minfi Normalization, probes in RGChannelSet are filtered using a standard p.value threshold (0.01):
 
 ```{r bad_probes, eval=FALSE, echo=TRUE}
-RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) <0.01),]
+RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
 ```
 
 <br>
@@ -248,12 +259,37 @@ DT::datatable(params$table_corrplot, extensions = 'Buttons',
 
 After Minfi normalization, we obtained a GenomicRatioSet with some transformations depending on the type of normalization chosen. To understand better the different classes of Minfi packages, and their relations depending of the normalization method, please read this [vignette](https://www.bioconductor.org/help/course-materials/2015/BioC2015/methylation450k.html) of Minfi creators (it is also valid for Illumina EPIC arrays).
 
-Moreover, we also removed SNP loci and added Sex information:
+Options selected:
+
+* Drop SNPs: __`r params$dropsnps`__ *`r if(params$dropsnps) paste('minimum MAF filtered:', params$maf)`*
+* Drop CpHs: __`r params$dropcphs`__
+* Drop X/Y Chromosomes: __`r params$dropsex`__
+
+Moreover, we also removed SNP loci, CpHs and X/Y chromosome positions if these options are selected:
 
 ```{r dropsnps, eval=FALSE, echo=TRUE}
-minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
+minfi::dropLociWithSnps(gset, maf = 0))
 
 ```
+
+```{r dropcphs, eval=FALSE, echo=TRUE}
+minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
+
+```
+
+```{r dropsex, eval=FALSE, echo=TRUE}
+gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
+```
+
+Finally, we added sex information:
+
+```{r addsex, eval=FALSE, echo=TRUE}
+minfi::addSex(gset)
+
+```
+
+
+After normalization, __`r params$probes`__ DNA methylation positions remained.
 
 <br>
 
@@ -340,6 +376,8 @@ knitr::kable(params$table_dmps)
 * Scale: __`r params$scale`__
 * Cluster Algorithm: __`r params$clusteralg`__
 * Distance: __`r params$distance`__
+
+The data used for the representation are  __`r if(!params$removebatch) "the normalized beta values" else "the normalized beta values after removing covariable effects on the data (with the limma removeBatchEffect function), preserving the variable of interest"`__.
 
 In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__ .
 

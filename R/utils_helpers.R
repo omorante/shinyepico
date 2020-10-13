@@ -700,7 +700,8 @@ create_bisulfiteplot = function(rgset, sample_names, threshold = 1.5) {
 }
 
 create_sexplot = function(gset, sample_names) {
-  sex_info = as.data.frame(minfi::getSex(gset))
+  
+  sex_info = as.data.frame(minfi::pData(gset)[,c("xMed","yMed","predictedSex")])
   sex_info$sample = sample_names
   
   plotly::ggplotly(
@@ -708,7 +709,7 @@ create_sexplot = function(gset, sample_names) {
       sex_info,
       ggplot2::aes_string(x = "xMed", y = "yMed", color = "predictedSex")
     ) +
-      ggplot2::geom_point(size = 2) +
+      ggplot2::geom_point(size = 3) +
       ggplot2::geom_abline(
         intercept = -2,
         slope = 1,

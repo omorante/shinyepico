@@ -31,8 +31,16 @@ hclust_methods = c("single",
 #' @noRd
 app_ui <- function(request) {
   navbarPage(
-    "shiny\u00C9PICo!",
+    title = div(style = "padding: 1px 0px; width: '100%'",
+                img(
+                  src = "images/logo_header.png",
+                  width = 25,
+                  height = 25
+                ),
+                "shiny\u00C9PICo!"),
+    windowTitle = HTML("shiny\u00C9PICo!</title><link rel='icon' type='image/gif/png' href='images/favicon.ico'>"),
     id = "navbar_epic",
+    collapsible = TRUE,
     theme = shinythemes::shinytheme("sandstone") ,
     tabPanel(
       "Input",
@@ -42,7 +50,7 @@ app_ui <- function(request) {
           width = 3,
           fileInput(
             inputId = "fileinput_input",
-            "Upload Compress Experiment Directory (zip):",
+            "Upload Compressed Experiment Directory (zip)",
             multiple = FALSE,
             accept = c(
               "application/zip",
@@ -93,7 +101,50 @@ app_ui <- function(request) {
         sidebarPanel(
           width = 3,
           selectInput("select_minfi_norm", "Select Normalization", norm_options),
-          shinyjs::disabled(actionButton("button_minfi_select", "Select"))
+          
+          div(
+            margin_left="50px",
+            switchInput(
+              inputId = "select_minfi_dropcphs",
+              label = "Drop CpHs",
+              labelWidth = "fit",
+              value = TRUE,
+              inline = TRUE
+            ),
+            
+            switchInput(
+              inputId = "select_minfi_dropsnps",
+              label = "Drop SNPs",
+              labelWidth = "fit",
+              value = TRUE,
+              inline = TRUE
+            )
+          ),
+          
+          conditionalPanel(
+            "input.select_minfi_dropsnps",
+            sliderInput(
+              inputId = "slider_minfi_maf",
+              label = "Minimum MAF to filter",
+              min = 0,
+              max = 1,
+              step = 0.01,
+              value = 0,
+              width = "75%"
+            )
+          ),
+          
+          switchInput(
+            inputId = "select_minfi_chromosomes",
+            label = "Drop X/Y Chr.",
+            labelWidth = "fit",
+            value = FALSE
+          ),
+          
+          shinyjs::disabled(actionButton("button_minfi_select", "Select")),
+          h4(),
+          textOutput("text_minfi_probes")
+          
         ),
         mainPanel(
           width = 9,
@@ -151,7 +202,7 @@ app_ui <- function(request) {
                 selectInput(
                   inputId = "select_minfi_pcaplot_color",
                   choices = c(),
-                  label = "Select color variable:"
+                  label = "Select color variable"
                 )
               ),
               column(
@@ -252,6 +303,7 @@ app_ui <- function(request) {
                     column(
                       6,
                       h4("Group options"),
+                      
                       selectizeInput(
                         "select_limma_groups2plot",
                         "Groups to plot",
@@ -266,7 +318,17 @@ app_ui <- function(request) {
                         c(),
                         multiple = TRUE,
                         options = list(plugins = list('remove_button', 'drag_drop'))
-                      )
+                      ),
+                      
+                      h4("Data options"),
+                      
+                      switchInput(
+                        inputId = "select_limma_removebatch",
+                        label = "Remove Batch Effect",
+                        labelWidth = "100px",
+                        value = FALSE,
+                        disabled = TRUE
+                      ),
                     ),
                     
                     column(
@@ -287,7 +349,7 @@ app_ui <- function(request) {
                       5,
                       selectInput(
                         "select_limma_clusteralg",
-                        "Clustering algorithm:",
+                        "Clustering algorithm",
                         c(
                           "single",
                           "complete",
@@ -301,12 +363,12 @@ app_ui <- function(request) {
                       
                       selectInput(
                         "select_limma_clusterdist",
-                        "Distance Function:",
+                        "Distance Function",
                         c("pearson", "spearman", "kendall", "euclidean"),
                         "pearson"
                       ),
                       
-                      selectInput("select_limma_scale", "Scale:", c("row", "none"), "row"),
+                      selectInput("select_limma_scale", "Scale", c("row", "none"), "row"),
                       tags$br()
                     ),
                     
@@ -362,6 +424,7 @@ app_ui <- function(request) {
                         )
                       ),
                       
+
                       shinyjs::disabled(actionButton("button_limma_heatmapcalc", "Update"))
                     )
                   )
@@ -377,12 +440,12 @@ app_ui <- function(request) {
     tabPanel(
       "Export",
       shinyjs::useShinyjs(),
-      h3("Download RObjects:"),
+      h3("Download RObjects"),
       downloadButton("download_export_robjects"),
       p(
         "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"
       ),
-      h3("Download filtered bed files:"),
+      h3("Download filtered bed files"),
       selectInput("select_export_bedtype",
                   "Subsetting mode",
                   c("by contrasts", "by heatmap cluster"),
@@ -392,12 +455,12 @@ app_ui <- function(request) {
         "Press to download the created filtered lists of contrasts, or heatmap clusters,
         with the chosen criteria, in bed format (hg19 genome)."
       ),
-      h3("Download Workflow Report:"),
+      h3("Download Workflow Report"),
       downloadButton("download_export_markdown"),
       p(
         "Press to download the report of all the steps follow and selected in the pipeline, and the results."
       ), 
-      h3("Download Heatmap:"),
+      h3("Download Heatmap"),
       downloadButton("download_export_heatmaps"),
       p(
         "Press to download the custom heatmap in the gplots::heatmap.2 version."
@@ -413,7 +476,7 @@ app_ui <- function(request) {
       img(src = "images/logo.png",
           width = 150), 
       h1("shiny\u00C9PICo") ,
-      h3("1.0.0"),
+      h3("1.1.0"),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target="_blank")

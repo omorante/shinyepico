@@ -168,7 +168,19 @@ app_server = function(input, output, session) {
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
   rval_rgset = eventReactive(input$button_input_next, {
-    targets = rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,]
+    #Prior check to test variable selection
+    if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
+        anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
+      showModal(
+        modalDialog(
+          title = "Variable error",
+          "Check if selected variables are correct. Sample Name Variable should not have duplicated values
+          and the variable of interest should have groups greater than 1.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+    }
     
     #Check prior conditions to read data
     validate(need(
@@ -180,89 +192,83 @@ app_server = function(input, output, session) {
       "Grouping variable should have groups greater than 1"
     ))
     
+    #disable button to avoid multiple clicks
+    shinyjs::disable("button_input_next")
+    
+    
     #We need to check if this step works
-    try({
-      RGSet = minfi::read.metharray.exp(targets = targets,
-                                        verbose = TRUE,
-                                        force = TRUE)
-    })
+    withProgress(message = "Reading array data...",
+                 value = 2,
+                 max = 5,
+                 {
+                   try({
+                     RGSet = minfi::read.metharray.exp(targets = rval_sheet_target(),
+                                                       verbose = TRUE,
+                                                       force = TRUE)
+                   })
+                   
+                   
+                   
+                   
+                   if (!exists("RGSet", inherits = FALSE)) {
+                     showModal(
+                       modalDialog(
+                         title = "reading error",
+                         "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
+                         easyClose = TRUE,
+                         footer = NULL
+                       )
+                     )
+                     shinyjs::disable("button_minfi_select")
+                   }
+                   
+                   validate(
+                     need(
+                       exists("RGSet", inherits = FALSE),
+                       "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"
+                     )
+                   )
+                   
+                   #we return RGSet filtered by the standard detection threshold of Pvalue, 0.01
+                   RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
+                 })
     
-    if (!exists("RGSet", inherits = FALSE)) {
-      showModal(
-        modalDialog(
-          title = "reading error",
-          "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet",
-          easyClose = TRUE,
-          footer = NULL
-        )
-      )
-      shinyjs::disable("button_minfi_select")
-    }
-    
-    validate(
-      need(
-        exists("RGSet", inherits = FALSE),
-        "Minfi can't read arrays specified in your samplesheet. Please, check your zipfile and your sampleSheet"
-      )
-    )
-    
-    #setting number of PCs and clicking PCA button to obtain initial graph
-    updateSelectInput(
-      session,
-      "select_minfi_pcaplot_pcx",
-      choices = paste0("PC", seq_len(nrow(targets))),
-      selected = "PC1"
-    )
-    updateSelectInput(
-      session,
-      "select_minfi_pcaplot_pcy",
-      choices = paste0("PC", seq_len(nrow(targets))),
-      selected = "PC2"
-    )
-    shinyjs::click("button_pca_update")
-    
-    #We return RGSet filter by the standard detection threshold of Pvalue, 0.01
-    RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
   })
   
   #We change the page to the next one
   observeEvent(input$button_input_next,
                {
-                 shinyjs::disable("button_input_next") #disable button to avoid multiple clicks
+                 #check if rgset is loaded
+                 req(rval_rgset())
                  
-                 #check if variables selected are correct
-                 if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
-                     anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
-                   showModal(
-                     modalDialog(
-                       title = "Variable error",
-                       "Check if selected variables are correct. Sample Name Variable should not have duplicated values
-          and the variable of interest should have groups greater than 1.",
-                       easyClose = TRUE,
-                       footer = NULL
-                     )
-                   )
-                   shinyjs::enable("button_input_next")
-                 }
-                 else {
-                   updateSelectInput(
-                     session,
-                     "select_minfi_pcaplot_color",
-                     choices = c(colnames(rval_sheet_target()), "xMed","yMed","predictedSex"),
-                     selected = input$select_input_donorvar
-                   )
+                 #update PCA parameters
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_pcx",
+                   choices = paste0("PC", seq_len(nrow(rval_sheet_target()))),
+                   selected = "PC1"
+                 )
+                 
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_pcy",
+                   choices = paste0("PC", seq_len(nrow(rval_sheet_target()))),
+                   selected = "PC2"
+                 )
+                 
+                 updateSelectInput(
+                   session,
+                   "select_minfi_pcaplot_color",
+                   choices = c(colnames(rval_sheet_target()),
+                               "xMed",
+                               "yMed",
+                               "predictedSex"),
                    
-                   withProgress(message = "Reading array data...",
-                                value = 2,
-                                max = 5,
-                                {
-                                  rval_rgset()
-                                  updateNavbarPage(session, "navbar_epic", "Normalization")
-                                })
-                   
-                   shinyjs::enable("button_minfi_select")
-                   
-                 }
+                   selected = input$select_input_groupingvar
+                 )
+                 
+                 shinyjs::enable("button_minfi_select")
+                 updateNavbarPage(session, "navbar_epic", "Normalization")
                })
   
   
@@ -270,15 +276,21 @@ app_server = function(input, output, session) {
   
   
   #Calculation of minfi normalized data
-  rval_gset = reactive({
-    withProgress(message = "Normalization in progress..",
+  rval_gset = eventReactive(input$button_minfi_select, {
+    
+    validate(need(!is.null(rval_rgset()),
+                  "Raw data has not been loaded yet."))
+    
+    shinyjs::disable("button_minfi_select") #disable button to avoid repeat clicking
+    
+    withProgress(message = "Normalization in progress...",
                  value = 1,
                  max = 4,
                  {
                    try({
                      if (input$select_minfi_norm == "Illumina") {
                        gset = minfi::mapToGenome(minfi::ratioConvert(
-                         type = "Illumina",
+                         betaThreshold = 0.001,
                          minfi::preprocessIllumina(
                            rval_rgset(),
                            bg.correct = TRUE,
@@ -316,6 +328,19 @@ app_server = function(input, output, session) {
                    })
                    
                    #check if normalization has worked
+                   
+                   if(!exists("gset", inherits = FALSE)) {
+                     showModal(
+                       modalDialog(
+                         title = "Normalization failure",
+                         "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer.",
+                         easyClose = TRUE,
+                         footer = NULL
+                       )
+                     )
+                     shinyjs::enable("button_minfi_select") 
+                   }
+                   
                    validate(
                      need(
                        exists("gset", inherits = FALSE),
@@ -323,14 +348,47 @@ app_server = function(input, output, session) {
                      )
                    )
                    
+                   #prior CpG probes
+                   probes = length(minfi::featureNames(gset))
+                   
                    #remove SNPs to proceed with the analysis and add sex column
-                   minfi::addSex(minfi::dropLociWithSnps(gset, maf = 0))
+                   if (input$select_minfi_dropsnps)
+                    gset = minfi::dropLociWithSnps(gset, maf = input$slider_minfi_maf)
+                   
+                   #remove CpHs
+                   if (input$select_minfi_dropcphs)
+                    gset = minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
+                   
+                   #Add sex info
+                    gset = minfi::addSex(gset)
+                   
+                   #remove chromosomes
+                   if(input$select_minfi_chromosomes){
+                     gset = gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
+                   }
+                   
+                   #Info CpGs removed
+                   message(paste(probes - length(minfi::featureNames(gset)), "probes were filtered out."))
+                   
+                   #enable button
+                   shinyjs::enable("button_minfi_select") 
+
+                   #return gset
+                   gset
                    
                  })
-    
   })
   
   
+  #filtered probes info
+  
+  rval_gsetprobes = eventReactive(input$button_minfi_select,{
+    req(rval_gset())
+    length(minfi::featureNames(rval_gset()))
+  })
+  
+  output$text_minfi_probes = renderText(paste(rval_gsetprobes(),"positions after normalization"))
+
   #getBeta/getM reactives
   rval_rgset_getBeta = eventReactive(rval_rgset(), {
     bvalues = as.data.frame(minfi::getBeta(rval_rgset()))
@@ -360,7 +418,7 @@ app_server = function(input, output, session) {
   
   #PCA
   rval_plot_pca = eventReactive(
-    list(input$button_pca_update, input$select_minfi_norm),
+    list(input$button_pca_update, input$button_minfi_select),
     create_pca(
       Bvalues = rval_gset_getBeta(),
       pheno_info = as.data.frame(minfi::pData(rval_gset())),
@@ -425,17 +483,29 @@ app_server = function(input, output, session) {
   
   #Sex prediction
   
-  rval_plot_sexprediction = reactive(create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar]))
+  rval_plot_sexprediction = reactive({
+    req(rval_gset())
+    create_sexplot(rval_gset(), rval_sheet_target()[, input$select_input_samplenamevar])
+  })
+  
+  rval_plot_sextable = reactive({
+    req(rval_gset())
+    data.frame(name = rval_sheet_target()[[input$select_input_samplenamevar]], sex = as.data.frame(minfi::pData(rval_gset()))[["predictedSex"]])
+  })
   
   output$graph_minfi_sex = plotly::renderPlotly(rval_plot_sexprediction())
+  
   output$table_minfi_sex = DT::renderDT(
-    data.frame(name = rval_sheet_target()[[input$select_input_samplenamevar]], sex = as.data.frame(minfi::pData(rval_gset(
-    )))[["predictedSex"]]),
+    rval_plot_sextable(),
     rownames = FALSE,
     selection = "single",
     style = "bootstrap",
     caption = "Predicted sex:",
-    options = list(pageLength = 10, scrollX = TRUE, autoWidth = TRUE)
+    options = list(
+      pageLength = 10,
+      scrollX = TRUE,
+      autoWidth = TRUE
+    )
   )
   
   
@@ -456,19 +526,14 @@ app_server = function(input, output, session) {
   #Update of next form and move to Limma
   observeEvent(input$button_minfi_select,
                {
-                 #check if normalization has worked
-                 validate(
-                   need(
-                     !is.null(rval_gset()),
-                     "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."
-                   )
-                 )
+                 #check if normalization has been performed
+                 req(rval_gset())
                  
                  updateSelectInput(
                    session,
                    "select_limma_voi",
                    label = "Select Variable of Interest",
-                   choices = colnames(rval_clean_sheet_target()),
+                   choices = colnames(rval_clean_sheet_target())[vapply(rval_clean_sheet_target(), is.factor, logical(1))], 
                    selected = input$select_input_groupingvar
                  )
                  
@@ -499,7 +564,6 @@ app_server = function(input, output, session) {
                  )
                  
                  shinyjs::enable("button_limma_calculatemodel")
-                 updateNavbarPage(session, "navbar_epic", "DMPs")
                })
   
   
@@ -509,7 +573,7 @@ app_server = function(input, output, session) {
   
   #Variable of interest
   rval_voi = reactive(factor(make.names(minfi::pData(rval_gset(
-  ))[, input$select_limma_voi]))) #add substitution of "-" for "_", avoiding conflicts
+  ))[, input$select_limma_voi])))
   
   #Design calculation
   rval_design = eventReactive(input$button_limma_calculatemodel, {
@@ -526,10 +590,37 @@ app_server = function(input, output, session) {
     )))
   
     #Bulding the design matrix
-    design = stats::model.matrix(formula, data = rval_clean_sheet_target())
+    try({
+      design = stats::model.matrix(formula, data = rval_clean_sheet_target())
+    })
+    
+    validate(
+      need(
+        exists("design", inherits = FALSE),
+        "Design matrix has failed. Please, check your options and try again."
+      ),
+      need(
+        nrow(design) == length(rval_sheet_target()[[input$select_input_samplenamevar]]),
+        "The design matrix contains missing values. Please, check the selected variable and covariables."
+      )
+    )
+    
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
     row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
     colnames(design) = make.names(colnames(design), unique = TRUE)
+    
+    #checking colinearity
+    if (qr(design)$rank < ncol(design)) {
+      showModal(
+        modalDialog(
+          title = "Colinearity warning",
+          "The design matrix presents colinear columns. Even though it is possible to try to continue the analysis, checking the selected covariables is recommended.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+      
+    }
     
     design
   })
@@ -723,8 +814,8 @@ app_server = function(input, output, session) {
       showModal(
         modalDialog(
           title = "Contrasts Calculation Error",
-          "An unexpected error has ocurred during contrasts calculation. Please, generate the model again.
-        If the problem persists, report the error to the mantainer.",
+          "An unexpected error has ocurred during contrasts calculation. Please, generate the model again and check if it is correct.
+        If the problem persists, report the error to the maintainer",
           easyClose = TRUE,
           footer = NULL
         )
@@ -739,8 +830,8 @@ app_server = function(input, output, session) {
     validate(
       need(
         exists("dif_cpgs", inherits = FALSE),
-        "An unexpected error has ocurred during contrasts calculation. Please, generate the model again.
-                  If the problem persists, report the error to the mantainer."
+        "An unexpected error has ocurred during contrasts calculation. Please, generate the model again and check if it is correct.
+        If the problem persists, report the error to the maintainer"
       )
     )
     
@@ -774,6 +865,21 @@ app_server = function(input, output, session) {
     
     #force rval_filteredlist
     rval_filteredlist()
+    
+    #enable or disable removebatch option
+    covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
+    
+    if (ncol(covariables_design) > 0)
+      updateSwitchInput(session,
+                        "select_limma_removebatch",
+                        value = FALSE,
+                        disabled = FALSE)
+    else
+      updateSwitchInput(session,
+                        "select_limma_removebatch",
+                        value = FALSE,
+                        disabled = TRUE)
+
     
     #enable and click heatmap button to get default graph
     shinyjs::enable("button_limma_heatmapcalc")
@@ -813,7 +919,26 @@ app_server = function(input, output, session) {
     {
       filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
       dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
-      join_table = rval_gset_getBeta()[dif_cpgs, ]
+      
+      #If remove batch option is enabled, limma:removebatcheffects is applied using the design info data.
+      if (!input$select_limma_removebatch)
+      {
+        join_table = rval_gset_getBeta()[dif_cpgs,]
+      }
+      else
+      {
+        voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
+        covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
+        
+        join_table = as.data.frame(
+          limma::removeBatchEffect(
+            rval_gset_getBeta(),
+            design = voi_design,
+            covariates = covariables_design
+          )[dif_cpgs,]
+        )
+      }
+        
       join_table$cpg = NULL
       
       #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
@@ -949,12 +1074,14 @@ app_server = function(input, output, session) {
                      )
                    else
                      return(
-                       plotOutput(
+                       div(
+                        min_width=400,
+                         plotOutput(
                          "graph_limma_heatmap_static",
                          width = "600px",
                          height = "600px"
                        ) %>% shinycssloaders::withSpinner()
-                     )
+                     ))
                  })
                  
                  if (!as.logical(input$select_limma_graphstatic))
@@ -971,7 +1098,6 @@ app_server = function(input, output, session) {
   #EXPORT
   
   #Disable or enable buttons depending on software state
-  
   observeEvent(rval_analysis_finished(),
                if (rval_analysis_finished())
                {
@@ -1117,6 +1243,11 @@ app_server = function(input, output, session) {
                        grouping_var = input$select_input_groupingvar,
                        donor_var = input$select_input_donorvar,
                        normalization_mode = input$select_minfi_norm,
+                       dropsnps = input$select_minfi_dropsnps,
+                       dropcphs = input$select_minfi_dropcphs,
+                       dropsex = input$select_minfi_chromosomes,
+                       maf = input$slider_minfi_maf,
+                       probes = rval_gsetprobes(),
                        limma_voi = input$select_limma_voi,
                        limma_covar = input$checkbox_limma_covariables,
                        limma_inter = input$checkbox_limma_interactions,
@@ -1136,6 +1267,7 @@ app_server = function(input, output, session) {
                        Colv = input$select_limma_colv,
                        distance = input$select_limma_clusterdist,
                        scale = input$select_limma_scale,
+                       removebatch = input$select_limma_removebatch,
                        plot_densityplotraw = rval_plot_densityplotraw(),
                        plot_densityplot = rval_plot_densityplot(),
                        plot_pcaplot = rval_plot_pca()[["graph"]],
