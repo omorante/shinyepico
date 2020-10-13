@@ -23,7 +23,19 @@ jobs:
         r-version: [3.6,4.0]
 
     steps:
-      - name: R-actions
-        uses: Swechhya/R-actions@v1.2
+      - name: Set up ubuntu dependencies
+        run: sudo apt-get install libxml2-utils libcurl4-openssl-dev
+      - uses: actions/checkout@v2
+      - name: Set up R ${{ matrix.r-version }}
+        uses: r-lib/actions/setup-r@ffe45a39586f073cc2e9af79c4ba563b657dc6e3
         with:
-          needsBioc: true
+          r-version: ${{ matrix.r-version }}
+      - name: Install dependencies
+        run: |
+          install.packages(c("remotes", "rcmdcheck"))
+          remotes::install_deps(dependencies = TRUE)
+        shell: Rscript {0}
+      - name: Check
+        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+        shell: Rscript {0}
+
