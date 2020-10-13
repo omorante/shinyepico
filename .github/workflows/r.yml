@@ -19,26 +19,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        r-version: [4.0]
+        os: [ubuntu-latest]
+        r-version: [3.6,4.0]
 
     steps:
-      - name: Set up ubuntu dependencies
-        run: sudo apt-get install libxml2-utils libcurl4-openssl-dev
-        if: matrix.os == 'ubuntu-latest'
-      - name: Set up macOS dependencies
-        run:  brew install libxml2; brew install curl; brew link curl --force; brew link libxml2 --force
-        if: matrix.os == 'macos-latest'
-      - uses: actions/checkout@v2
-      - name: Set up R ${{ matrix.r-version }}
-        uses: r-lib/actions/setup-r@ffe45a39586f073cc2e9af79c4ba563b657dc6e3
+      - name: R-actions
+        uses: Swechhya/R-actions@v1.2
         with:
-          r-version: ${{ matrix.r-version }}
-      - name: Install dependencies
-        run: |
-          install.packages(c("remotes", "rcmdcheck"))
-          remotes::install_deps(dependencies = TRUE)
-        shell: Rscript {0}
-      - name: Check
-        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
-        shell: Rscript {0}
+          needsBioc: true
