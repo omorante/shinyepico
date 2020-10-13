@@ -592,8 +592,8 @@ create_dendrogram = function(plot_data,
   
   
   distance = distfun(heatdata)
-  clustering = hclust(distance, clusteralg)
-  clusters = cutree(clustering, k = k_number)
+  clustering = stats::hclust(distance, clusteralg)
+  clusters = stats::cutree(clustering, k = k_number)
   
   rowside_scale = grDevices::rainbow(length(unique(clusters)))
   

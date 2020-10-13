@@ -180,7 +180,7 @@ __Raw__
 
 __Processed (`r params$normalization_mode`)__
 
-```{r boxplot_processed, echo=FALSE, warning=FALSE, message = FALSE}
+```{r boxplot_processed, echo=FALSE, warning=FALSE, mess = FALSE}
    params$plot_boxplot
 ```
 
