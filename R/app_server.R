@@ -533,7 +533,7 @@ app_server = function(input, output, session) {
                    session,
                    "select_limma_voi",
                    label = "Select Variable of Interest",
-                   choices = colnames(rval_clean_sheet_target()),
+                   choices = colnames(rval_clean_sheet_target())[vapply(rval_clean_sheet_target(), is.factor, logical(1))], 
                    selected = input$select_input_groupingvar
                  )
                  
@@ -590,7 +590,21 @@ app_server = function(input, output, session) {
     )))
   
     #Bulding the design matrix
-    design = stats::model.matrix(formula, data = rval_clean_sheet_target())
+    try({
+      design = stats::model.matrix(formula, data = rval_clean_sheet_target())
+    })
+    
+    validate(
+      need(
+        exists("design", inherits = FALSE),
+        "Design matrix has failed. Please, check your options and try again."
+      ),
+      need(
+        nrow(design) == length(rval_sheet_target()[[input$select_input_samplenamevar]]),
+        "The design matrix contains missing values. Please, check the selected variable and covariables."
+      )
+    )
+    
     colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
     row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
     colnames(design) = make.names(colnames(design), unique = TRUE)

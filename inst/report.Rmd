@@ -1,5 +1,5 @@
 ---
-title: "shinyÉPICo workflow report"
+title: "shinyÉPICo Workflow Report"
 output: 
   html_document:
     toc: true
@@ -72,8 +72,14 @@ params:
   filteredlist2heatmap : NA
 ---
 
-This report was created with shinyÉPICo. <br>
-(c) 2020 Octavio Morante-Palacios
+```{r, out.width = "150px", echo=FALSE}
+knitr::include_graphics("images/logo.png")
+```
+<br>
+This report was created with shinyÉPICo. 
+<br>
+&copy; 2020 Octavio Morante-Palacios
+<br>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
