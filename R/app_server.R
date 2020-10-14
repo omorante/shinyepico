@@ -78,9 +78,9 @@ app_server = function(input, output, session) {
     
     suppressWarnings({
       clean_sample_sheet = as.data.frame(lapply(minfi::pData(rval_gset()), function(x) {
-        if (sum(is.na(as.numeric(x))) < length(x) * 0.75) {
+        if (sum(is.na(as.numeric(x))) < length(x) * 0.75 & stats::sd(x, na.rm=TRUE) > 0) {
           return(as.numeric(x))
-        } #if NAs produced with as.numeric are less than 75%, we consider the variable numeric
+        } #if NAs produced with as.numeric are less than 75%, and SD is greater than 0 we consider the variable numeric
         else if (length(unique(x)) > 1 &
                  length(unique(x)) < length(x)) {
               return(as.factor(make.names(x))) #returning syntactically valid names

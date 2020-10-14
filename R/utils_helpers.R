@@ -398,7 +398,7 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
   #bvalues should be a dataframe
   
   pca_data = as.data.frame(stats::prcomp(t(stats::na.omit(Bvalues)))$x)
-  
+
   cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
   cor_data$Var1 = row.names(cor_data)
   
