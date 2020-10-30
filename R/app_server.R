@@ -1496,18 +1496,32 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
                    {
-                     if (input$select_export_bedtype == "by heatmap cluster") {
+                     if (input$select_export_bedtype == "by heatmap cluster" & input$select_export_analysistype == "DMPs") {
                        create_filtered_bed_clusters( dendro_data = rval_dendrogram(),
                                                      annotation = rval_annotation(),
                                                      directory = dirname(file)
                        )
                        
                      }
-                     else{
+                     else if(input$select_export_bedtype == "by contrasts" & input$select_export_analysistype == "DMPs"){
                        create_filtered_beds(rval_filteredlist(),
                                             rval_annotation(),
                                             directory = dirname(file))
                      }
+                     else if(input$select_export_bedtype == "by heatmap cluster" & input$select_export_analysistype == "DMRs"){
+                       print("to do")
+                       #to do
+                     }
+                     else if(input$select_export_bedtype == "by contrasts" & input$select_export_analysistype == "DMRs"){
+                       create_filtered_beds_dmrs(
+                         mcsea_filtered = rval_filteredmcsea(),
+                         regionsTypes = input$select_dmrs_regions,
+                         annotation = rval_annotation(),
+                         directory = dirname(file)
+                       )
+
+                     }
+                     
                      
                      objects = list.files(path = dirname(file),
                                           full.names = TRUE,

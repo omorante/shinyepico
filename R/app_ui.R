@@ -694,12 +694,29 @@ app_ui <- function(request) {
         "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"
       ),
       h3("Download filtered bed files"),
-      selectInput("select_export_bedtype",
-                  "Subsetting mode",
-                  c("by contrasts", "by heatmap cluster"),
-                  selected = "by contrast"),
-      downloadButton("download_export_filteredbeds"),
-      p(
+      
+      fluidPage(
+      div(
+        style = "display:inline-block",
+        selectInput(
+          "select_export_analysistype",
+          "Analysis type",
+          c("DMPs", "DMRs"),
+          selected = "by contrast"
+        )
+      ),
+      div(
+        style = "display:inline-block",
+        selectInput(
+          "select_export_bedtype",
+          "Subsetting mode",
+          c("by contrasts", "by heatmap cluster"),
+          selected = "by contrasts"
+        )
+      )), 
+      
+    downloadButton("download_export_filteredbeds"),
+    p(
         "Press to download the created filtered lists of contrasts, or heatmap clusters,
         with the chosen criteria, in bed format (hg19 genome)."
       ),
