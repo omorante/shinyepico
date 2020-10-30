@@ -438,6 +438,254 @@ app_ui <- function(request) {
     ),
     
     tabPanel(
+      "DMRs",
+      titlePanel("Differentially Methylated Regions"),
+      sidebarLayout(
+        sidebarPanel(
+          width = 3,
+          
+          pickerInput(
+            inputId = "select_dmrs_contrasts",
+            label = "Contrasts to calculate",
+            choices = c(),
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3"
+            ),
+            multiple = TRUE
+          ),
+          
+          pickerInput(
+            inputId = "select_dmrs_regions",
+            label = "Type of DMRs",
+            choices = c("promoters", "genes", "CGI"),
+            selected = c("promoters", "genes", "CGI"),
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3"
+            ),
+            multiple = TRUE
+          ),
+          
+          pickerInput(
+            inputId = "select_dmrs_platform",
+            label = "Array platform",
+            choices = c("450k", "EPIC"),
+            selected = c("EPIC"),
+            multiple = FALSE
+          ),
+          
+          sliderInput(
+            "slider_dmrs_cpgs",
+            label = "Min. CpGs in DMR",
+            min = 2,
+            max = 50,
+            value = 5
+          ),
+          
+          sliderInput(
+            "slider_dmrs_permutations",
+            label = "Number of permutations",
+            min = 1000,
+            max = 100000,
+            value = 50000
+          ),
+          
+          shinyjs::disabled(actionButton("button_dmrs_calculate", "Calculate"))
+        ),
+        
+        mainPanel(
+          width = 9,
+          tabsetPanel(
+            id = "tabset_dmrs",
+            
+            tabPanel(
+              "Heatmap",
+              div(
+                style = 'max-width:800px;margin:auto;',
+                fluidPage(
+              h4("DMRs Heatmap"),
+              textOutput("text_dmrs_heatmapcount"),
+              plotOutput("graph_dmrs_heatmap", width = "600px", height = "600px") %>% shinycssloaders::withSpinner(),
+              
+              h4("DMRs counts in each contrast"),
+              tableOutput("table_dmrs_count")  %>% shinycssloaders::withSpinner(),
+              
+              fluidRow(
+                column(
+                  6,
+                  h4("Group options"),
+                  
+                  selectizeInput(
+                    "select_dmrs_groups2plot",
+                    "Groups to plot",
+                    c(),
+                    multiple = TRUE,
+                    options = list(plugins = list('remove_button', 'drag_drop'))
+                  ),
+                  
+                  selectizeInput(
+                    "select_dmrs_contrasts2plot",
+                    "Contrasts to plot",
+                    c(),
+                    multiple = TRUE,
+                    options = list(plugins = list('remove_button', 'drag_drop'))
+                  ),
+                  
+                  selectizeInput(
+                    "select_dmrs_regions2plot",
+                    "Regions to plot",
+                    c(),
+                    multiple = TRUE,
+                    options = list(plugins = list('remove_button', 'drag_drop'))
+                  ),
+                  
+                  h4("Data options"),
+                  
+                  switchInput(
+                    inputId = "select_dmrs_removebatch",
+                    label = "Remove Batch Effect",
+                    labelWidth = "100px",
+                    value = FALSE,
+                    disabled = TRUE
+                  ),
+                ),
+                
+                column(
+                  6,
+                  h4("Filtering options"),
+                  sliderInput("slider_dmrs_deltab", "Min. DeltaBeta", 0, 1, 0),
+                  sliderInput("slider_dmrs_adjpvalue", "Max. FDR", 0, 1, 0.05),
+                  sliderInput("slider_dmrs_pvalue", "Max. p-value", 0, 1, 1)
+                  
+                )
+              ),
+              
+              h4("Clustering options", align =
+                   "left"),
+              
+              fluidRow(
+                column(
+                  5,
+                  selectInput(
+                    "select_dmrs_clusteralg",
+                    "Clustering algorithm",
+                    c(
+                      "single",
+                      "complete",
+                      "average",
+                      "mcquitty",
+                      "median",
+                      "centroid"
+                    ),
+                    "average"
+                  ),
+                  
+                  selectInput(
+                    "select_dmrs_clusterdist",
+                    "Distance Function",
+                    c("pearson", "spearman", "kendall", "euclidean"),
+                    "pearson"
+                  ),
+                  
+                  selectInput("select_dmrs_scale", "Scale", c("row", "none"), "row"),
+                  tags$br()
+                ),
+                
+                column(
+                  3,
+                  offset = 1,
+                  tags$br(),
+                  
+                  switchInput(
+                    inputId = "select_dmrs_graphstatic",
+                    label = "Static Graph",
+                    labelWidth = "100px",
+                    value = TRUE
+                  ),
+                  
+                  switchInput(
+                    inputId = "select_dmrs_colv",
+                    label = "Column Dendro.",
+                    labelWidth = "100px",
+                    value = TRUE
+                  ),
+                  
+                  switchInput(
+                    inputId = "select_dmrs_colsidecolors",
+                    label = "Column Colors",
+                    labelWidth = "100px",
+                    value = FALSE
+                  )
+                  
+                ),
+                
+                column(
+                  3,
+                  
+                  tags$br(),
+                  
+                  switchInput(
+                    inputId = "select_dmrs_rowsidecolors",
+                    label = "Row Colors",
+                    labelWidth = "100px",
+                    value = FALSE
+                  ),
+                  
+                  conditionalPanel(
+                    "input.select_dmrs_rowsidecolors",
+                    numericInput(
+                      "select_dmrs_knumber",
+                      "Clusters number",
+                      value = 2,
+                      min = 1,
+                      max = Inf,
+                      step = 1
+                    )
+                  ),
+                  
+                  shinyjs::disabled(actionButton("button_dmrs_heatmapcalc", "Update"))
+                )
+              )))),
+            
+            tabPanel(
+              "Single DMR plot",
+              
+              h4("Genomic graph"),
+              plotOutput("graph_dmrs_singledmr") %>% shinycssloaders::withSpinner(),
+              #h4("GSEA graph"),
+              #plotOutput("graph_dmrs_singlegsea") %>% shinycssloaders::withSpinner(),
+              h4("DMRs table"),
+              
+              
+              div(style = "display:inline-block",
+                  
+                  selectInput(
+                    "select_dmrs_selcont",
+                    label = "Contrast",
+                    choices = c()
+                  )),
+              
+              div(style = "display:inline-block",
+                  selectInput("select_dmrs_selreg",  label = "Region", choices = c())),
+              
+              
+              DT::DTOutput("table_dmrs_table") %>% shinycssloaders::withSpinner(),
+              
+              br(),
+
+              actionButton("button_dmrs_graphsingle", "Plot")
+              
+            )
+          )
+        ),
+      )
+    ), 
+    
+    
+    tabPanel(
       "Export",
       shinyjs::useShinyjs(),
       h3("Download RObjects"),

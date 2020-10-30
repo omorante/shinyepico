@@ -4,8 +4,49 @@ globalVariables("grupo")
 globalVariables("type")
 globalVariables("table")
 
+# NORMALIZATION FUNCTIONS
 
-# LIMMA CORE FUNCTIONS
+normalize_rgset = function(rgset, normalization_mode){
+  
+  if (normalization_mode == "Illumina") {
+    gset = minfi::mapToGenome(minfi::ratioConvert(
+      betaThreshold = 0.001,
+      minfi::preprocessIllumina(
+        rgset,
+        bg.correct = TRUE,
+        normalize = "controls"
+      )
+    ))
+  }
+  
+  else if (normalization_mode == "Raw") {
+    gset = minfi::mapToGenome(minfi::ratioConvert(minfi::preprocessRaw(rgset)))
+  }
+  
+  else if (normalization_mode == "Noob") {
+    gset = minfi::mapToGenome(minfi::ratioConvert(minfi::preprocessNoob(rgset)))
+  }
+  
+  else if (normalization_mode == "Funnorm") {
+    gset = minfi::preprocessFunnorm(rgset)
+  }
+  
+  else if (normalization_mode == "SWAN") {
+    gset = minfi::preprocessSWAN(rgset,
+                                 mSet = minfi::mapToGenome(minfi::preprocessRaw(rgset))) #MethylSet or GenomicMethylSet?
+  }
+  
+  else if (normalization_mode == "Quantile") {
+    gset = minfi::preprocessQuantile(rgset)
+  }
+  
+  else if (normalization_mode == "Noob+Quantile") {
+    gset = minfi::preprocessQuantile(minfi::preprocessNoob(rgset))
+  }
+  
+  gset
+}
+# DMPs CORE FUNCTIONS
 
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
   if (!is.null(Bvalues_totales$cpg)) {
@@ -26,7 +67,6 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
     })
   }
   
-  #all.means = as.data.frame(all.means)   #desconectado por prueba
   all.means$cpg  = row.names(Bvalues_totales)
   
   #calcular diferencias
@@ -103,7 +143,6 @@ create_filtered_list = function(limma_list,
                                 deltaB,
                                 adjp_max,
                                 p.value,
-                                sd_cort = Inf,
                                 cores) {
   force(limma_list)
   force(global_difs)
@@ -145,6 +184,208 @@ create_filtered_list = function(limma_list,
   
 }
 
+# DMRs CORE FUNCTIONS
+
+
+find_dmrs = function(find_dif_cpgs,
+                     minCpGs,
+                     platform,
+                     voi,
+                     regionsTypes,
+                     contrasts,
+                     bvalues,
+                     permutations,
+                     ncores) {
+  force(find_dif_cpgs)
+  force(minCpGs)
+  force(platform)
+  force(voi)
+  force(regionsTypes)
+  force(contrasts)
+  force(bvalues)
+  force(permutations)
+  
+  associationTypes = paste0(regionsTypes, "_association")
+  
+  #Limiting ncores
+  if (ncores > 2) {
+    ncores = 2
+  }
+  
+  #filtering only selected contrasts
+  find_dif_cpgs = find_dif_cpgs[contrasts]
+  
+  #Creating rankings to use with mCSEA from limma list
+  ranking_list = lapply(find_dif_cpgs, function(x) {
+    ranking = x[["t"]]
+    names(ranking) = x[["cpg"]]
+    ranking
+  })
+  
+  #Generating design matrix to use with mCSEA
+  design_matrix = data.frame(row.names = colnames(bvalues), group = voi)
+  
+  foreach::foreach(
+    ranking = ranking_list,
+    .final = function(x)
+      setNames(x, names(ranking_list))
+  ) %do% {
+    isolate({
+      #Specified seed to obtain always the same results
+      set.seed(123)
+      
+      #Generating mCSEA result
+      result = mCSEA::mCSEATest(
+        ranking,
+        minCpGs = minCpGs,
+        methData = bvalues,
+        platform = platform,
+        pheno = design_matrix,
+        regionsTypes = regionsTypes,
+        nperm = permutations,
+        nproc = ncores
+      )
+      
+      #Processing associations to match with regions
+      for(i in seq_along(associationTypes)){
+        result[[associationTypes[i]]] = result[[associationTypes[i]]][row.names(result[[regionsTypes[i]]])]
+      }
+      
+      result
+    })
+  }
+}
+
+
+add_dmrs_globaldifs = function(mcsea_result, cpg_globaldifs, regionsTypes, cores){
+  
+  force(mcsea_result)
+  force(cpg_globaldifs)
+  force(regionsTypes)
+  force(cores)
+  
+  
+  doParallel::registerDoParallel(cores)
+  
+  cpg_globaldifs = data.table::as.data.table(cpg_globaldifs) #changed from setDT because of bug with bvalues rownames
+  data.table::setkeyv(cpg_globaldifs, "cpg")
+  
+  associationTypes = paste0(regionsTypes, "_association")
+  
+  dmrs_globaldifs = foreach::foreach(
+    cont = names(mcsea_result),
+    .final = function(x)
+      setNames(x, names(mcsea_result))
+  ) %dopar% {
+    isolate({
+      dif_target = paste("dif",
+                         limma::strsplit2(cont, "-")[1],
+                         limma::strsplit2(cont, "-")[2],
+                         sep = "_")
+      
+      result = list()
+      
+      for (i in seq_along(regionsTypes)) {
+        result[[regionsTypes[i]]] = vapply(mcsea_result[[cont]][[associationTypes[i]]], function(x) {
+          mean(as.numeric(cpg_globaldifs[list(x), nomatch = NULL, mult = "all"][[dif_target]]), na.rm = TRUE)
+        }, numeric(1))
+        
+      }
+      
+      result
+
+    })
+  }
+  
+  doParallel::stopImplicitCluster()
+  
+  isolate({
+    for (cont in names(mcsea_result)) {
+      for (region in regionsTypes)
+      {
+        mcsea_result[[cont]][[region]]$dif_beta = dmrs_globaldifs[[cont]][[region]]
+      }
+    }
+  })
+  
+  mcsea_result
+}
+
+
+filter_dmrs = function(mcsea_list,
+                       fdr,
+                       pval,
+                       dif_beta,
+                       regionsTypes,
+                       contrasts) {
+  force(fdr)
+  force(pval)
+  force(dif_beta)
+  force(regionsTypes)
+  force(mcsea_list)
+  force(contrasts)
+  
+  #calculating association names from regionsTypes
+  associationTypes = paste0(regionsTypes, "_association")
+  
+  foreach::foreach(
+    result = mcsea_list,
+    .final = function(x)
+      setNames(x, names(mcsea_list))
+  ) %do% {
+    isolate({
+      #Filtering regions by fdr
+      for (region in regionsTypes) {
+        result[[region]] = result[[region]][result[[region]]$padj < fdr &
+                                              result[[region]]$pval < pval &
+                                            abs(result[[region]]$dif_beta) >= dif_beta,] 
+        
+      }
+      
+      #Filtering associations
+      for (i in seq_along(associationTypes)) {
+        association = associationTypes[i]
+        result[[association]] = result[[association]][row.names(result[[regionsTypes[i]]])]
+      }
+      
+      result
+    })
+  }
+  
+}
+
+
+create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
+
+  mcsea_result = mcsea_result[contrasts]
+  associations = paste0(regions, "_association")
+  
+  
+  bvalues$cpg = row.names(bvalues)
+  data.table::setDT(bvalues)
+  data.table::setkeyv(bvalues, "cpg")
+  
+  list_heatdata = list()
+  
+  for (contrast in contrasts) {
+    for (i in seq_along(regions)) {
+      list_heatdata[[paste0(contrast, "|", regions[i])]] = data.table::as.data.table(t(vapply(mcsea_result[[contrast]][[associations[i]]], function(x) {
+        colMeans(bvalues[list(x), -c("cpg"), nomatch = NULL, mult = "all"])
+      }, numeric(ncol(bvalues) - 1))))
+    }
+  }
+  
+  heatdata = data.table::rbindlist(list_heatdata)
+  colnames(heatdata) = colnames(bvalues)[-ncol(bvalues)]
+  
+  heatdata
+}
+  
+
+
+
+
+
 
 
 # DOWNLOAD HANDLER FUNCTIONS
@@ -165,6 +406,16 @@ fwrite_bed = function(bed_file, file_name){
     col.names = FALSE,
     row.names = FALSE
   )
+}
+
+
+create_filtered_beds_dmrs = function(mcsea_filtered, platform, directory){
+  
+  mCSEAdata::annot450K
+  mCSEAdata::annotEPIC
+  
+  
+  
 }
 
 create_filtered_beds = function(filtered_data, annotation, directory) {
@@ -229,7 +480,7 @@ create_heatmap = function(plot_data,
                           clusteralg = "average",
                           distance = "pearson",
                           scale = "row",
-                          static = FALSE) {
+                          static = TRUE) {
   
   heatdata = as.matrix(plot_data)
   heatdata = heatdata[stats::complete.cases(heatdata), ]
@@ -647,7 +898,6 @@ create_snpheatmap = function(snps, sample_names, color_groups) {
   ) %>% plotly_config()
 }
 
-
 create_bisulfiteplot = function(rgset, sample_names, threshold = 1.5) {
   colnames(rgset) = sample_names
   
@@ -728,7 +978,6 @@ create_plotSA = function(fit) {
     ggplot2::labs(x = "Amean", y = "sqrt(sigma)") +
     ggplot2::theme_bw()
 }
-
 
 plotly_config = function(plotly_object, fixedrange = TRUE) {
   plotly_object %>%

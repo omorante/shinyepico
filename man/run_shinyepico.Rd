@@ -18,7 +18,7 @@ run_shinyepico(
 
 \item{host}{IP used to deploy the server. By default, your local IP (127.0.0.1)}
 
-\item{port}{Port used to deploy the server. By default, 2000.}
+\item{port}{Port used to deploy the server.}
 }
 \value{
 None

@@ -11,22 +11,27 @@
 #' @importFrom shiny shinyApp
 #' @importFrom shiny shinyOptions
 #' @export
-#' 
-run_shinyepico <- function(
-  n_cores = parallel::detectCores()/2,
-  max_upload_size = 2000,
-  host = "127.0.0.1",
-  port = NULL
-
-) {
-    
-    shinyOptions(n_cores = n_cores, 
-                 shiny.maxRequestSize = max_upload_size * 1024^2
-                 )
+#'
+run_shinyepico <- function(n_cores = parallel::detectCores() / 2,
+                           max_upload_size = 2000,
+                           host = "127.0.0.1",
+                           port = NULL) {
   
-    shinyApp(
-     ui = app_ui, server = app_server, 
-     options = list(host = host, port=port, launch.browser=TRUE))  
+  stopifnot(is.numeric(n_cores) & n_cores >= 1)
+  stopifnot(is.numeric(max_upload_size) & max_upload_size > 0)
+  
+  shinyOptions(n_cores = round(n_cores),
+               shiny.maxRequestSize = max_upload_size * 1024 ^ 2)
+  
+  shinyApp(
+    ui = app_ui,
+    server = app_server,
+    options = list(
+      host = host,
+      port = port,
+      launch.browser = TRUE
+    )
+  )
   
 }
 

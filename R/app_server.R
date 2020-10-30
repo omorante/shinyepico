@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @importFrom rlang .data
+#' @import data.table
 #'
 #' @noRd
 
@@ -288,43 +289,7 @@ app_server = function(input, output, session) {
                  max = 4,
                  {
                    try({
-                     if (input$select_minfi_norm == "Illumina") {
-                       gset = minfi::mapToGenome(minfi::ratioConvert(
-                         betaThreshold = 0.001,
-                         minfi::preprocessIllumina(
-                           rval_rgset(),
-                           bg.correct = TRUE,
-                           normalize = "controls"
-                         )
-                       ))
-                     }
-                     
-                     else if (input$select_minfi_norm == "Raw") {
-                       gset = minfi::mapToGenome(minfi::ratioConvert(minfi::preprocessRaw(rval_rgset())))
-                     }
-                     
-                     else if (input$select_minfi_norm == "Noob") {
-                       gset = minfi::mapToGenome(minfi::ratioConvert(minfi::preprocessNoob(rval_rgset())))
-                     }
-                     
-                     else if (input$select_minfi_norm == "Funnorm") {
-                       gset = minfi::preprocessFunnorm(rval_rgset())
-                     }
-                     
-                     else if (input$select_minfi_norm == "SWAN") {
-                       gset = minfi::preprocessSWAN(rval_rgset(),
-                                                    mSet = minfi::mapToGenome(minfi::preprocessRaw(rval_rgset()))) #MethylSet or GenomicMethylSet?
-                     }
-                     
-                     else if (input$select_minfi_norm == "Quantile") {
-                       gset = minfi::preprocessQuantile(rval_rgset())
-                     }
-                     
-                     else if (input$select_minfi_norm == "Noob+Quantile") {
-                       gset = minfi::preprocessQuantile(minfi::preprocessNoob(rval_rgset()))
-                     }
-                     
-                     
+                     gset = normalize_rgset(rgset = rval_rgset(), normalization_mode = input$select_minfi_norm)
                    })
                    
                    #check if normalization has worked
@@ -741,7 +706,7 @@ app_server = function(input, output, session) {
           value = FALSE
         ),
         
-        actionButton("button_limma_calculatedifs", "Calculate Contrasts")
+        actionButton("button_limma_calculatedifs", "Calc. Contrasts")
       ))
     
     else
@@ -869,17 +834,26 @@ app_server = function(input, output, session) {
     #enable or disable removebatch option
     covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
     
-    if (ncol(covariables_design) > 0)
+    if (ncol(covariables_design) > 0) {
       updateSwitchInput(session,
                         "select_limma_removebatch",
                         value = FALSE,
                         disabled = FALSE)
-    else
+      updateSwitchInput(session,
+                        "select_dmrs_removebatch",
+                        value = FALSE,
+                        disabled = FALSE)
+    }
+    else{
       updateSwitchInput(session,
                         "select_limma_removebatch",
                         value = FALSE,
                         disabled = TRUE)
-
+      updateSwitchInput(session,
+                        "select_dmrs_removebatch",
+                        value = FALSE,
+                        disabled = FALSE)
+    }
     
     #enable and click heatmap button to get default graph
     shinyjs::enable("button_limma_heatmapcalc")
@@ -913,7 +887,6 @@ app_server = function(input, output, session) {
                  })
     
   })
-  
   
   rval_filteredlist2heatmap = reactive(
     {
@@ -1095,8 +1068,6 @@ app_server = function(input, output, session) {
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
   
-  #EXPORT
-  
   #Disable or enable buttons depending on software state
   observeEvent(rval_analysis_finished(),
                if (rval_analysis_finished())
@@ -1105,6 +1076,21 @@ app_server = function(input, output, session) {
                  shinyjs::enable("download_export_filteredbeds")
                  shinyjs::enable("download_export_markdown")
                  shinyjs::enable("download_export_heatmaps")
+                 shinyjs::enable("button_dmrs_calculate")
+                 
+                 updatePickerInput(
+                   session,
+                   "select_dmrs_contrasts",
+                   selected = rval_contrasts(),
+                   choices = rval_contrasts(),
+                 )
+                 updatePickerInput(
+                   session,
+                   "select_dmrs_platform",
+                   selected = if(nrow(rval_finddifcpgs()[[1]])>450001) {"EPIC"} else {"450k"},
+                   choices = c("450k", "EPIC")
+                 )
+                 
                }
                
                else
@@ -1113,7 +1099,324 @@ app_server = function(input, output, session) {
                  shinyjs::disable("download_export_filteredbeds")
                  shinyjs::disable("download_export_markdown")
                  shinyjs::disable("download_export_heatmaps")
+                 shinyjs::disable("button_dmrs_calculate")
                })
+  
+  #DMRs
+  
+  rval_mcsea = eventReactive(input$button_dmrs_calculate, {
+    validate(
+      need(
+        rval_analysis_finished(),
+        "To calculate DMRs, you have to finish first the DMP calculation."
+      )
+    )
+    
+    validate(
+      need(
+        requireNamespace("mCSEA", quietly = T),
+        "mCSEA is not installed. You should install the package to calculate DMRs"
+      ),
+      need(
+        input$select_dmrs_contrasts != "",
+        "You should select at least one contrast."
+      )
+    )
+    
+    shinyjs::disable("button_dmrs_calculate")
+    
+    withProgress(message = "Calculating DMRs...",
+                 max = 3,
+                 value = 1,
+                 
+                 {
+                   
+                   try({
+                     dmrs_result = find_dmrs(
+                       rval_finddifcpgs(),
+                       minCpGs = input$slider_dmrs_cpgs,
+                       platform = "EPIC",
+                       voi = rval_voi(),
+                       regionsTypes = input$select_dmrs_regions,
+                       contrasts = input$select_dmrs_contrasts,
+                       bvalues = rval_gset_getBeta(),
+                       permutations = input$slider_dmrs_permutations,
+                       ncores = n_cores
+                     )
+                     
+                     setProgress(value = 2, message = "Calculating differential of betas...")
+                     
+                     dmrs_result = add_dmrs_globaldifs(
+                       mcsea_result = dmrs_result,
+                       cpg_globaldifs = rval_globaldifs(),
+                       regionsTypes = input$select_dmrs_regions,
+                       cores = n_cores
+                     )
+                   })
+                 })
+    
+    shinyjs::enable("button_dmrs_calculate")
+    
+    if (!exists("dmrs_result", inherits = FALSE)) {
+      showModal(
+        modalDialog(
+          title = "DMR calculation error",
+          "An unexpected error has occurred during DMRs calculation.",
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+      shinyjs::disable("button_dmrs_heatmapcalc")
+    }
+    
+    validate(need(
+      exists("dmrs_result", inherits = FALSE),
+      "An unexpected error has occurred during DMRs calculation."
+    ))
+    
+    #enable heatmap button
+    shinyjs::enable("button_dmrs_heatmapcalc")
+
+    dmrs_result
+  
+  })
+  
+  observeEvent(input$button_dmrs_calculate,{
+    
+    updateSelectInput(session,
+                      "select_dmrs_selcont",
+                      choices = input$select_dmrs_contrasts)
+    updateSelectInput(session,
+                      "select_dmrs_selreg",
+                      choices = input$select_dmrs_regions)
+    
+    
+    updateSelectInput(
+      session,
+      "select_dmrs_groups2plot",
+      label = "Groups to plot",
+      choices = levels(rval_voi()),
+      selected = levels(rval_voi())
+    )
+    updateSelectInput(
+      session,
+      "select_dmrs_contrasts2plot",
+      label = "Contrasts to plot",
+      choices = rval_contrasts(),
+      selected = rval_contrasts()
+    )
+    updateSelectInput(
+      session,
+      "select_dmrs_regions2plot",
+      label = "Regions to plot",
+      choices = input$select_dmrs_regions,
+      selected = input$select_dmrs_regions
+    )
+    
+    rval_mcsea() #Force calculation of DMRs
+    
+  })
+  
+  rval_filteredmcsea = reactive({
+    
+    req(rval_mcsea())
+    
+    filter_dmrs(
+      mcsea_list = rval_mcsea(),
+      fdr = input$slider_dmrs_adjpvalue,
+      pval = input$slider_dmrs_pvalue,
+      dif_beta = input$slider_dmrs_deltab,
+      regionsTypes = input$select_dmrs_regions,
+      contrasts = input$select_dmrs_contrasts
+    )
+    
+  })
+  
+  rval_filteredmcsea2heatmap = reactive({
+    
+    req(rval_filteredmcsea())
+    print("ahora")
+    print(str(rval_filteredmcsea()[input$select_dmrs_contrasts2plot]))
+    print(input$select_dmrs_regions2plot)
+    
+    voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
+    covariables_design = as.matrix(rval_design()[,-seq_len(length(unique(rval_voi())))])
+
+    #filtering contrasts
+    join_table = create_dmrs_heatdata(
+      mcsea_result = rval_filteredmcsea()[input$select_dmrs_contrasts2plot],
+      bvalues = if (!input$select_dmrs_removebatch) {
+        rval_gset_getBeta()
+      } else {
+        as.data.frame(
+          limma::removeBatchEffect(
+            rval_gset_getBeta(),
+            design = voi_design,
+            covariates = covariables_design
+          )
+        )
+      },
+      regions = input$select_dmrs_regions2plot,
+      contrasts = input$select_dmrs_contrasts
+    )
+    
+    print("tabla")
+    print(head(join_table))
+    #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_dmrsheatmap
+    if (is.null(join_table) |
+        nrow(join_table) < 2 | nrow(join_table) > 12000)
+    {
+      NULL
+    }
+    else
+    {
+      join_table
+    }
+    
+  })
+  
+  #Heatmap DMRs
+  
+  plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, {
+    
+    validate(need(
+      !is.null(rval_filteredmcsea2heatmap()),
+      "Differences are not in the plotting range (<12000, >1)"
+    ))
+    
+
+    create_heatmap(
+      rval_filteredmcsea2heatmap(),
+      factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_dmrs_groups2plot],
+                             levels = input$select_dmrs_groups2plot),
+      groups2plot = rval_voi() %in% input$select_dmrs_groups2plot,
+      Colv = as.logical(input$select_dmrs_colv),
+      ColSideColors = input$select_dmrs_colsidecolors,
+      RowSideColors = rval_dendrogram_dmrs(),
+      clusteralg = input$select_dmrs_clusteralg,
+      distance = input$select_dmrs_clusterdist,
+      scale = input$select_dmrs_scale,
+      static = as.logical(input$select_dmrs_graphstatic)
+    )
+  })
+  
+  rval_dendrogram_dmrs = eventReactive(input$button_dmrs_heatmapcalc,
+                                  {
+                                    if (input$select_dmrs_rowsidecolors)
+                                      
+                                      #check if dendrogram cutting works (k should be minor than heatmap rows)
+                                      try({
+                                        dendrogram = create_dendrogram(
+                                          rval_filteredmcsea2heatmap(),
+                                          factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_dmrs_groups2plot],
+                                                                 levels = input$select_dmrs_groups2plot),
+                                          groups2plot = rval_voi() %in% input$select_dmrs_groups2plot,
+                                          clusteralg = input$select_dmrs_clusteralg,
+                                          distance = input$select_dmrs_clusterdist,
+                                          scale_selection = input$select_dmrs_scale,
+                                          k_number = input$select_dmrs_knumber
+                                        )
+                                      })
+                                    
+                                    else
+                                      dendrogram = NULL
+                                    
+                                    
+                                    if (!exists("dendrogram", inherits = FALSE)) {
+                                      dendrogram = NULL
+                                      showModal(
+                                        modalDialog(
+                                          title = "Row clustering error",
+                                          "An error has ocurred during cluster cutting from row dendrogram. Maybe the number of clusters selected is too high.",
+                                          easyClose = TRUE,
+                                          footer = NULL
+                                        )
+                                      )
+                                    }
+                                    
+                                    dendrogram #returning the dendrogram classification
+                                    
+                                  })
+  output$graph_dmrs_heatmap = renderPlot(plot_dmrsheatmap())
+  
+  #DMRs count table
+  
+  make_table_dmrscount = eventReactive(rval_filteredmcsea(),{
+    
+    req(rval_filteredmcsea())
+    
+    result = data.frame(
+      contrast =  rep(
+        names(rval_filteredmcsea()),
+        each = length(input$select_dmrs_regions)
+      ),
+      region_type = input$select_dmrs_regions
+    )
+    
+    
+    result$Hypermethylated = apply(result, 1, function(x) {
+      nrow(rval_filteredmcsea()[[x[1]]][[x[2]]][rval_filteredmcsea()[[x[1]]][[x[2]]]$NES < 0, ])
+    })
+    
+    result$Hypomethylated = apply(result, 1, function(x) {
+      nrow(rval_filteredmcsea()[[x[1]]][[x[2]]][rval_filteredmcsea()[[x[1]]][[x[2]]]$NES > 0, ])
+    })
+    
+    result$total = result$Hypermethylated + result$Hypomethylated
+    
+    result
+  })
+  
+  output$table_dmrs_count = renderTable(make_table_dmrscount(), digits = 0)
+  
+  #DMRs single plot
+  
+
+  rval_cpgcount_dmrs_heatmap = eventReactive(input$button_limma_heatmapcalc, nrow(rval_filteredmcsea2heatmap()))
+  
+  plot_singledmr = eventReactive(input$button_dmrs_graphsingle,
+                                 {
+                                   validate(need(!is.null(input$table_dmrs_table_rows_selected), "A DMR should be selected."))
+                                   
+                                   selected_dmr = row.names(rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]])[input$table_dmrs_table_rows_selected]
+                                   
+                                   mCSEA::mCSEAPlot(
+                                     rval_mcsea()[[input$select_dmrs_selcont]],
+                                     regionType = input$select_dmrs_selreg,
+                                     dmrName = selected_dmr,
+                                     makePDF = F,
+                                     transcriptAnnotation = "symbol"
+                                   )
+                                 })
+  
+
+  
+  output$graph_dmrs_singledmr = renderPlot(plot_singledmr())
+  
+  
+  rval_table_sigdmrs = reactive({
+    rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]]
+  })
+  
+  output$table_dmrs_table = DT::renderDT(
+    rval_table_sigdmrs(),
+    rownames = TRUE,
+    selection = "single",
+    style = "bootstrap",
+    caption = "Select DMR to plot:",
+    options = list(
+      pageLength = 10,
+      autoWidth = TRUE,
+      scrollX = TRUE,
+      columnDefs = list(list(
+        targets = match("leadingEdge",colnames(rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]])), visible = FALSE
+      ))
+    )
+  )
+  
+  
+  
+  #EXPORT
   
   #R Objects
   
