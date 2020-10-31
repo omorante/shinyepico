@@ -17,7 +17,9 @@ app_server = function(input, output, session) {
   rval_generated_limma_model = reactiveVal(value = FALSE)
   rval_analysis_finished = reactiveVal(value = FALSE)
   rval_filteredlist2heatmap_valid = reactiveVal(value = FALSE)
-  
+  rval_filteredmcsea2heatmap_valid = reactiveVal(value = FALSE)
+  rval_dmrs_finished = reactiveVal(value = FALSE)
+  rval_dmrs_ready2heatmap = reactiveVal(value = FALSE)
   
   #Load button only shows if file is uploaded
   output$ui_button_input_load = renderUI({
@@ -1158,6 +1160,7 @@ app_server = function(input, output, session) {
     shinyjs::enable("button_dmrs_calculate")
     
     if (!exists("dmrs_result", inherits = FALSE)) {
+      rval_dmrs_finished(FALSE)
       showModal(
         modalDialog(
           title = "DMR calculation error",
@@ -1176,9 +1179,10 @@ app_server = function(input, output, session) {
     
     #enable heatmap button
     shinyjs::enable("button_dmrs_heatmapcalc")
+    rval_dmrs_finished(TRUE)
+    rval_dmrs_ready2heatmap(TRUE)
 
     dmrs_result
-  
   })
   
   observeEvent(input$button_dmrs_calculate,{
@@ -1217,6 +1221,13 @@ app_server = function(input, output, session) {
     
   })
   
+  observeEvent(rval_dmrs_ready2heatmap(),{
+    if(rval_dmrs_ready2heatmap()){
+      rval_dmrs_ready2heatmap(FALSE)
+      shinyjs::click("button_dmrs_heatmapcalc")
+    }
+  })
+  
   rval_filteredmcsea = reactive({
     
     req(rval_mcsea())
@@ -1235,9 +1246,6 @@ app_server = function(input, output, session) {
   rval_filteredmcsea2heatmap = reactive({
     
     req(rval_filteredmcsea())
-    print("ahora")
-    print(str(rval_filteredmcsea()[input$select_dmrs_contrasts2plot]))
-    print(input$select_dmrs_regions2plot)
     
     voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
     covariables_design = as.matrix(rval_design()[,-seq_len(length(unique(rval_voi())))])
@@ -1260,16 +1268,16 @@ app_server = function(input, output, session) {
       contrasts = input$select_dmrs_contrasts
     )
     
-    print("tabla")
-    print(head(join_table))
     #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_dmrsheatmap
     if (is.null(join_table) |
         nrow(join_table) < 2 | nrow(join_table) > 12000)
     {
+      rval_filteredmcsea2heatmap_valid(FALSE)
       NULL
     }
     else
     {
+      rval_filteredmcsea2heatmap_valid(TRUE)
       join_table
     }
     
@@ -1472,19 +1480,44 @@ app_server = function(input, output, session) {
   rval_annotation = reactive(as.data.frame(minfi::getAnnotation(rval_gset())))
   
   observe({
-    if (rval_analysis_finished() &
-        input$select_export_bedtype == "by heatmap cluster" &
-        (!rval_filteredlist2heatmap_valid() |
-         is.null(rval_dendrogram()))) {
-      shinyjs::disable("download_export_filteredbeds")
-    } else if (rval_analysis_finished() &
-             rval_filteredlist2heatmap_valid() & !is.null(rval_dendrogram())) {
-      shinyjs::enable("download_export_filteredbeds")
-    } else if (rval_analysis_finished() &
-               input$select_export_bedtype == "by contrasts") {
-      shinyjs::enable("download_export_filteredbeds")
+    if (input$select_export_analysistype == "DMPs") {
+      if (rval_analysis_finished() &
+          input$select_export_bedtype == "by heatmap cluster" &
+          (!rval_filteredlist2heatmap_valid() |
+           is.null(rval_dendrogram()))) {
+        shinyjs::disable("download_export_filteredbeds")
+      } else if (rval_analysis_finished() &
+                 rval_filteredlist2heatmap_valid() &
+                 !is.null(rval_dendrogram())) {
+        shinyjs::enable("download_export_filteredbeds")
+      } else if (rval_analysis_finished() &
+                 input$select_export_bedtype == "by contrasts") {
+        shinyjs::enable("download_export_filteredbeds")
+      }
     }
+    else{
+      print("started DMRs")
+      if (rval_dmrs_finished() &
+          input$select_export_bedtype == "by heatmap cluster" &
+          (!rval_filteredmcsea2heatmap_valid() |
+           is.null(rval_dendrogram_dmrs()))) {
+        shinyjs::disable("download_export_filteredbeds")
+      }
+      else if (rval_dmrs_finished() &
+               rval_filteredmcsea2heatmap_valid() &
+               !is.null(rval_dendrogram_dmrs())) {
+        shinyjs::enable("download_export_filteredbeds")
+      } else if (rval_dmrs_finished() &
+                 input$select_export_bedtype == "by contrasts") {
+        shinyjs::enable("download_export_filteredbeds")
+      }
+    }
+    print("DMRs finished")
+    print(rval_dmrs_finished())
+    print("filteredmcea2heatmap valid")
+    print(rval_filteredmcsea2heatmap_valid())
   })
+
   
   #Filtered BEDs
   output$download_export_filteredbeds  = downloadHandler(
@@ -1509,12 +1542,30 @@ app_server = function(input, output, session) {
                                             directory = dirname(file))
                      }
                      else if(input$select_export_bedtype == "by heatmap cluster" & input$select_export_analysistype == "DMRs"){
-                       print("to do")
-                       #to do
+                       create_filtered_bed_dmrs_clusters(
+                         dendro_data = rval_dendrogram_dmrs(),
+                         mcsea_filtered = rval_filteredmcsea(),
+                         annotation = rval_annotation(),
+                         directory = dirname(file)
+                       )
+                       create_dmrs_bed_background(
+                         mcsea_result = rval_mcsea(),
+                         collapse = TRUE,
+                         regionsTypes = input$select_dmrs_regions2plot,
+                         annotation = rval_annotation(),
+                         directory = dirname(file)
+                       )
                      }
                      else if(input$select_export_bedtype == "by contrasts" & input$select_export_analysistype == "DMRs"){
                        create_filtered_beds_dmrs(
                          mcsea_filtered = rval_filteredmcsea(),
+                         regionsTypes = input$select_dmrs_regions,
+                         annotation = rval_annotation(),
+                         directory = dirname(file)
+                       )
+                       create_dmrs_bed_background(
+                         mcsea_result = rval_mcsea(),
+                         collapse = FALSE,
                          regionsTypes = input$select_dmrs_regions,
                          annotation = rval_annotation(),
                          directory = dirname(file)

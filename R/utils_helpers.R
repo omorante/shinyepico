@@ -366,17 +366,22 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
   data.table::setkeyv(bvalues, "cpg")
   
   list_heatdata = list()
+  identifiers = c()
   
   for (contrast in contrasts) {
     for (i in seq_along(regions)) {
       list_heatdata[[paste0(contrast, "|", regions[i])]] = data.table::as.data.table(t(vapply(mcsea_result[[contrast]][[associations[i]]], function(x) {
         colMeans(bvalues[list(x), -c("cpg"), nomatch = NULL, mult = "all"])
       }, numeric(ncol(bvalues) - 1))))
+      identifiers = c(identifiers, paste(contrast, regions[i], names(mcsea_result[[contrast]][[associations[i]]]), sep="|"))
+      
     }
   }
   
   heatdata = data.table::rbindlist(list_heatdata)
   colnames(heatdata) = colnames(bvalues)[-ncol(bvalues)]
+  heatdata = as.data.frame(heatdata)
+  row.names(heatdata) = identifiers
   
   heatdata
 }
@@ -389,7 +394,7 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
 
 
 # DOWNLOAD HANDLER FUNCTIONS
-fwrite_bed = function(bed_file, file_name, DMR = FALSE) {
+fwrite_bed = function(bed_file, file_name, DMR = FALSE, ...) {
   if (!DMR) {
     bed_file = data.table::data.table(
       chr = bed_file$chr,
@@ -408,10 +413,79 @@ fwrite_bed = function(bed_file, file_name, DMR = FALSE) {
     sep = "\t",
     quote = FALSE,
     col.names = FALSE,
-    row.names = FALSE
+    row.names = FALSE,
+    ...
   )
 }
 
+
+create_dmrs_bed_background = function(mcsea_result,
+                                      collapse = FALSE,
+                                      regionsTypes,
+                                      annotation,
+                                      directory){
+  
+  annotation$cpg = row.names(annotation)
+  annotation = data.table::as.data.table(annotation)
+  data.table::setkeyv(annotation, "cpg")
+  associationTypes = paste0(regionsTypes, "_association")
+  
+  
+  for (association in associationTypes) {
+    temp = data.table::as.data.table(t(vapply(names(mcsea_result[[1]][[association]]), function(name) {
+      target = annotation[list(mcsea_result[[1]][[association]][[name]]), nomatch = NULL, mult = "all"]
+      chr = unique(as.character(target$chr))
+      ini = min(as.numeric(target$pos))
+      fin = max(as.numeric(target$pos))
+      name = paste("background", association, name, sep = "_")
+      
+      res = c(
+        chr = chr,
+        start = ini,
+        end = fin,
+        name = name
+      )
+      
+      if (length(res) != 4) {
+        message(
+          paste(
+            name,
+            "DMR is not correctly annotated. NAs will be introduced in final bed"
+          )
+        )
+        res = c(
+          chr = "NA",
+          start = "NA",
+          end = "NA",
+          name = name
+        )
+      }
+      
+      res
+      
+    }, character(4))))
+    
+    if(collapse){
+      fwrite_bed(
+        temp,
+        file_name = paste0(directory, "/", "background.bed"),
+        DMR = TRUE, 
+        append = TRUE
+      )
+      
+    }
+    else{
+      fwrite_bed(
+        temp,
+        file_name = paste0(directory, "/", "background", "_", association, ".bed"),
+        DMR = TRUE
+      )
+      
+    }
+}
+  
+  
+}
 
 create_filtered_beds_dmrs = function(mcsea_filtered,
                                      regionsTypes,
@@ -431,10 +505,6 @@ create_filtered_beds_dmrs = function(mcsea_filtered,
         ini = min(as.numeric(target$pos))
         fin = max(as.numeric(target$pos))
         name = paste(contrast, association, name, sep = "_")
-        
-        if (length(chr) > 1) {
-          chr = chr[1]
-        }
         
         res = c(
           chr = chr,
@@ -472,8 +542,62 @@ create_filtered_beds_dmrs = function(mcsea_filtered,
   }
 }
 
-create_filtered_bed_dmrs_clusters = function(dendro_data, annotation, directory){
+create_filtered_bed_dmrs_clusters = function(dendro_data,
+                                             mcsea_filtered,
+                                             annotation,
+                                             directory) {
+  annotation$cpg = row.names(annotation)
+  annotation = data.table::as.data.table(annotation)
+  data.table::setkeyv(annotation, "cpg")
   
+  lapply(unique(dendro_data), function(cluster) {
+    temp = data.table::as.data.table(t(vapply(names(dendro_data[dendro_data == cluster]), function(name) {
+      contrast = limma::strsplit2(name, "\\|")[1]
+      association = paste0(limma::strsplit2(name, "\\|")[2], "_association")
+      gene = limma::strsplit2(name, "\\|")[3]
+      
+      target = annotation[list(mcsea_filtered[[contrast]][[association]][[gene]]), nomatch = NULL, mult = "all"]
+
+      chr = unique(as.character(target$chr))
+      ini = min(as.numeric(target$pos))
+      fin = max(as.numeric(target$pos))
+      name = paste(contrast, association, gene, sep = "_")
+      
+      res = c(
+        chr = chr,
+        start = ini,
+        end = fin,
+        name = name
+      )
+      
+      if (length(res) != 4) {
+        message(paste(
+          name,
+          "DMR is not correctly annotated. NAs will be introduced in final bed"
+        ))
+        res = c(
+          chr = "NA",
+          start = "NA",
+          end = "NA",
+          name = name
+        )
+      }
+      
+      res
+      
+    }, character(4))))
+    
+    fwrite_bed(
+      temp,
+      file_name = paste0(directory, "/", "cluster", "_", which(unique(dendro_data) %in% cluster), ".bed"),
+      DMR = TRUE
+    )
+    
+  }
+         
+         
+         
+         )
   
   
   
