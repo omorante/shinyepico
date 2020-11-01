@@ -1476,9 +1476,41 @@ app_server = function(input, output, session) {
     }
   )
   
+  rval_annotation = reactive({
+    
+      if (input$select_export_genometype == "hg38" &
+          (!requireNamespace("rtracklayer", quietly = T)) |
+          !requireNamespace("GenomicRanges", quietly = T)){
+        
+        showModal(
+          modalDialog(
+            title = "Rtracklayer::liftOver not available",
+            "Rtracklayer is not installed and it is needed to liftOver annotation from hg19 to hg38 genome. Please, install the package and restart the R session.",
+            easyClose = TRUE,
+            footer = NULL
+          )
+        )
+        updateSelectInput(session, "select_export_genometype", choices = "hg19", selected = "hg19")
+      }
+        
+    annotation = as.data.frame(minfi::getAnnotation(rval_gset()))
   
-  rval_annotation = reactive(as.data.frame(minfi::getAnnotation(rval_gset())))
-  
+    if(input$select_export_genometype == "hg19"){
+      data.frame(row.names = row.names(annotation), chr = annotation$chr, pos = annotation$pos)
+    }
+    else{
+      chain = rtracklayer::import.chain(system.file("hg19ToHg38.over.chain", package = "shinyepico"))
+      ann_granges = data.frame(chr=annotation$chr, start=annotation$pos - 1, end = annotation$pos, name = row.names(annotation))
+      ann_granges = GenomicRanges::makeGRangesFromDataFrame(ann_granges, starts.in.df.are.0based=TRUE, keep.extra.columns = T)
+      ann_granges = unlist(rtracklayer::liftOver(ann_granges, chain = chain))
+      
+      data.frame(row.names = GenomicRanges::mcols(ann_granges)[[1]], chr=GenomicRanges::seqnames(ann_granges), pos = GenomicRanges::start(ann_granges))
+    }
+      
+    
+  }
+  )
+
   observe({
     if (input$select_export_analysistype == "DMPs") {
       if (rval_analysis_finished() &
@@ -1496,7 +1528,6 @@ app_server = function(input, output, session) {
       }
     }
     else{
-      print("started DMRs")
       if (rval_dmrs_finished() &
           input$select_export_bedtype == "by heatmap cluster" &
           (!rval_filteredmcsea2heatmap_valid() |
@@ -1512,10 +1543,6 @@ app_server = function(input, output, session) {
         shinyjs::enable("download_export_filteredbeds")
       }
     }
-    print("DMRs finished")
-    print(rval_dmrs_finished())
-    print("filteredmcea2heatmap valid")
-    print(rval_filteredmcsea2heatmap_valid())
   })
 
   
@@ -1529,6 +1556,9 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
                    {
+                     #generating annotation
+                     #rval_annotation()
+                     
                      if (input$select_export_bedtype == "by heatmap cluster" & input$select_export_analysistype == "DMPs") {
                        create_filtered_bed_clusters( dendro_data = rval_dendrogram(),
                                                      annotation = rval_annotation(),

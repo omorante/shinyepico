@@ -3,6 +3,7 @@ globalVariables("contrast")
 globalVariables("grupo")
 globalVariables("type")
 globalVariables("table")
+globalVariables("ranking")
 
 # NORMALIZATION FUNCTIONS
 
@@ -228,7 +229,7 @@ find_dmrs = function(find_dif_cpgs,
   foreach::foreach(
     ranking = ranking_list,
     .final = function(x)
-      setNames(x, names(ranking_list))
+      stats::setNames(x, names(ranking_list))
   ) %do% {
     isolate({
       #Specified seed to obtain always the same results
@@ -275,7 +276,7 @@ add_dmrs_globaldifs = function(mcsea_result, cpg_globaldifs, regionsTypes, cores
   dmrs_globaldifs = foreach::foreach(
     cont = names(mcsea_result),
     .final = function(x)
-      setNames(x, names(mcsea_result))
+      stats::setNames(x, names(mcsea_result))
   ) %dopar% {
     isolate({
       dif_target = paste("dif",
@@ -331,7 +332,7 @@ filter_dmrs = function(mcsea_list,
   foreach::foreach(
     result = mcsea_list,
     .final = function(x)
-      setNames(x, names(mcsea_list))
+      stats::setNames(x, names(mcsea_list))
   ) %do% {
     isolate({
       #Filtering regions by fdr

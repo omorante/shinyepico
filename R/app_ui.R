@@ -696,24 +696,35 @@ app_ui <- function(request) {
       h3("Download filtered bed files"),
       
       fluidPage(
-      div(
-        style = "display:inline-block",
-        selectInput(
-          "select_export_analysistype",
-          "Analysis type",
-          c("DMPs", "DMRs"),
-          selected = "by contrast"
-        )
+        div(
+          style = "display:inline-block",
+          selectInput(
+            "select_export_analysistype",
+            "Analysis type",
+            c("DMPs", "DMRs"),
+            selected = "by contrast"
+          )
+        ),
+        div(
+          style = "display:inline-block",
+          selectInput(
+            "select_export_bedtype",
+            "Subsetting mode",
+            c("by contrasts", "by heatmap cluster"),
+            selected = "by contrasts"
+          )
+        ),
+        div(
+          style = "display:inline-block",
+          selectInput(
+            "select_export_genometype",
+            "Genome version",
+            c("hg19", "hg38"),
+            selected = "hg19"
+          )
+        ),
       ),
-      div(
-        style = "display:inline-block",
-        selectInput(
-          "select_export_bedtype",
-          "Subsetting mode",
-          c("by contrasts", "by heatmap cluster"),
-          selected = "by contrasts"
-        )
-      )), 
+      
       
     downloadButton("download_export_filteredbeds"),
     p(
