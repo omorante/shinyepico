@@ -831,12 +831,13 @@ create_pca = function(Bvalues,
 }
 
 
-create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
+create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet, p.value = TRUE) {
   #bvalues should be a dataframe
   
   pca_data = as.data.frame(stats::prcomp(t(stats::na.omit(Bvalues)))$x)
-  cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet))
+  cor_data = as.data.frame(cor3(pca_data, clean_sample_sheet, p.value = p.value))
   cor_data$Var1 = row.names(cor_data)
+  print(str(cor_data))
   
   data.table::setDT(cor_data)
   
@@ -849,18 +850,43 @@ create_corrplot = function(Bvalues, clean_sample_sheet, sample_target_sheet) {
   
   cor_data$Var1 = factor(cor_data$Var1, levels = colnames(pca_data))
   
+  if(p.value){
+    limit = c(0,1)
+    name = "Correlation (p.value)"
+    low = "#6D9EC1"
+    high = "white"
+  }
+  else{
+    limit = c(-1,1)
+    name = "Correlation"
+    high = "#6D9EC1"
+    low = "#E46726"
+    mid = "white"
+  }
+  
   corr_graph = plotly::ggplotly(
     ggplot2::ggplot(cor_data, ggplot2::aes_string("Var1", "Var2", fill = "cor")) + ggplot2::geom_tile(color =
                                                                                                         "darkgrey", size = 1) +
+     if(p.value){
+       ggplot2::scale_fill_gradient(
+         high = high,
+         low = low,
+         limit = limit,
+         space = "Lab",
+         name = name
+       )
+     }
+    else{
       ggplot2::scale_fill_gradient2(
-        high = "#6D9EC1",
-        low = "#E46726",
-        mid = "white",
+        high = high,
+        low = low,
+        mid = mid,
         midpoint = 0,
-        limit = c(-1, 1),
+        limit = limit,
         space = "Lab",
-        name = "Correlation"
-      ) +
+        name = name
+      )
+    } +
       ggplot2::theme_bw() +
       ggplot2::theme(
         panel.grid = ggplot2::element_blank(),
@@ -1179,7 +1205,7 @@ plotly_config = function(plotly_object, fixedrange = TRUE) {
 
 #PLOT AUX FUNCTIONS
 
-cor3 = function(df1, df2) {
+cor3 = function(df1, df2, p.value = FALSE) {
   #function based on cor2 function of https://gist.github.com/talegari
   #This function handle the comparison fo numeric variables (PCs) 
   #with numeric or factor variables.
@@ -1202,11 +1228,11 @@ cor3 = function(df1, df2) {
         , "character")
   )
   
-  cor_fun <- function(pos_df1, pos_df2) {
+  cor_fun = function(pos_df1, pos_df2) {
     # both are numeric
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("integer", "numeric")) {
-      r <- stats::cor(df1[[pos_df1]]
+      r = stats::cor(df1[[pos_df1]]
                       , df2[[pos_df2]]
                       , use = "pairwise.complete.obs")
     }
@@ -1214,27 +1240,60 @@ cor3 = function(df1, df2) {
     # one is numeric and other is a factor/character
     if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
         class(df2[[pos_df2]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["r.squared"]])
+      r = sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["r.squared"]])
     }
     
     if (class(df2[[pos_df2]]) %in% c("integer", "numeric") &&
         class(df1[[pos_df1]]) %in% c("factor", "character")) {
-      r <- sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["r.squared"]])
+      r = sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["r.squared"]])
     }
     
     return(r)
   }
   
-  cor_fun <- Vectorize(cor_fun)
+  cor_fun_pvalue = function(pos_df1, pos_df2) {
+    # both are numeric
+    if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
+        class(df2[[pos_df2]]) %in% c("integer", "numeric")) {
+      r = stats::cor.test(df1[[pos_df1]]
+                     , df2[[pos_df2]]
+                     , use = "pairwise.complete.obs")[["p.value"]]
+    }
+    
+    # one is numeric and other is a factor/character
+    if (class(df1[[pos_df1]]) %in% c("integer", "numeric") &&
+        class(df2[[pos_df2]]) %in% c("factor", "character")) {
+      r = sqrt(summary(stats::lm(df1[[pos_df1]] ~ as.factor(df2[[pos_df2]])))[["coefficients"]][2,4])
+    }
+    
+    if (class(df2[[pos_df2]]) %in% c("integer", "numeric") &&
+        class(df1[[pos_df1]]) %in% c("factor", "character")) {
+      r = sqrt(summary(stats::lm(df2[[pos_df2]] ~ as.factor(df1[[pos_df1]])))[["coefficients"]][2,4])
+    }
+    
+    return(r)
+  }
+  
+  cor_fun = Vectorize(cor_fun)
+  cor_fun_pvalue = Vectorize(cor_fun_pvalue)
   
   # now compute corr matrix
-  corrmat <- outer(seq_len(ncol(df1))
+  
+  if(p.value){
+    corrmat = outer(seq_len(ncol(df1))
+                    , seq_len(ncol(df2))
+                    , function(x, y)
+                      cor_fun_pvalue(x, y))
+  }
+  else{
+  corrmat = outer(seq_len(ncol(df1))
                    , seq_len(ncol(df2))
                    , function(x, y)
                      cor_fun(x, y))
+  }
   
-  rownames(corrmat) <- colnames(df1)
-  colnames(corrmat) <- colnames(df2)
+  rownames(corrmat) = colnames(df1)
+  colnames(corrmat) = colnames(df2)
   
   return(corrmat)
 }
