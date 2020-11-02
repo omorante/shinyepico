@@ -47,6 +47,22 @@ normalize_rgset = function(rgset, normalization_mode){
   
   gset
 }
+
+
+# MODEL GENERATION
+
+generate_limma_fit = function(Mvalues, design, weighting){
+  
+  if (weighting) {
+      weights = limma::arrayWeights(Mvalues, design = design)
+  }
+  else {
+      weights = NULL
+  }
+  
+  limma::lmFit(Mvalues, design, weights = weights)
+}
+
 # DMPs CORE FUNCTIONS
 
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {

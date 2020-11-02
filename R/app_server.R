@@ -171,7 +171,10 @@ app_server = function(input, output, session) {
   
   
   #rval_rgset loads RGSet using read.metharray.exp and the sample sheet (rval_sheet())
-  rval_rgset = eventReactive(input$button_input_next, {
+  rval_rgset = eventReactive(input$button_input_next, ignoreNULL = FALSE, {
+    
+    validate(need(input$fileinput_input != "", "Data has not been uploaded yet"))
+    
     #Prior check to test variable selection
     if (anyDuplicated(rval_sheet_target()[, input$select_input_samplenamevar]) > 0 |
         anyDuplicated(rval_sheet_target()[, input$select_input_groupingvar]) == 0) {
@@ -603,7 +606,12 @@ app_server = function(input, output, session) {
   
   
   #Calculation of limma model
-  rval_fit = eventReactive(input$button_limma_calculatemodel, {
+  rval_fit = eventReactive(input$button_limma_calculatemodel, ignoreNULL = FALSE, {
+    
+    validate(
+      need(input$fileinput_input != "", "DMP calculation has not been performed or data has not been uploaded."))
+    
+    req(rval_design())
     
     shinyjs::disable("button_limma_calculatemodel") #disable button to avoid repeat clicking
     
@@ -611,17 +619,9 @@ app_server = function(input, output, session) {
                  value = 3,
                  max = 6,
                  {
-                   if (as.logical(input$select_limma_weights)) {
-                     try({
-                       weights = limma::arrayWeights(rval_gset_getM(), design = rval_design())
-                     })
-                   }
-                   else {
-                     weights = NULL
-                   }
-                   
                    try({
-                     fit = limma::lmFit(rval_gset_getM(), rval_design(), weights = weights)
+                     fit = generate_limma_fit(Mvalues = rval_gset_getM(), design = rval_design(),
+                                        weighting = as.logical(input$select_limma_weights) )
                    })
                    
                    if (!exists("fit", inherits = FALSE)) {
@@ -1110,8 +1110,8 @@ app_server = function(input, output, session) {
   
   #DMRs
   
-  rval_mcsea = eventReactive(input$button_dmrs_calculate,{
-
+  rval_mcsea = eventReactive(input$button_dmrs_calculate, {
+    
     validate(
       need(
         rval_analysis_finished(),
@@ -1303,8 +1303,9 @@ app_server = function(input, output, session) {
   
   #Heatmap DMRs
   
-  plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, {
-    print("calculating heatmap")
+  plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, ignoreNULL=FALSE, {
+
+    validate(need(input$fileinput_input != "", "DMR calculation has not been performed or data has not been uploaded."))
     
     validate(need(
       !is.null(rval_filteredmcsea2heatmap()),

@@ -9,6 +9,8 @@ fwrite_bed = function(bed_file, file_name, DMR = FALSE, ...) {
     )
   }
   
+  #We remove NA values in final beds, and remove possible trailing spaces
+  bed_file = stats::na.omit(bed_file)
   bed_file$start = trimws(format(as.numeric(bed_file$start), scientific = FALSE))
   bed_file$end = trimws(format(as.numeric(bed_file$end), scientific = FALSE))
   
