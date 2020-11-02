@@ -36,7 +36,7 @@ params:
   rval_design: NA
   rval_contrasts: NA
   rval_voi: NA
-  rval_dendrogram: NA
+  rval_dendrogram: NULL
   
   #heatmap 
   min_deltabeta: NA
@@ -49,6 +49,23 @@ params:
   distance: NA
   scale: NA
   removebatch: NA
+  
+  #DMRs
+  dmrs_contrasts: NULL
+  dmrs_rval_dendrogram: NULL
+  dmrs_min_deltabeta: NA
+  dmrs_max_fdr: NA
+  dmrs_max_pvalue: NA
+  dmrs_clusteralg: NA
+  dmrs_groups2plot: NA
+  dmrs_contrasts2plot: NA
+  dmrs_regions2plot: NA
+  dmrs_Colv: NA
+  dmrs_distance: NA
+  dmrs_scale: NA
+  dmrs_removebatch: NA
+  table_dmrs: NA
+  filteredmcsea2heatmap: NULL
   
   #plots
 
@@ -69,7 +86,7 @@ params:
   data_sexprediction: NA
   
   table_dmps: NA
-  filteredlist2heatmap : NA
+  filteredlist2heatmap: NULL
 ---
 
 ```{r, out.width = "150px", echo=FALSE}
@@ -84,7 +101,12 @@ This report was created with shinyÉPICo.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+knitr::knit_engines$set(asis = function(options) {
+  if (options$echo && options$eval) knitr::knit_child(text = options$code)
+})
+
 ```
+
 
 ```{css, echo=FALSE}
 div, code {overflow-x:auto !important}
@@ -293,7 +315,7 @@ After normalization, __`r params$probes`__ DNA methylation positions remained.
 
 <br>
 
-## Differentially Methylated Positions (DMPs) calculation
+## Model generation
 
 Then, the linear model was generated using __`r params$limma_voi`__ as variable of interest,  __`r if(length(params$limma_covar) == 0) "None" else paste(params$limma_covar, collapse=", ")`__ as covariable(s), and __`r if(length(params$limma_inter) == 0) "None" else paste(params$limma_inter, collapse=", ")`__ as interaction(s). 
 
@@ -356,21 +378,21 @@ Using the calculated model, the t-statistics and p.values are obtained automatic
 Where `trend` and `robust` are the options specified in the form. In this case, trend is  __`r params$limma_ebayes_trend`__ and robust is __`r params$limma_ebayes_robust`__ .
 
 
-## Filtered results
+## Filtered results (DMPs)
 
-For each contrast ( __`r paste(params$rval_contrasts, collapse=", ")`__ ) , the statistics for each CpG were generated and, after, filtered with these criteria:
+For each contrast ( __`r paste(params$dmrs_contrasts, collapse=", ")`__ ) , the statistics for each CpG were generated and, after, filtered with these criteria:
 
 * Max. FDR: __`r params$max_fdr`__
 * Min. Δβ:   __`r params$min_deltabeta`__
 * Max. pvalue:   __`r params$max_pvalue`__
 
-### Table with all contrasts
+### Table with all contrasts (DMPs)
 
 ```{r filtered_table_all,echo=FALSE,message=FALSE, warning=FALSE}
 knitr::kable(params$table_dmps)
 ```
 
-### Custom heatmap
+### Custom heatmap (DMPs)
 
 * Column dendogram:  __`r params$Colv`__
 * Scale: __`r params$scale`__
@@ -381,15 +403,55 @@ The data used for the representation are  __`r if(!params$removebatch) "the norm
 
 In the custom heatmap the selected contrasts to plot were: __`r paste(params$contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$groups2plot, collapse=", ")`__ .
 
-```{r filtered_table,echo=FALSE,message=FALSE, warning=FALSE, fig.width = 9, fig.height = 12}
+```{r heatmap_dmps,echo=FALSE,message=FALSE, warning=FALSE, fig.width = 9, fig.height = 12}
 
-if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(params$rval_voi[params$rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = params$rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE, ColSideColors = TRUE, RowSideColors = params$rval_dendrogram) else cat("Differences are not in the plotting range (<12000, >1)")
+    if(!is.null(params$filteredlist2heatmap)) create_heatmap(params$filteredlist2heatmap, factorgroups =  factor(params$rval_voi[params$rval_voi %in% params$groups2plot], levels = params$groups2plot), groups2plot = params$rval_voi %in% params$groups2plot, Colv = as.logical(params$Colv), clusteralg = params$clusteralg, distance = params$distance, scale = params$scale, static=TRUE, ColSideColors = TRUE, RowSideColors = params$rval_dendrogram) else cat("Differences are not in the plotting range (<12000, >1)")
   
 ```
 
-CpGs in heatmap:  __`r if(is.null(nrow(params$filteredlist2heatmap))) "None" else nrow(params$filteredlist2heatmap)`__ 
+DMPs in heatmap:  __`r if(is.null(nrow(params$filteredlist2heatmap))) "None" else nrow(params$filteredlist2heatmap)`__ 
 
 <br>
+
+
+
+```{asis filt_res, echo=TRUE, eval=!is.null(params$dmrs_contrasts)}
+## Filtered results (DMRs)
+
+For each contrast ( __`r paste(params$rval_contrasts, collapse=", ")`__ ) , the statistics for each CpG were generated and, after, filtered with these criteria:
+
+* Max. FDR: __`r params$dmrs_max_fdr`__
+* Min. Δβ:   __`r params$dmrs_min_deltabeta`__
+* Max. pvalue:   __`r params$dmrs_max_pvalue`__
+```
+
+## Table with all contrasts (DMRs)
+
+```{r filtered_table_all_dmrs,echo=FALSE,message=FALSE, warning=FALSE}
+if(!is.null(params$dmrs_contrasts)) knitr::kable(params$table_dmrs) else cat("DMRs were not calculated in this analysis.")
+```
+
+
+```{asis custom_heatmap, echo=TRUE, eval=!is.null(params$dmrs_contrasts)}
+## Custom heatmap (DMRs)
+
+* Column dendogram:  __`r params$dmrs_Colv`__
+* Scale: __`r params$dmrs_scale`__
+* Cluster Algorithm: __`r params$dmrs_clusteralg`__
+* Distance: __`r params$dmrs_distance`__
+
+The data used for the representation are  __`r if(!params$dmrs_removebatch) "the normalized beta values" else "the normalized beta values after removing covariable effects on the data (with the limma removeBatchEffect function), preserving the variable of interest"`__.
+
+In the custom heatmap the selected contrasts to plot were: __`r paste(params$dmrs_contrasts2plot, collapse=", ")`__ and the groups were: __`r paste(params$dmrs_groups2plot, collapse=", ")`__ .
+```
+
+```{r heatmap_dmrs,echo=FALSE,message=FALSE, warning=FALSE, fig.width = 9, fig.height = 12}
+
+if(!is.null(params$filteredmcsea2heatmap) & !is.null(params$dmrs_contrasts)) create_heatmap(params$filteredmcsea2heatmap, factorgroups =  factor(params$rval_voi[params$rval_voi %in% params$dmrs_groups2plot], levels = params$dmrs_groups2plot), groups2plot = params$rval_voi %in% params$dmrs_groups2plot, Colv = as.logical(params$dmrs_Colv), clusteralg = params$dmrs_clusteralg, distance = params$dmrs_distance, scale = params$dmrs_scale, static=TRUE, ColSideColors = TRUE, RowSideColors = params$dmrs_rval_dendrogram) else cat("Differences are not in the plotting range (<12000, >1)")
+  
+```
+
+DMRs in heatmap:  __`r if(is.null(nrow(params$filteredmcsea2heatmap))) "None" else nrow(params$filteredmcsea2heatmap)`__ 
 
 ## System and analysis information
 

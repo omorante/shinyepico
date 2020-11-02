@@ -220,6 +220,7 @@ app_ui <- function(request) {
               "Correlations",
               h4("Processed"),
               plotly::plotlyOutput("graph_minfi_corrplot") %>% shinycssloaders::withSpinner(),
+              selectInput("select_minfi_typecorrplot", "Select data to plot", choices=c("p.value","correlation value"), selected="correlation value"),
               DT::DTOutput("table_minfi_corrplot") %>% shinycssloaders::withSpinner()
             )
           )
@@ -689,6 +690,18 @@ app_ui <- function(request) {
       "Export",
       shinyjs::useShinyjs(),
       h3("Download RObjects"),
+      pickerInput(
+        inputId = "select_export_objects2download",
+        label = "Selected objects",
+        choices = c("RGSet","GenomicRatioSet","fit","design","ebayestables","Bvalues","Mvalues","global_difs"),
+        selected = c("RGSet","GenomicRatioSet","fit","design","ebayestables","Bvalues","Mvalues","global_difs"),
+        options = list(
+          `actions-box` = TRUE,
+          size = 10,
+          `selected-text-format` = "count > 3"
+        ),
+        multiple = TRUE
+      ),
       downloadButton("download_export_robjects"),
       p(
         "Press to download the R objects used for the analysis (RGSet, GenomicRatioSet, Bvalues, Mvalues, etc.)"

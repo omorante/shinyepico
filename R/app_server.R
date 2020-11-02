@@ -20,6 +20,7 @@ app_server = function(input, output, session) {
   rval_filteredmcsea2heatmap_valid = reactiveVal(value = FALSE)
   rval_dmrs_finished = reactiveVal(value = FALSE)
   rval_dmrs_ready2heatmap = reactiveVal(value = FALSE)
+  rval_dmrs_ready2mcsea = reactiveVal(value = FALSE)
   
   #Load button only shows if file is uploaded
   output$ui_button_input_load = renderUI({
@@ -419,7 +420,8 @@ app_server = function(input, output, session) {
     create_corrplot(
       rval_gset_getBeta(),
       rval_clean_sheet_target(),
-      rval_sheet_target()
+      rval_sheet_target(),
+      p.value = input$select_minfi_typecorrplot == "p.value"
     )
   )
   
@@ -978,7 +980,9 @@ app_server = function(input, output, session) {
                                  validate(need(
                                    !is.null(rval_filteredlist2heatmap()),
                                    "Differences are not in the plotting range (<12000, >1)"
-                                 ))
+                                 ),
+                                 need(input$select_limma_groups2plot != "", 
+                                      "Select at least one group to plot."))
                                  
                                  create_heatmap(
                                    rval_filteredlist2heatmap(),
@@ -1065,7 +1069,7 @@ app_server = function(input, output, session) {
                    output$graph_limma_heatmap_static = renderPlot(plot_heatmap())
                })
   
-  output$text_limma_heatmapcount = renderText(paste("CpGs in heatmap:", rval_cpgcount_heatmap()))
+  output$text_limma_heatmapcount = renderText(paste("DMPs in heatmap:", rval_cpgcount_heatmap()))
   
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
@@ -1106,7 +1110,8 @@ app_server = function(input, output, session) {
   
   #DMRs
   
-  rval_mcsea = eventReactive(input$button_dmrs_calculate, {
+  rval_mcsea = eventReactive(input$button_dmrs_calculate,{
+
     validate(
       need(
         rval_analysis_finished(),
@@ -1122,8 +1127,44 @@ app_server = function(input, output, session) {
       need(
         input$select_dmrs_contrasts != "",
         "You should select at least one contrast."
+      ),
+      need(
+        input$select_dmrs_regions != "",
+        "You should select at least one DMR type."
       )
     )
+    print("calculating rval_mcsea")
+    
+    updateSelectInput(session,
+                      "select_dmrs_selcont",
+                      choices = input$select_dmrs_contrasts)
+    updateSelectInput(session,
+                      "select_dmrs_selreg",
+                      choices = input$select_dmrs_regions)
+    
+    updateSelectInput(
+      session,
+      "select_dmrs_groups2plot",
+      label = "Groups to plot",
+      choices = levels(rval_voi()),
+      selected = levels(rval_voi())
+    )
+    updateSelectInput(
+      session,
+      "select_dmrs_contrasts2plot",
+      label = "Contrasts to plot",
+      choices = rval_contrasts(),
+      selected = rval_contrasts()
+    )
+    updateSelectInput(
+      session,
+      "select_dmrs_regions2plot",
+      label = "Regions to plot",
+      choices = input$select_dmrs_regions,
+      selected = input$select_dmrs_regions
+    )
+    
+    print(input$select_dmrs_regions2plot)
     
     shinyjs::disable("button_dmrs_calculate")
     
@@ -1180,57 +1221,16 @@ app_server = function(input, output, session) {
     #enable heatmap button
     shinyjs::enable("button_dmrs_heatmapcalc")
     rval_dmrs_finished(TRUE)
-    rval_dmrs_ready2heatmap(TRUE)
 
     dmrs_result
-  })
-  
-  observeEvent(input$button_dmrs_calculate,{
-    
-    updateSelectInput(session,
-                      "select_dmrs_selcont",
-                      choices = input$select_dmrs_contrasts)
-    updateSelectInput(session,
-                      "select_dmrs_selreg",
-                      choices = input$select_dmrs_regions)
-    
-    
-    updateSelectInput(
-      session,
-      "select_dmrs_groups2plot",
-      label = "Groups to plot",
-      choices = levels(rval_voi()),
-      selected = levels(rval_voi())
-    )
-    updateSelectInput(
-      session,
-      "select_dmrs_contrasts2plot",
-      label = "Contrasts to plot",
-      choices = rval_contrasts(),
-      selected = rval_contrasts()
-    )
-    updateSelectInput(
-      session,
-      "select_dmrs_regions2plot",
-      label = "Regions to plot",
-      choices = input$select_dmrs_regions,
-      selected = input$select_dmrs_regions
-    )
-    
-    rval_mcsea() #Force calculation of DMRs
-    
-  })
-  
-  observeEvent(rval_dmrs_ready2heatmap(),{
-    if(rval_dmrs_ready2heatmap()){
-      rval_dmrs_ready2heatmap(FALSE)
-      shinyjs::click("button_dmrs_heatmapcalc")
-    }
   })
   
   rval_filteredmcsea = reactive({
     
     req(rval_mcsea())
+    print("calculating rval_filteredmcsea")
+    
+    rval_dmrs_ready2heatmap(TRUE)
     
     filter_dmrs(
       mcsea_list = rval_mcsea(),
@@ -1245,7 +1245,12 @@ app_server = function(input, output, session) {
   
   rval_filteredmcsea2heatmap = reactive({
     
-    req(rval_filteredmcsea())
+    req(input$select_dmrs_regions2plot)
+    req(input$select_dmrs_contrasts2plot)
+    
+    print(input$select_dmrs_regions2plot)
+    print(input$select_dmrs_contrasts2plot)
+    print(str(rval_filteredmcsea()))
     
     voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
     covariables_design = as.matrix(rval_design()[,-seq_len(length(unique(rval_voi())))])
@@ -1283,16 +1288,29 @@ app_server = function(input, output, session) {
     
   })
   
+  observeEvent(input$button_dmrs_calculate, priority = 1,{
+
+  })
+  
+  observeEvent(rval_dmrs_ready2heatmap(),{
+    if(rval_dmrs_ready2heatmap()){
+      rval_dmrs_ready2heatmap(FALSE)
+      print("clicked")
+      
+      shinyjs::click("button_dmrs_heatmapcalc")
+    }
+  })
+  
   #Heatmap DMRs
   
   plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, {
+    print("calculating heatmap")
     
     validate(need(
       !is.null(rval_filteredmcsea2heatmap()),
       "Differences are not in the plotting range (<12000, >1)"
     ))
     
-
     create_heatmap(
       rval_filteredmcsea2heatmap(),
       factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_dmrs_groups2plot],
@@ -1345,14 +1363,16 @@ app_server = function(input, output, session) {
                                     dendrogram #returning the dendrogram classification
                                     
                                   })
+  rval_cpgcount_dmrs_heatmap = eventReactive(input$button_dmrs_heatmapcalc, nrow(rval_filteredmcsea2heatmap()))
+  
   output$graph_dmrs_heatmap = renderPlot(plot_dmrsheatmap())
+  output$text_dmrs_heatmapcount = renderText(paste("DMRs in heatmap:", rval_cpgcount_dmrs_heatmap()))
+  
   
   #DMRs count table
   
   make_table_dmrscount = eventReactive(rval_filteredmcsea(),{
-    
-    req(rval_filteredmcsea())
-    
+    print("calculating table")
     result = data.frame(
       contrast =  rep(
         names(rval_filteredmcsea()),
@@ -1380,8 +1400,6 @@ app_server = function(input, output, session) {
   #DMRs single plot
   
 
-  rval_cpgcount_dmrs_heatmap = eventReactive(input$button_limma_heatmapcalc, nrow(rval_filteredmcsea2heatmap()))
-  
   plot_singledmr = eventReactive(input$button_dmrs_graphsingle,
                                  {
                                    validate(need(!is.null(input$table_dmrs_table_rows_selected), "A DMR should be selected."))
@@ -1424,6 +1442,7 @@ app_server = function(input, output, session) {
   
   
   
+  
   #EXPORT
   
   #R Objects
@@ -1447,26 +1466,23 @@ app_server = function(input, output, session) {
                      mvalues = rval_gset_getM()
                      global_difs = rval_globaldifs()
                      
+                     objetos = list(RGSet="rgset",GenomicRatioSet="gset",fit="fit",design="design",
+                                    ebayestables="ebayes_tables",Bvalues="bvalues",Mvalues="mvalues",global_difs="global_difs")
+                     
+                     #if(rval_dmrs_finished()) mcsea_result = rval_mcsea()
                      
                      setProgress(value = 2, message = "Saving RObjects...")
-                     save(bvalues, file = paste(tempdir(), "Bvalues.RData", sep = "/"))
-                     save(mvalues, file = paste(tempdir(), "Mvalues.RData", sep = "/"))
-                     save(rgset , file = paste(tempdir(), "RGSet.RData", sep = "/"))
-                     save(gset,
-                          file = paste(tempdir(), "Normalized_genomicratioset.RData", sep = "/"))
-                     save(fit, file = paste(tempdir(), "fit.RData", sep = "/"))
-                     save(design, file = paste(tempdir(), "design.RData", sep = "/"))
-                     save(global_difs,
-                          file = paste(tempdir(), "global_difs.RData", sep = "/"))
-                     save(ebayes_tables,
-                          file = paste(tempdir(), "ebayestables.RData", sep = "/"))
                      
-                     objects = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
+                     for(id in input$select_export_objects2download){
+                       do.call(function(object, name) save(object,file=paste0(tempdir(),"/",name,".RData")), list(object=as.name(objetos[[id]]), name=objetos[[id]]))
+                     }
+                     
+                     objects2save = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
                      
                      setProgress(value = 3, message = "Compressing RObjects...")
                      zip::zip(
                        file,
-                       objects,
+                       objects2save,
                        recurse = FALSE,
                        include_directories = FALSE,
                        mode = "cherry-pick"
@@ -1484,7 +1500,7 @@ app_server = function(input, output, session) {
         
         showModal(
           modalDialog(
-            title = "Rtracklayer::liftOver not available",
+            title = "rtracklayer::liftOver not available",
             "Rtracklayer is not installed and it is needed to liftOver annotation from hg19 to hg38 genome. Please, install the package and restart the R session.",
             easyClose = TRUE,
             footer = NULL
@@ -1683,6 +1699,26 @@ app_server = function(input, output, session) {
                        table_dmps = make_table(),
                        filteredlist2heatmap = rval_filteredlist2heatmap()
                      )
+                     
+                     #if DMR analysis has been done, we add specific parameters
+                     if (rval_dmrs_finished()) {
+                       params[["dmrs_contrasts"]] = input$select_dmrs_contrasts
+                       params[["dmrs_rval_dendrogram"]] = rval_dendrogram_dmrs()
+                       params[["dmrs_min_deltabeta"]] =  input$slider_dmrs_deltab
+                       params[["dmrs_max_fdr"]] = input$slider_dmrs_adjpvalue
+                       params[["dmrs_max_pvalue"]] = input$slider_dmrs_pvalue
+                       params[["dmrs_clusteralg"]] = input$select_dmrs_clusteralg
+                       params[["dmrs_groups2plot"]] = input$select_dmrs_groups2plot
+                       params[["dmrs_contrasts2plot"]] = input$select_dmrs_contrasts2plot
+                       params[["dmrs_regions2plot"]] = input$select_dmrs_regions2plot
+                       params[["dmrs_Colv"]] = input$select_dmrs_colv
+                       params[["dmrs_distance"]] = input$select_dmrs_clusterdist
+                       params[["dmrs_scale"]] = input$select_dmrs_scale
+                       params[["dmrs_removebatch"]] = input$select_dmrs_removebatch
+                       params[["table_dmrs"]] = make_table_dmrscount()
+                       params[["filteredmcsea2heatmap"]] = rval_filteredmcsea2heatmap()
+                       
+                     }
                      
                      newenv = new.env(parent = globalenv())
                      newenv$create_heatmap = create_heatmap
