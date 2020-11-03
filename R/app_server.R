@@ -551,19 +551,12 @@ app_server = function(input, output, session) {
   rval_design = eventReactive(input$button_limma_calculatemodel, {
     
     req(input$select_limma_voi) # a variable of interest is required
-    
-    formula = stats::as.formula(paste0("~ 0 + ", paste(
-      c(
-        input$select_limma_voi,
-        input$checkbox_limma_covariables,
-        input$checkbox_limma_interactions
-      ),
-      collapse = "+"
-    )))
   
     #Bulding the design matrix
     try({
-      design = stats::model.matrix(formula, data = rval_clean_sheet_target())
+      design = generate_design(voi=input$select_limma_voi, sample_name=input$select_input_samplenamevar,
+                               covariables=input$checkbox_limma_covariables, interactions=input$checkbox_limma_interactions, 
+                               sample_sheet=rval_clean_sheet_target())
     })
     
     validate(
@@ -576,10 +569,6 @@ app_server = function(input, output, session) {
         "The design matrix contains missing values. Please, check the selected variable and covariables."
       )
     )
-    
-    colnames(design)[seq_len(length(unique(rval_voi())))] = levels(rval_voi())
-    row.names(design) = rval_sheet_target()[[input$select_input_samplenamevar]]
-    colnames(design) = make.names(colnames(design), unique = TRUE)
     
     #checking colinearity
     if (qr(design)$rank < ncol(design)) {
@@ -769,10 +758,9 @@ app_server = function(input, output, session) {
   rval_finddifcpgs = eventReactive(input$button_limma_calculatedifs, {
     try({
       dif_cpgs = find_dif_cpgs(
-        rval_voi(),
-        rval_design(),
-        rval_fit(),
-        rval_contrasts(),
+        design = rval_design(),
+        fit = rval_fit(),
+        contrasts = rval_contrasts(),
         trend = as.logical(input$select_limma_trend),
         robust = as.logical(input$select_limma_robust),
         cores = n_cores
@@ -821,12 +809,20 @@ app_server = function(input, output, session) {
       choices = levels(rval_voi()),
       selected = levels(rval_voi())
     )
+    
     updateSelectInput(
       session,
       "select_limma_contrasts2plot",
       label = "Contrasts to plot",
       choices = rval_contrasts(),
       selected = rval_contrasts()
+    )
+    
+    updateSelectInput(
+      session,
+      "select_limma_anncontrast",
+      label = "Contrast",
+      choices = rval_contrasts()
     )
     
     # disable button to avoid repeat clicking
@@ -923,12 +919,10 @@ app_server = function(input, output, session) {
           nrow(join_table) < 2 | nrow(join_table) > 12000)
       {
         rval_filteredlist2heatmap_valid(FALSE)
-        shinyjs::disable("download_export_heatmaps")
         NULL
       }
       else
       {
-        shinyjs::enable("download_export_heatmaps")
         rval_filteredlist2heatmap_valid(TRUE)
         join_table
       }
@@ -1073,6 +1067,52 @@ app_server = function(input, output, session) {
   
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
+  table_annotation = eventReactive(input$button_limma_anncalc,{
+    
+    req(rval_filteredlist())
+    
+    dif_target = paste("dif",
+                       limma::strsplit2(input$select_limma_anncontrast, "-")[1],
+                       limma::strsplit2(input$select_limma_anncontrast, "-")[2],
+                       sep = "_")
+    
+    temp = as.data.frame(minfi::getAnnotation(rval_gset()))
+    
+    int_cols = c(
+      "Name",
+      "chr",
+      "pos",
+      "strand",
+      "Relation_to_Island",
+      "UCSC_RefGene_Name",
+      "UCSC_RefGene_Group"
+    )
+    
+    temp = temp[row.names(temp) %in% rval_filteredlist()[[input$select_limma_anncontrast]]$cpg, int_cols]
+    
+    temp$dif_beta = rval_globaldifs()[[dif_target]][rval_globaldifs()[["cpg"]] %in% row.names(temp)]
+    temp$fdr = rval_filteredlist()[[input$select_limma_anncontrast]][["adj.P.Val"]][rval_filteredlist()[[input$select_limma_anncontrast]][["cpg"]] %in% row.names(temp)]
+
+    temp
+  })
+  
+  output$table_limma_ann = DT::renderDT(
+    table_annotation(),
+    extensions = 'Buttons',
+    rownames = FALSE,
+    selection = "single",
+    style = "bootstrap",
+    caption = "DMPs Annotation:",
+    options = list(
+      dom = 'Blfrtip',
+      lengthMenu = list(c(10,25,50,100,25000), c(10,25,50,100,25000)),
+      pageLength = 10,
+      autoWidth = TRUE,
+      scrollX = TRUE,
+      buttons = c('csv', 'excel', 'print')
+    ),
+  )
+  
   
   #Disable or enable buttons depending on software state
   observeEvent(rval_analysis_finished(),
@@ -1081,7 +1121,6 @@ app_server = function(input, output, session) {
                  shinyjs::enable("download_export_robjects")
                  shinyjs::enable("download_export_filteredbeds")
                  shinyjs::enable("download_export_markdown")
-                 shinyjs::enable("download_export_heatmaps")
                  shinyjs::enable("button_dmrs_calculate")
                  
                  updatePickerInput(
@@ -1107,6 +1146,7 @@ app_server = function(input, output, session) {
                  shinyjs::disable("download_export_heatmaps")
                  shinyjs::disable("button_dmrs_calculate")
                })
+  
   
   #DMRs
   
@@ -1164,8 +1204,6 @@ app_server = function(input, output, session) {
       selected = input$select_dmrs_regions
     )
     
-    print(input$select_dmrs_regions2plot)
-    
     shinyjs::disable("button_dmrs_calculate")
     
     withProgress(message = "Calculating DMRs...",
@@ -1221,16 +1259,15 @@ app_server = function(input, output, session) {
     #enable heatmap button
     shinyjs::enable("button_dmrs_heatmapcalc")
     rval_dmrs_finished(TRUE)
+    rval_dmrs_ready2heatmap(TRUE)
 
     dmrs_result
   })
   
-  rval_filteredmcsea = reactive({
+  rval_filteredmcsea = eventReactive(list(input$button_dmrs_calculate, input$button_dmrs_heatmapcalc),{
     
     req(rval_mcsea())
     print("calculating rval_filteredmcsea")
-    
-    rval_dmrs_ready2heatmap(TRUE)
     
     filter_dmrs(
       mcsea_list = rval_mcsea(),
@@ -1286,10 +1323,6 @@ app_server = function(input, output, session) {
       join_table
     }
     
-  })
-  
-  observeEvent(input$button_dmrs_calculate, priority = 1,{
-
   })
   
   observeEvent(rval_dmrs_ready2heatmap(),{
@@ -1367,6 +1400,7 @@ app_server = function(input, output, session) {
   rval_cpgcount_dmrs_heatmap = eventReactive(input$button_dmrs_heatmapcalc, nrow(rval_filteredmcsea2heatmap()))
   
   output$graph_dmrs_heatmap = renderPlot(plot_dmrsheatmap())
+  
   output$text_dmrs_heatmapcount = renderText(paste("DMRs in heatmap:", rval_cpgcount_dmrs_heatmap()))
   
   
@@ -1428,16 +1462,22 @@ app_server = function(input, output, session) {
   output$table_dmrs_table = DT::renderDT(
     rval_table_sigdmrs(),
     rownames = TRUE,
+    extensions = 'Buttons',
     selection = "single",
     style = "bootstrap",
     caption = "Select DMR to plot:",
     options = list(
       pageLength = 10,
+      dom = 'Blfrtip',
+      lengthMenu = list(c(10,25,50,100,25000), c(10,25,50,100,25000)),
       autoWidth = TRUE,
       scrollX = TRUE,
-      columnDefs = list(list(
-        targets = match("leadingEdge",colnames(rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]])), visible = FALSE
-      ))
+      buttons = c('csv', 'excel', 'print'),
+      columnDefs = list(
+        list(
+          targets = match("leadingEdge", colnames(rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]])),
+          visible = FALSE
+        ))
     )
   )
   
@@ -1528,6 +1568,7 @@ app_server = function(input, output, session) {
   }
   )
 
+  #Bed downloading enabling/disabling control
   observe({
     if (input$select_export_analysistype == "DMPs") {
       if (rval_analysis_finished() &
@@ -1561,6 +1602,22 @@ app_server = function(input, output, session) {
       }
     }
   })
+  
+  #heatmap downloading enable/disable
+  observe({
+    if (input$select_export_heatmaptype == "DMPs") {
+      if (rval_analysis_finished() & rval_filteredlist2heatmap_valid())
+        shinyjs::enable("download_export_heatmaps")
+      else
+        shinyjs::disable("download_export_heatmaps")
+    }
+    else{
+      if (rval_dmrs_finished() & rval_filteredmcsea2heatmap_valid())
+        shinyjs::enable("download_export_heatmaps")
+      else
+        shinyjs::disable("download_export_heatmaps")
+    }
+  })
 
   
   #Filtered BEDs
@@ -1573,8 +1630,6 @@ app_server = function(input, output, session) {
                    value = 1,
                    max = 4,
                    {
-                     #generating annotation
-                     #rval_annotation()
                      
                      if (input$select_export_bedtype == "by heatmap cluster" & input$select_export_analysistype == "DMPs") {
                        create_filtered_bed_clusters( dendro_data = rval_dendrogram(),
@@ -1750,19 +1805,37 @@ app_server = function(input, output, session) {
                      grDevices::pdf(file = file,
                                     height = 11.71,
                                     width = 8.6)
-                     create_heatmap(
-                       rval_filteredlist2heatmap(),
-                       factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
-                                              levels = input$select_limma_groups2plot),
-                       groups2plot = rval_voi() %in% input$select_limma_groups2plot,
-                       Colv = as.logical(input$select_limma_colv),
-                       ColSideColors = as.logical(input$select_limma_colsidecolors),
-                       RowSideColors = rval_dendrogram(),
-                       clusteralg = input$select_limma_clusteralg,
-                       distance = input$select_limma_clusterdist,
-                       scale = input$select_limma_scale,
-                       static = TRUE
-                     )
+                     if(input$select_export_heatmaptype == "DMPs"){
+                       create_heatmap(
+                         rval_filteredlist2heatmap(),
+                         factorgroups =  factor(rval_voi()[rval_voi() %in% input$select_limma_groups2plot],
+                                                levels = input$select_limma_groups2plot),
+                         groups2plot = rval_voi() %in% input$select_limma_groups2plot,
+                         Colv = as.logical(input$select_limma_colv),
+                         ColSideColors = as.logical(input$select_limma_colsidecolors),
+                         RowSideColors = rval_dendrogram(),
+                         clusteralg = input$select_limma_clusteralg,
+                         distance = input$select_limma_clusterdist,
+                         scale = input$select_limma_scale,
+                         static = TRUE
+                       )
+                     }
+                     else{
+                       create_heatmap(
+                         rval_filteredmcsea2heatmap(),
+                         factorgroups = factor(rval_voi()[rval_voi() %in% input$select_dmrs_groups2plot],
+                                                levels = input$select_dmrs_groups2plot),
+                         groups2plot = rval_voi() %in% input$select_dmrs_groups2plot,
+                         Colv = as.logical(input$select_dmrs_colv),
+                         ColSideColors = as.logical(input$select_dmrs_colsidecolors),
+                         RowSideColors = rval_dendrogram_dmrs(),
+                         clusteralg = input$select_dmrs_clusteralg,
+                         distance = input$select_dmrs_clusterdist,
+                         scale = input$select_dmrs_scale,
+                         static = TRUE
+                       )
+                     }
+
                      grDevices::dev.off()
                      shinyjs::enable("download_export_heatmaps")
                    })

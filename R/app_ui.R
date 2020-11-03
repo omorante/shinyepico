@@ -289,7 +289,7 @@ app_ui <- function(request) {
               DT::DTOutput("table_limma_design") %>% shinycssloaders::withSpinner()
             ),
             tabPanel(
-              "Differential CpGs",
+              "Heatmap",
               value = "differential_cpgs",
               div(
                 style = 'max-width:800px;margin:auto;',
@@ -432,7 +432,15 @@ app_ui <- function(request) {
                   
                 )
               )
+            ),
+            
+            tabPanel("DMPs Annotation",
+                     br(),
+                     DT::DTOutput("table_limma_ann") %>% shinycssloaders::withSpinner(),
+                     selectInput(inputId = "select_limma_anncontrast", label = "",choices = "",selected = ""),
+                     actionButton("button_limma_anncalc", label="Calculate")
             )
+            
           )
         )
       )
@@ -750,6 +758,7 @@ app_ui <- function(request) {
         "Press to download the report of all the steps follow and selected in the pipeline, and the results."
       ), 
       h3("Download Heatmap"),
+      selectInput("select_export_heatmaptype", label = "Heatmap type",choices = c("DMPs","DMRs"), selected="DMPs"),
       downloadButton("download_export_heatmaps"),
       p(
         "Press to download the custom heatmap in the gplots::heatmap.2 version."

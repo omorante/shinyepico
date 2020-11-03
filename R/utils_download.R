@@ -9,6 +9,9 @@ fwrite_bed = function(bed_file, file_name, DMR = FALSE, ...) {
     )
   }
   
+  bed_file$start = as.numeric(bed_file$start)
+  bed_file$end = as.numeric(bed_file$end)
+  
   #We remove NA values in final beds, and remove possible trailing spaces
   bed_file = stats::na.omit(bed_file)
   bed_file$start = trimws(format(as.numeric(bed_file$start), scientific = FALSE))
@@ -124,7 +127,7 @@ create_filtered_beds_dmrs = function(mcsea_filtered,
           message(
             paste(
               name,
-              "DMR is not correctly annotated. NAs will be introduced in final bed"
+              "DMR is not correctly annotated. It will be discarded in final bed"
             )
           )
           res = c(

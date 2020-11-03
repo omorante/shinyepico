@@ -6,7 +6,6 @@ globalVariables("table")
 globalVariables("ranking")
 
 # NORMALIZATION FUNCTIONS
-
 normalize_rgset = function(rgset, normalization_mode){
   
   if (normalization_mode == "Illumina") {
@@ -48,8 +47,30 @@ normalize_rgset = function(rgset, normalization_mode){
   gset
 }
 
-
 # MODEL GENERATION
+generate_design = function(voi, sample_name, covariables, interactions, sample_sheet){
+  
+  voi_factor = factor(make.names(sample_sheet[[voi]]))
+  
+  formula = stats::as.formula(paste0("~ 0 + ", paste(
+    c(
+      voi,
+      covariables,
+      interactions
+    ),
+    collapse = "+"
+  )))
+  
+  #Bulding the design matrix
+    design = stats::model.matrix(formula, data = sample_sheet)
+  
+  
+  colnames(design)[seq_len(length(unique(voi_factor)))] = levels(voi_factor)
+  row.names(design) = sample_sheet[[sample_name]]
+  colnames(design) = make.names(colnames(design), unique = TRUE)
+  
+  design
+}
 
 generate_limma_fit = function(Mvalues, design, weighting){
   
@@ -64,7 +85,6 @@ generate_limma_fit = function(Mvalues, design, weighting){
 }
 
 # DMPs CORE FUNCTIONS
-
 calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
   if (!is.null(Bvalues_totales$cpg)) {
     rownames(Bvalues_totales) = Bvalues_totales$cpg
@@ -111,13 +131,13 @@ calculate_global_difs = function(Bvalues_totales, grupos, contrasts, cores) {
 }
 
 
-find_dif_cpgs = function (groups,
-                          design,
+find_dif_cpgs = function (design,
                           fit,
                           contrasts,
                           trend = FALSE,
                           robust = FALSE,
                           cores) {
+  
   doParallel::registerDoParallel(cores)
   
   tabla_global = foreach::foreach(contrast = contrasts) %do% {
@@ -139,7 +159,6 @@ find_dif_cpgs = function (groups,
       rm(contraste, fitting) #Erase not necessary objects
       
       tt_global
-      
       
     })
   }
@@ -202,8 +221,6 @@ create_filtered_list = function(limma_list,
 }
 
 # DMRs CORE FUNCTIONS
-
-
 find_dmrs = function(find_dif_cpgs,
                      minCpGs,
                      platform,
@@ -372,36 +389,7 @@ filter_dmrs = function(mcsea_list,
 }
 
 
-create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
 
-  mcsea_result = mcsea_result[contrasts]
-  associations = paste0(regions, "_association")
-  
-  
-  bvalues$cpg = row.names(bvalues)
-  data.table::setDT(bvalues)
-  data.table::setkeyv(bvalues, "cpg")
-  
-  list_heatdata = list()
-  identifiers = c()
-  
-  for (contrast in contrasts) {
-    for (i in seq_along(regions)) {
-      list_heatdata[[paste0(contrast, "|", regions[i])]] = data.table::as.data.table(t(vapply(mcsea_result[[contrast]][[associations[i]]], function(x) {
-        colMeans(bvalues[list(x), -c("cpg"), nomatch = NULL, mult = "all"])
-      }, numeric(ncol(bvalues) - 1))))
-      identifiers = c(identifiers, paste(contrast, regions[i], names(mcsea_result[[contrast]][[associations[i]]]), sep="|"))
-      
-    }
-  }
-  
-  heatdata = data.table::rbindlist(list_heatdata)
-  colnames(heatdata) = colnames(bvalues)[-ncol(bvalues)]
-  heatdata = as.data.frame(heatdata)
-  row.names(heatdata) = identifiers
-  
-  heatdata
-}
   
 
 
