@@ -1010,7 +1010,7 @@ app_server = function(input, output, session) {
   
   
   
-  observeEvent(input$button_limma_heatmapcalc,
+  observe(
                {
                  #Render the correct plot depending on the selected
                  output$graph_limma_heatmapcontainer = renderUI({
@@ -1375,7 +1375,35 @@ app_server = function(input, output, session) {
                                   })
   rval_cpgcount_dmrs_heatmap = eventReactive(input$button_dmrs_heatmapcalc, nrow(rval_filteredmcsea2heatmap()))
   
-  output$graph_dmrs_heatmap = renderPlot(plot_dmrsheatmap())
+  observe(
+               {
+                 #Render the correct plot depending on the selected
+                 output$graph_dmrs_heatmapcontainer = renderUI({
+                   if (!as.logical(input$select_dmrs_graphstatic))
+                     return(
+                       plotly::plotlyOutput(
+                         "graph_dmrs_heatmap_interactive",
+                         width = "600px",
+                         height = "500px"
+                       )  %>% shinycssloaders::withSpinner()
+                     )
+                   else
+                     return(
+                       div(
+                         min_width=400,
+                         plotOutput(
+                           "graph_dmrs_heatmap_static",
+                           width = "600px",
+                           height = "600px"
+                         ) %>% shinycssloaders::withSpinner()
+                       ))
+                 })
+                 
+                 if (!as.logical(input$select_dmrs_graphstatic))
+                   output$graph_dmrs_heatmap_interactive = plotly::renderPlotly(plot_dmrsheatmap())
+                 else
+                   output$graph_dmrs_heatmap_static = renderPlot(plot_dmrsheatmap())
+               })
   
   output$text_dmrs_heatmapcount = renderText(paste("DMRs in heatmap:", rval_cpgcount_dmrs_heatmap()))
   

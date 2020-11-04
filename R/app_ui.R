@@ -519,8 +519,7 @@ app_ui <- function(request) {
                 fluidPage(
               h4("DMRs Heatmap"),
               textOutput("text_dmrs_heatmapcount"),
-              plotOutput("graph_dmrs_heatmap", width = "600px", height = "600px") %>% shinycssloaders::withSpinner(),
-              
+              uiOutput("graph_dmrs_heatmapcontainer"),
               h4("DMRs counts in each contrast"),
               tableOutput("table_dmrs_count")  %>% shinycssloaders::withSpinner(),
               
