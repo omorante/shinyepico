@@ -1077,6 +1077,16 @@ app_server = function(input, output, session) {
     ),
   )
   
+  ind_boxplot = eventReactive(input$button_limma_indboxplotcalc,{
+    
+    validate(need(!is.null(input$table_limma_ann_rows_selected), "A DMP should be selected."))
+    cpg_sel = table_annotation()[["Name"]][input$table_limma_ann_rows_selected]
+    
+    create_individual_boxplot(rval_gset_getBeta(), cpg_sel, rval_voi() )
+  })
+  
+  output$graph_limma_indboxplot = renderPlot(ind_boxplot())
+  
   
   #Disable or enable buttons depending on software state
   observeEvent(rval_analysis_finished(),
@@ -1481,10 +1491,10 @@ app_server = function(input, output, session) {
                      setProgress(value = 2, message = "Saving RObjects...")
                      
                      for(id in input$select_export_objects2download){
-                       do.call(function(object, name) saveRDS(object,file=paste0(tempdir(),"/",name,".RData")), list(object=as.name(objetos[[id]]), name=objetos[[id]]))
+                       do.call(function(object, name) saveRDS(object,file=paste0(tempdir(),"/",name,".RDS")), list(object=as.name(objetos[[id]]), name=objetos[[id]]))
                      }
                      
-                     objects2save = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
+                     objects2save = list.files(tempdir(), pattern = "*.RDS", full.names = TRUE)
                      
                      setProgress(value = 3, message = "Compressing RObjects...")
                      zip::zip(
@@ -1500,8 +1510,7 @@ app_server = function(input, output, session) {
   )
   
   rval_annotation = reactive({
-    print("rval annotation triggered")
-    
+                   
     int_cols = c(
       "Name",
       "Relation_to_Island",
@@ -1529,51 +1538,58 @@ app_server = function(input, output, session) {
                         selected = "hg19")
     }
     
-    annotation = as.data.frame(minfi::getAnnotation(rval_gset()))
-    annotation = annotation[, int_cols]
-    annotation$genome = "hg19"
-    
-    if (input$select_export_genometype == "hg19") {
-      annotation
-    }
-    else{
-      chain = rtracklayer::import.chain(system.file("hg19ToHg38.over.chain", package = "shinyepico"))
-      
-      ann_granges = data.frame(
-        chr = annotation$chr,
-        start = annotation$pos - 1,
-        end = annotation$pos,
-        name = row.names(annotation)
-      )
-      ann_granges = GenomicRanges::makeGRangesFromDataFrame(
-        ann_granges,
-        starts.in.df.are.0based = TRUE,
-        keep.extra.columns = T
-      )
-      ann_granges = unlist(rtracklayer::liftOver(ann_granges, chain = chain))
-      
-      hg38 = data.table::data.table(
-        Name = GenomicRanges::mcols(ann_granges)[[1]],
-        chr = as.character(GenomicRanges::seqnames(ann_granges)),
-        pos = GenomicRanges::start(ann_granges),
-        genome = "hg38"
-      )
-      
-      annotation = as.data.table(annotation[, !(colnames(annotation) %in% c("chr", "pos", "genome"))])
-      
-      print(str(hg38))
-      print(str(annotation))
-      
-      hg38 = as.data.frame(data.table::merge.data.table(x = annotation,
-                                                        y = hg38,
-                                                        by = "Name",
-                                                        all.x = TRUE))
-      row.names(hg38) = hg38$Name
-      
-      hg38
-    }
-    
-    
+    withProgress(message = "Generating annotation...",
+                 max = 3,
+                 value = 1,
+                 
+                 {
+                   annotation = as.data.frame(minfi::getAnnotation(rval_gset()))
+                   annotation = annotation[, int_cols]
+                   annotation$genome = "hg19"
+                   
+                   if (input$select_export_genometype == "hg19") {
+                     annotation
+                   }
+                   else{
+                     chain = rtracklayer::import.chain(system.file("hg19ToHg38.over.chain", package = "shinyepico"))
+                     
+                     ann_granges = data.frame(
+                       chr = annotation$chr,
+                       start = annotation$pos - 1,
+                       end = annotation$pos,
+                       name = row.names(annotation)
+                     )
+                     ann_granges = GenomicRanges::makeGRangesFromDataFrame(
+                       ann_granges,
+                       starts.in.df.are.0based = TRUE,
+                       keep.extra.columns = T
+                     )
+                     ann_granges = unlist(rtracklayer::liftOver(ann_granges, chain = chain))
+                     
+                     hg38 = data.table::data.table(
+                       Name = GenomicRanges::mcols(ann_granges)[[1]],
+                       chr = as.character(GenomicRanges::seqnames(ann_granges)),
+                       pos = GenomicRanges::start(ann_granges),
+                       genome = "hg38"
+                     )
+                     
+                     annotation = as.data.table(annotation[,!(colnames(annotation) %in% c("chr", "pos", "genome"))])
+                     
+                     print(str(hg38))
+                     print(str(annotation))
+                     
+                     hg38 = as.data.frame(data.table::merge.data.table(
+                       x = annotation,
+                       y = hg38,
+                       by = "Name",
+                       all.x = TRUE
+                     ))
+                     row.names(hg38) = hg38$Name
+                     
+                     hg38
+                   }
+                 })
+
   })
   
   #Bed downloading enabling/disabling control
@@ -1813,8 +1829,10 @@ app_server = function(input, output, session) {
                     
                      fileConn = file(file)
                      writeLines(c(
+                       paste("#This script was generated with shinyÉPICo", packageVersion("shinyepico"), "on", Sys.Date()),
                        "library(shiny)",
                        "library(data.table)",
+                       "library(rlang)",
                        paste("########################", "PARAMETERS", "########################" ),
                        "path = \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
                        paste("cores =", n_cores),
@@ -1835,6 +1853,14 @@ app_server = function(input, output, session) {
                        paste("deltaB =", rlang::expr_text(input$slider_limma_deltab)),
                        paste("adjp_max =", rlang::expr_text(input$slider_limma_adjpvalue)),
                        paste("p.value =", rlang::expr_text(input$slider_limma_pvalue)),
+                       paste("mincpgs_dmrs =",rlang::expr_text(input$slider_dmrs_cpgs)),
+                       paste("platform =",rlang::expr_text(input$select_dmrs_platform)),
+                       paste("permutations_dmrs =",rlang::expr_text(input$slider_dmrs_permutations)),
+                       paste("regions_dmrs =",rlang::expr_text(input$select_dmrs_regions)),
+                       paste("contrasts_dmrs =",rlang::expr_text(input$select_dmrs_contrasts)),
+                       paste("fdr_dmrs =",rlang::expr_text(input$slider_dmrs_adjpvalue)),
+                       paste("pval_dmrs =",rlang::expr_text(input$slider_dmrs_pvalue)),
+                       paste("dif_beta_dmrs =",rlang::expr_text(input$slider_dmrs_deltab)),
                        paste("\n\n\n########################", "FUNCTIONS", "########################" ),
                        paste("read_idats =", rlang::expr_text(read_idats)),
                        paste("normalize_rgset =", rlang::expr_text(normalize_rgset)),
@@ -1844,6 +1870,9 @@ app_server = function(input, output, session) {
                        paste("calculate_global_difs =", rlang::expr_text(calculate_global_difs)),
                        paste("find_dif_cpgs =", rlang::expr_text(find_dif_cpgs)),
                        paste("create_filtered_list =", rlang::expr_text(create_filtered_list)),
+                       paste("find_dmrs =", rlang::expr_text(find_dmrs)),
+                       paste("add_dmrs_globaldifs =", rlang::expr_text(add_dmrs_globaldifs)),
+                       paste("filter_dmrs =", rlang::expr_text(filter_dmrs)),
                        paste("\n\n\n########################", "PIPELINE", "########################" ),
                        "#Data reading",
                        "sheet = minfi::read.metharray.sheet(path)",
@@ -1859,11 +1888,15 @@ app_server = function(input, output, session) {
                        "Bvalues = as.data.frame(minfi::getBeta(gset))",
                        "colnames(Bvalues) = sheet_target[[sample_name_var]]",
                        "fit = generate_limma_fit(Mvalues, design, weighting)\n",
-                       "#Contrasts calculation",
+                       "#DMPs calculation",
                        "global_difs = calculate_global_difs(Bvalues, voi, contrasts, cores)",
                        "ebayes_tables = find_dif_cpgs(design, fit, contrasts, trend, robust, cores)",
-                       "filtered_list = create_filtered_list(ebayes_tables, global_difs, deltaB, adjp_max, p.value, cores)"),
-                       fileConn)
+                       "filtered_list = create_filtered_list(ebayes_tables, global_difs, deltaB, adjp_max, p.value, cores)",
+                       "#DMRs calculation",
+                       "mcsea_list = find_dmrs(ebayes_tables, mincpgs_dmrs, platform, voi, regions_dmrs, contrasts_dmrs, Bvalues, permutations_dmrs, cores)",
+                       "mcsea_list = add_dmrs_globaldifs(mcsea_list, global_difs, regions_dmrs, cores)",
+                       "mcsea_filtered = filter_dmrs(mcsea_list, fdr_dmrs,pval_dmrs,dif_beta_dmrs,regions_dmrs,contrasts_dmrs)"),
+                   fileConn)
                      close(fileConn)
                      
                      shinyjs::enable("download_export_script")

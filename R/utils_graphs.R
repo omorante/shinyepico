@@ -670,54 +670,28 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
   heatdata
 }
 
-create_individual_barplot = function(cpg, voi, bvalues){
-  
-  bselected = bvalues[cpg,]
-  bselected$gene = row.names(bselected)
-  bselected_pivot = as.data.frame(pivot_longer(bselected,colnames(bselected)[-length(colnames(bselected))], names_to ="sample")  )           
-  bselected_pivot$group = c("MO","DC","DEX")
-  bselected_pivot$buffy = c("A","A","A","A","B","B","B","B","C","C","C","C")
-  bselected_pivot$type = "methylation"
-  meth_sum = summarySE(bselected_pivot, measurevar="value",groupvars=c("group","gene"))
-  meth_sum$group = factor(exp_sum$group, levels=c("MO","DC","DEX"))
-  meth_sum$type = "methylation"
-  
-  
-  summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
-                        conf.interval=.95, .drop=TRUE) {
-    library(plyr)
-    
-    # New version of length which can handle NA's: if na.rm==T, don't count them
-    length2 <- function (x, na.rm=FALSE) {
-      if (na.rm) sum(!is.na(x))
-      else       length(x)
-    }
-    
-    # This does the summary. For each group's data frame, return a vector with
-    # N, mean, and sd
-    datac <- ddply(data, groupvars, .drop=.drop,
-                   .fun = function(xx, col) {
-                     c(N    = length2(xx[[col]], na.rm=na.rm),
-                       mean = mean   (xx[[col]], na.rm=na.rm),
-                       sd   = sd     (xx[[col]], na.rm=na.rm)
-                     )
-                   },
-                   measurevar
-    )
-    
-    # Rename the "mean" column    
-    datac <- rename(datac, c("mean" = measurevar))
-    
-    datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
-    
-    # Confidence interval multiplier for standard error
-    # Calculate t-statistic for confidence interval: 
-    # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
-    ciMult <- qt(conf.interval/2 + .5, datac$N-1)
-    datac$ci <- datac$se * ciMult
-    
-    return(datac)
-  }
-  
+create_individual_boxplot = function(Bvalues, cpg, voi) {
+  Bvalues[cpg,,drop=FALSE] %>%
+    tidyr::pivot_longer(cols = seq_len(ncol(Bvalues)),
+                        names_to = "sample",
+                        values_to = "Bvalues") %>%
+    dplyr::mutate(group = voi) %>%
+    ggplot2::ggplot(ggplot2::aes_string(x = "group", y = "Bvalues")) +
+    ggplot2::geom_boxplot(
+      outlier.colour = "black",
+      outlier.shape = 16,
+      outlier.size = 2,
+      notch = FALSE,
+      fill = "#56B1F7"
+    ) +
+    ggplot2::ggtitle(cpg)+
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank()
+    ) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -45, hjust =
+                                                         0),
+                   plot.title = ggplot2::element_text(hjust = 0.5))
   
 }

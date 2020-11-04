@@ -435,11 +435,14 @@ app_ui <- function(request) {
             ),
             
             tabPanel("DMPs Annotation",
+                     h4("DMP Boxplot"),
+                     plotOutput("graph_limma_indboxplot")%>% shinycssloaders::withSpinner(),
+                     h4("DMPs Annotation"),
                      br(),
                      DT::DTOutput("table_limma_ann") %>% shinycssloaders::withSpinner(),
                      selectInput(inputId = "select_limma_anncontrast", label = "",choices = "",selected = ""),
+                     actionButton(inputId="button_limma_indboxplotcalc", label = "Plot")
             )
-            
           )
         )
       )
