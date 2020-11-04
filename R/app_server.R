@@ -75,7 +75,7 @@ app_server = function(input, output, session) {
   
   
   rval_sheet_target = eventReactive(input$button_input_next,
-                                    rval_sheet()[rval_sheet()[, input$select_input_samplenamevar]  %in% input$selected_samples,])
+                                    rval_sheet()[rval_sheet()[[input$select_input_samplenamevar]]  %in% input$selected_samples,])
   
   
   rval_clean_sheet_target = eventReactive(rval_gset(),{
@@ -209,9 +209,9 @@ app_server = function(input, output, session) {
                  max = 5,
                  {
                    try({
-                     RGSet = minfi::read.metharray.exp(targets = rval_sheet_target(),
-                                                       verbose = TRUE,
-                                                       force = TRUE)
+                     RGSet = read_idats(targets = rval_sheet_target(), 
+                                        detectP = 0.01)
+
                    })
                    
                    
@@ -236,8 +236,8 @@ app_server = function(input, output, session) {
                      )
                    )
                    
-                   #we return RGSet filtered by the standard detection threshold of Pvalue, 0.01
-                   RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01), ]
+                   #we return RGSet
+                   RGSet
                  })
     
   })
@@ -281,7 +281,6 @@ app_server = function(input, output, session) {
   
   #MINFI NORMALIZATION
   
-  
   #Calculation of minfi normalized data
   rval_gset = eventReactive(input$button_minfi_select, {
     
@@ -295,7 +294,9 @@ app_server = function(input, output, session) {
                  max = 4,
                  {
                    try({
-                     gset = normalize_rgset(rgset = rval_rgset(), normalization_mode = input$select_minfi_norm)
+                     gset = normalize_rgset(rgset = rval_rgset(), normalization_mode = input$select_minfi_norm,
+                                            dropSNPs = input$select_minfi_dropsnps, maf = input$slider_minfi_maf,
+                                            dropCpHs = input$select_minfi_dropcphs, dropSex = input$select_minfi_chromosomes )
                    })
                    
                    #check if normalization has worked
@@ -318,28 +319,6 @@ app_server = function(input, output, session) {
                        "An unexpected error has occurred during minfi normalization. Please, notify the error to the package maintainer."
                      )
                    )
-                   
-                   #prior CpG probes
-                   probes = length(minfi::featureNames(gset))
-                   
-                   #remove SNPs to proceed with the analysis and add sex column
-                   if (input$select_minfi_dropsnps)
-                    gset = minfi::dropLociWithSnps(gset, maf = input$slider_minfi_maf)
-                   
-                   #remove CpHs
-                   if (input$select_minfi_dropcphs)
-                    gset = minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
-                   
-                   #Add sex info
-                    gset = minfi::addSex(gset)
-                   
-                   #remove chromosomes
-                   if(input$select_minfi_chromosomes){
-                     gset = gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX","chrY"))],]
-                   }
-                   
-                   #Info CpGs removed
-                   message(paste(probes - length(minfi::featureNames(gset)), "probes were filtered out."))
                    
                    #enable button
                    shinyjs::enable("button_minfi_select") 
@@ -588,9 +567,7 @@ app_server = function(input, output, session) {
   
   #Calculation of contrasts
   rval_contrasts = reactive({
-    conts = utils::combn(levels(rval_voi()), 2)
-    
-    sprintf('%s-%s', conts[1,], conts[2,])
+    generate_contrasts(rval_voi())
   })
   
   
@@ -1067,7 +1044,7 @@ app_server = function(input, output, session) {
   
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
-  table_annotation = eventReactive(input$button_limma_anncalc,{
+  table_annotation = eventReactive(input$button_limma_heatmapcalc,{
     
     req(rval_filteredlist())
     
@@ -1076,20 +1053,7 @@ app_server = function(input, output, session) {
                        limma::strsplit2(input$select_limma_anncontrast, "-")[2],
                        sep = "_")
     
-    temp = as.data.frame(minfi::getAnnotation(rval_gset()))
-    
-    int_cols = c(
-      "Name",
-      "chr",
-      "pos",
-      "strand",
-      "Relation_to_Island",
-      "UCSC_RefGene_Name",
-      "UCSC_RefGene_Group"
-    )
-    
-    temp = temp[row.names(temp) %in% rval_filteredlist()[[input$select_limma_anncontrast]]$cpg, int_cols]
-    
+    temp = rval_annotation()[row.names(rval_annotation()) %in% rval_filteredlist()[[input$select_limma_anncontrast]]$cpg,]
     temp$dif_beta = rval_globaldifs()[[dif_target]][rval_globaldifs()[["cpg"]] %in% row.names(temp)]
     temp$fdr = rval_filteredlist()[[input$select_limma_anncontrast]][["adj.P.Val"]][rval_filteredlist()[[input$select_limma_anncontrast]][["cpg"]] %in% row.names(temp)]
 
@@ -1121,6 +1085,7 @@ app_server = function(input, output, session) {
                  shinyjs::enable("download_export_robjects")
                  shinyjs::enable("download_export_filteredbeds")
                  shinyjs::enable("download_export_markdown")
+                 shinyjs::enable("download_export_script")
                  shinyjs::enable("button_dmrs_calculate")
                  
                  updatePickerInput(
@@ -1143,6 +1108,7 @@ app_server = function(input, output, session) {
                  shinyjs::disable("download_export_robjects")
                  shinyjs::disable("download_export_filteredbeds")
                  shinyjs::disable("download_export_markdown")
+                 shinyjs::disable("download_export_script")
                  shinyjs::disable("download_export_heatmaps")
                  shinyjs::disable("button_dmrs_calculate")
                })
@@ -1515,7 +1481,7 @@ app_server = function(input, output, session) {
                      setProgress(value = 2, message = "Saving RObjects...")
                      
                      for(id in input$select_export_objects2download){
-                       do.call(function(object, name) save(object,file=paste0(tempdir(),"/",name,".RData")), list(object=as.name(objetos[[id]]), name=objetos[[id]]))
+                       do.call(function(object, name) saveRDS(object,file=paste0(tempdir(),"/",name,".RData")), list(object=as.name(objetos[[id]]), name=objetos[[id]]))
                      }
                      
                      objects2save = list.files(tempdir(), pattern = "*.RData", full.names = TRUE)
@@ -1534,40 +1500,82 @@ app_server = function(input, output, session) {
   )
   
   rval_annotation = reactive({
+    print("rval annotation triggered")
     
-      if (input$select_export_genometype == "hg38" &
-          (!requireNamespace("rtracklayer", quietly = T)) |
-          !requireNamespace("GenomicRanges", quietly = T)){
-        
-        showModal(
-          modalDialog(
-            title = "rtracklayer::liftOver not available",
-            "Rtracklayer is not installed and it is needed to liftOver annotation from hg19 to hg38 genome. Please, install the package and restart the R session.",
-            easyClose = TRUE,
-            footer = NULL
-          )
+    int_cols = c(
+      "Name",
+      "Relation_to_Island",
+      "UCSC_RefGene_Name",
+      "UCSC_RefGene_Group",      
+      "chr",
+      "pos",
+      "strand"
+    )
+    
+    if (input$select_export_genometype == "hg38" &
+        (!requireNamespace("rtracklayer", quietly = T)) |
+        !requireNamespace("GenomicRanges", quietly = T)) {
+      showModal(
+        modalDialog(
+          title = "rtracklayer::liftOver not available",
+          "Rtracklayer is not installed and it is needed to liftOver annotation from hg19 to hg38 genome. Please, install the package and restart the R session.",
+          easyClose = TRUE,
+          footer = NULL
         )
-        updateSelectInput(session, "select_export_genometype", choices = "hg19", selected = "hg19")
-      }
-        
+      )
+      updateSelectInput(session,
+                        "select_export_genometype",
+                        choices = "hg19",
+                        selected = "hg19")
+    }
+    
     annotation = as.data.frame(minfi::getAnnotation(rval_gset()))
-  
-    if(input$select_export_genometype == "hg19"){
-      data.frame(row.names = row.names(annotation), chr = annotation$chr, pos = annotation$pos)
+    annotation = annotation[, int_cols]
+    annotation$genome = "hg19"
+    
+    if (input$select_export_genometype == "hg19") {
+      annotation
     }
     else{
       chain = rtracklayer::import.chain(system.file("hg19ToHg38.over.chain", package = "shinyepico"))
-      ann_granges = data.frame(chr=annotation$chr, start=annotation$pos - 1, end = annotation$pos, name = row.names(annotation))
-      ann_granges = GenomicRanges::makeGRangesFromDataFrame(ann_granges, starts.in.df.are.0based=TRUE, keep.extra.columns = T)
+      
+      ann_granges = data.frame(
+        chr = annotation$chr,
+        start = annotation$pos - 1,
+        end = annotation$pos,
+        name = row.names(annotation)
+      )
+      ann_granges = GenomicRanges::makeGRangesFromDataFrame(
+        ann_granges,
+        starts.in.df.are.0based = TRUE,
+        keep.extra.columns = T
+      )
       ann_granges = unlist(rtracklayer::liftOver(ann_granges, chain = chain))
       
-      data.frame(row.names = GenomicRanges::mcols(ann_granges)[[1]], chr=GenomicRanges::seqnames(ann_granges), pos = GenomicRanges::start(ann_granges))
-    }
+      hg38 = data.table::data.table(
+        Name = GenomicRanges::mcols(ann_granges)[[1]],
+        chr = as.character(GenomicRanges::seqnames(ann_granges)),
+        pos = GenomicRanges::start(ann_granges),
+        genome = "hg38"
+      )
       
+      annotation = as.data.table(annotation[, !(colnames(annotation) %in% c("chr", "pos", "genome"))])
+      
+      print(str(hg38))
+      print(str(annotation))
+      
+      hg38 = as.data.frame(data.table::merge.data.table(x = annotation,
+                                                        y = hg38,
+                                                        by = "Name",
+                                                        all.x = TRUE))
+      row.names(hg38) = hg38$Name
+      
+      hg38
+    }
     
-  }
-  )
-
+    
+  })
+  
   #Bed downloading enabling/disabling control
   observe({
     if (input$select_export_analysistype == "DMPs") {
@@ -1792,6 +1800,77 @@ app_server = function(input, output, session) {
                    })
     }
   )
+  
+  #script generation
+  output$download_export_script = downloadHandler(
+    filename = "shinyepico_script.R",
+    content = function(file) {
+      shinyjs::disable("download_export_script")
+      withProgress(message = "Generating Script...",
+                   value = 1,
+                   max = 3,
+                   {
+                    
+                     fileConn = file(file)
+                     writeLines(c(
+                       "library(shiny)",
+                       "library(data.table)",
+                       paste("########################", "PARAMETERS", "########################" ),
+                       "path = \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
+                       paste("cores =", n_cores),
+                       paste("sample_name_var =", rlang::expr_text(input$select_input_samplenamevar)),
+                       paste("selected_samples =", rlang::expr_text(input$selected_samples)),
+                       paste("detectP =", 0.01),
+                       paste("normalization_mode =", rlang::expr_text(input$select_minfi_norm)),
+                       paste("dropSNPs =", rlang::expr_text(input$select_minfi_dropsnps)),
+                       paste("maf =", rlang::expr_text(input$slider_minfi_maf)),
+                       paste("dropCpHs =", rlang::expr_text(input$select_minfi_dropcphs)),
+                       paste("dropSex =", rlang::expr_text(input$select_minfi_chromosomes)),
+                       paste("voi_var =", rlang::expr_text(input$select_limma_voi)),
+                       paste("covariables =", rlang::expr_text(input$checkbox_limma_covariables)),
+                       paste("interactions =", rlang::expr_text(input$checkbox_limma_interactions)),
+                       paste("weighting =", rlang::expr_text(input$select_limma_weights)),
+                       paste("trend =", rlang::expr_text(input$select_limma_trend)),
+                       paste("robust =", rlang::expr_text(input$select_limma_robust)),
+                       paste("deltaB =", rlang::expr_text(input$slider_limma_deltab)),
+                       paste("adjp_max =", rlang::expr_text(input$slider_limma_adjpvalue)),
+                       paste("p.value =", rlang::expr_text(input$slider_limma_pvalue)),
+                       paste("\n\n\n########################", "FUNCTIONS", "########################" ),
+                       paste("read_idats =", rlang::expr_text(read_idats)),
+                       paste("normalize_rgset =", rlang::expr_text(normalize_rgset)),
+                       paste("generate_contrasts =", rlang::expr_text(generate_contrasts)),
+                       paste("generate_design =", rlang::expr_text(generate_design)),
+                        paste("generate_limma_fit =", rlang::expr_text(generate_limma_fit)),
+                       paste("calculate_global_difs =", rlang::expr_text(calculate_global_difs)),
+                       paste("find_dif_cpgs =", rlang::expr_text(find_dif_cpgs)),
+                       paste("create_filtered_list =", rlang::expr_text(create_filtered_list)),
+                       paste("\n\n\n########################", "PIPELINE", "########################" ),
+                       "#Data reading",
+                       "sheet = minfi::read.metharray.sheet(path)",
+                       "sheet_target = sheet[,sheet[[sample_name_var]] %in% selected_samples]",
+                       "voi = factor(make.names(sheet_target[[voi_var]]))",
+                       "rgset = read_idats(sheet_target, detectP)",
+                       "#Normalization",
+                       "gset = normalize_rgset(rgset, normalization_mode, dropSNPs, maf, dropCpHs, dropSex) #normalization\n",
+                       "#Limma model",
+                       "design = generate_design(voi_var, sample_name_var, covariables, interactions, sheet_target)",
+                       "contrasts = generate_contrasts(voi)",
+                       "Mvalues = minfi::getM(gset)",
+                       "Bvalues = as.data.frame(minfi::getBeta(gset))",
+                       "colnames(Bvalues) = sheet_target[[sample_name_var]]",
+                       "fit = generate_limma_fit(Mvalues, design, weighting)\n",
+                       "#Contrasts calculation",
+                       "global_difs = calculate_global_difs(Bvalues, voi, contrasts, cores)",
+                       "ebayes_tables = find_dif_cpgs(design, fit, contrasts, trend, robust, cores)",
+                       "filtered_list = create_filtered_list(ebayes_tables, global_difs, deltaB, adjp_max, p.value, cores)"),
+                       fileConn)
+                     close(fileConn)
+                     
+                     shinyjs::enable("download_export_script")
+                   })
+    }
+  )
+  
   
   #custom heatmap
   output$download_export_heatmaps = downloadHandler(

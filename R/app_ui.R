@@ -438,7 +438,6 @@ app_ui <- function(request) {
                      br(),
                      DT::DTOutput("table_limma_ann") %>% shinycssloaders::withSpinner(),
                      selectInput(inputId = "select_limma_anncontrast", label = "",choices = "",selected = ""),
-                     actionButton("button_limma_anncalc", label="Calculate")
             )
             
           )
@@ -747,8 +746,8 @@ app_ui <- function(request) {
       ),
       
       
-    downloadButton("download_export_filteredbeds"),
-    p(
+      downloadButton("download_export_filteredbeds"),
+      p(
         "Press to download the created filtered lists of contrasts, or heatmap clusters,
         with the chosen criteria, in bed format (hg19 genome)."
       ),
@@ -756,15 +755,23 @@ app_ui <- function(request) {
       downloadButton("download_export_markdown"),
       p(
         "Press to download the report of all the steps follow and selected in the pipeline, and the results."
-      ), 
-      h3("Download Heatmap"),
-      selectInput("select_export_heatmaptype", label = "Heatmap type",choices = c("DMPs","DMRs"), selected="DMPs"),
-      downloadButton("download_export_heatmaps"),
+      ),
+      h3("Download Custom R Script"),
+      downloadButton("download_export_script"),
       p(
-        "Press to download the custom heatmap in the gplots::heatmap.2 version."
-      )
+        "Press to download an R script with the main parameters and steps follow in the DMP/DMR pipeline, to reproduce the results later outside the shiny application."
+      ),
+      h3("Download Heatmap"),
+      selectInput(
+        "select_export_heatmaptype",
+        label = "Heatmap type",
+        choices = c("DMPs", "DMRs"),
+        selected = "DMPs"
+      ),
+      downloadButton("download_export_heatmaps"),
+      p("Press to download the custom heatmap in the gplots::heatmap.2 version.")
       
-    ),
+    ), 
     
     tabPanel(
       "About",

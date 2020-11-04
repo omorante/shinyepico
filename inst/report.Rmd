@@ -425,7 +425,7 @@ For each contrast ( __`r paste(params$rval_contrasts, collapse=", ")`__ ) , the 
 * Max. pvalue:   __`r params$dmrs_max_pvalue`__
 ```
 
-## Table with all contrasts (DMRs)
+### Table with all contrasts (DMRs)
 
 ```{r filtered_table_all_dmrs,echo=FALSE,message=FALSE, warning=FALSE}
 if(!is.null(params$dmrs_contrasts)) knitr::kable(params$table_dmrs) else cat("DMRs were not calculated in this analysis.")
@@ -433,7 +433,7 @@ if(!is.null(params$dmrs_contrasts)) knitr::kable(params$table_dmrs) else cat("DM
 
 
 ```{asis custom_heatmap, echo=TRUE, eval=!is.null(params$dmrs_contrasts)}
-## Custom heatmap (DMRs)
+### Custom heatmap (DMRs)
 
 * Column dendogram:  __`r params$dmrs_Colv`__
 * Scale: __`r params$dmrs_scale`__

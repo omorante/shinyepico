@@ -1,0 +1,48 @@
+---
+title: "shinyÉPICo pipeline"
+params:
+  #performance
+  cores: NA
+  #sample_selection
+  path: NA
+  selected_samples: NA
+  sample_name_var: NA
+  #normalization
+  normalization_mode: NA
+  dropSNPs: NA
+  dropCpHs: NA
+  dropSex: NA
+  maf: NA
+  #design modelling
+  voi_var: NA
+  covariables: NA
+  interactions: NA
+  #limma/ebayes parameters
+  weighting: NA
+  trend: NA
+  robust: NA
+  
+  #filtering parameters
+  deltaB: NA
+  adjp_max: NA
+  p.value: NA
+  
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r read_data, eval=FALSE}
+sheet = minfi::read.metharray.sheet(params$path)
+sheet_target = sheet[,sheet[[params$sample_name_var]] %in% params$selected_samples]
+voi = factor(make.names(sheet_target[[params$voi_var]]))
+
+```

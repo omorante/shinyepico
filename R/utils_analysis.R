@@ -5,17 +5,29 @@ globalVariables("type")
 globalVariables("table")
 globalVariables("ranking")
 
-# NORMALIZATION FUNCTIONS
-normalize_rgset = function(rgset, normalization_mode){
+# READING AND NORMALIZATION FUNCTIONS
+read_idats = function(targets, detectP){
   
+  RGSet = minfi::read.metharray.exp(targets = targets,
+                                    verbose = TRUE,
+                                    force = TRUE)
+  
+  RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < detectP), ]
+}
+
+normalize_rgset = function(rgset,
+                           normalization_mode,
+                           dropSNPs,
+                           maf,
+                           dropCpHs,
+                           dropSex) {
+  #Normalizing data by the selected method
   if (normalization_mode == "Illumina") {
     gset = minfi::mapToGenome(minfi::ratioConvert(
       betaThreshold = 0.001,
-      minfi::preprocessIllumina(
-        rgset,
-        bg.correct = TRUE,
-        normalize = "controls"
-      )
+      minfi::preprocessIllumina(rgset,
+                                bg.correct = TRUE,
+                                normalize = "controls")
     ))
   }
   
@@ -44,10 +56,43 @@ normalize_rgset = function(rgset, normalization_mode){
     gset = minfi::preprocessQuantile(minfi::preprocessNoob(rgset))
   }
   
+  #prior CpG probes
+  probes = length(minfi::featureNames(gset))
+  
+  #remove SNPs to proceed with the analysis and add sex column
+  if (dropSNPs)
+    gset = minfi::dropLociWithSnps(gset, maf = maf)
+  
+  #remove CpHs
+  if (dropCpHs)
+    gset = minfi::dropMethylationLoci(gset, dropRS = TRUE, dropCH = TRUE)
+  
+  #Add sex info
+  gset = minfi::addSex(gset)
+  
+  #remove chromosomes
+  if (dropSex) {
+    gset = gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in% c("chrX", "chrY"))], ]
+  }
+  
+  #Info CpGs removed
+  message(paste(
+    probes - length(minfi::featureNames(gset)),
+    "probes were filtered out."
+  ))
+  
   gset
 }
 
 # MODEL GENERATION
+
+generate_contrasts = function(voi){
+  
+  conts = utils::combn(levels(voi), 2)
+  
+  sprintf('%s-%s', conts[1,], conts[2,])
+}
+
 generate_design = function(voi, sample_name, covariables, interactions, sample_sheet){
   
   voi_factor = factor(make.names(sample_sheet[[voi]]))
