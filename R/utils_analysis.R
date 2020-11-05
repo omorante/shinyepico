@@ -335,14 +335,13 @@ find_dmrs = function(find_dif_cpgs,
   }
 }
 
-
+#we should rework this function
 add_dmrs_globaldifs = function(mcsea_result, cpg_globaldifs, regionsTypes, cores){
   
   force(mcsea_result)
   force(cpg_globaldifs)
   force(regionsTypes)
   force(cores)
-  
   
   doParallel::registerDoParallel(cores)
   
@@ -355,7 +354,7 @@ add_dmrs_globaldifs = function(mcsea_result, cpg_globaldifs, regionsTypes, cores
     cont = names(mcsea_result),
     .final = function(x)
       stats::setNames(x, names(mcsea_result))
-  ) %dopar% {
+  ) %do% {
     isolate({
       dif_target = paste("dif",
                          limma::strsplit2(cont, "-")[1],

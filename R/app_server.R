@@ -587,7 +587,7 @@ app_server = function(input, output, session) {
                  {
                    try({
                      fit = generate_limma_fit(Mvalues = rval_gset_getM(), design = rval_design(),
-                                        weighting = as.logical(input$select_limma_weights) )
+                                        weighting = as.logical(input$select_limma_weights))
                    })
                    
                    if (!exists("fit", inherits = FALSE)) {
@@ -1044,7 +1044,7 @@ app_server = function(input, output, session) {
   
   output$table_limma_difcpgs = renderTable(make_table(), digits = 0)
   
-  table_annotation = eventReactive(input$button_limma_heatmapcalc,{
+  table_annotation = eventReactive(list(input$button_limma_heatmapcalc,input$select_limma_anncontrast),{
     
     req(rval_filteredlist())
     
@@ -1066,7 +1066,7 @@ app_server = function(input, output, session) {
     rownames = FALSE,
     selection = "single",
     style = "bootstrap",
-    caption = "DMPs Annotation:",
+      caption = "DMPs Annotation:",
     options = list(
       dom = 'Blfrtip',
       lengthMenu = list(c(10,25,50,100,25000), c(10,25,50,100,25000)),
