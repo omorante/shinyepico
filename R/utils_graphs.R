@@ -651,6 +651,7 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
   
   list_heatdata = list()
   identifiers = c()
+  unique_id = c()
   
   for (contrast in contrasts) {
     for (i in seq_along(regions)) {
@@ -658,7 +659,7 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
         colMeans(bvalues[list(x), -c("cpg"), nomatch = NULL, mult = "all"])
       }, numeric(ncol(bvalues) - 1))))
       identifiers = c(identifiers, paste(contrast, regions[i], names(mcsea_result[[contrast]][[associations[i]]]), sep="|"))
-      
+      unique_id = c(unique_id, paste(regions[i], names(mcsea_result[[contrast]][[associations[i]]]), sep="|"))
     }
   }
   
@@ -667,7 +668,8 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
   heatdata = as.data.frame(heatdata)
   row.names(heatdata) = identifiers
   
-  heatdata
+  #removing duplicated positions when the same DMR is differential between more than 1 contrast.
+  heatdata[!duplicated(unique_id),] 
 }
 
 create_individual_boxplot = function(Bvalues, cpg, voi) {
