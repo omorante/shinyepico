@@ -246,7 +246,7 @@ create_filtered_beds = function(filtered_data, annotation, directory) {
 
 create_filtered_bed_clusters = function(dendro_data, annotation, directory) {
   annotation$cpg = row.names(annotation)
-  annotation = data.table::setDT(annotation)
+  annotation = data.table::as.data.table(annotation)
   
   #saving results by cluster
   lapply(unique(dendro_data), function(cluster) {

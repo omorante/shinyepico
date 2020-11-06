@@ -687,7 +687,7 @@ create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts, remov
   }
   
   bvalues$cpg = row.names(bvalues)
-  data.table::setDT(bvalues)
+  bvalues = data.table::as.data.table(bvalues)
   data.table::setkeyv(bvalues, "cpg")
   
   list_heatdata = list()
