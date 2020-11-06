@@ -867,29 +867,16 @@ app_server = function(input, output, session) {
   
   rval_filteredlist2heatmap = reactive(
     {
-      filtered_data = rval_filteredlist()[rval_contrasts() %in% input$select_limma_contrasts2plot] # filter contrasts2plot
-      dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
       
-      #If remove batch option is enabled, limma:removebatcheffects is applied using the design info data.
-      if (!input$select_limma_removebatch)
-      {
-        join_table = rval_gset_getBeta()[dif_cpgs,]
-      }
-      else
-      {
-        voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
-        covariables_design = as.matrix(rval_design()[, -seq_len(length(unique(rval_voi())))])
-        
-        join_table = as.data.frame(
-          limma::removeBatchEffect(
-            rval_gset_getBeta(),
-            design = voi_design,
-            covariates = covariables_design
-          )[dif_cpgs,]
-        )
-      }
-        
-      join_table$cpg = NULL
+      
+      join_table = create_dmps_heatdata(
+        rval_filteredlist(),
+        input$select_limma_contrasts2plot,
+        input$select_limma_removebatch,
+        rval_design(),
+        rval_voi(),
+        rval_gset_getBeta()
+      )
       
       #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_heatmap and disable download
       if (is.null(join_table) |
@@ -952,7 +939,8 @@ app_server = function(input, output, session) {
                                    !is.null(rval_filteredlist2heatmap()),
                                    "Differences are not in the plotting range (<12000, >1)"
                                  ),
-                                 need(input$select_limma_groups2plot != "", 
+                                 need(!is.null(input$select_limma_groups2plot) &
+                                        input$select_limma_groups2plot != "", 
                                       "Select at least one group to plot."))
                                  
                                  create_heatmap(
@@ -1261,30 +1249,15 @@ app_server = function(input, output, session) {
     req(input$select_dmrs_regions2plot)
     req(input$select_dmrs_contrasts2plot)
     
-    print(input$select_dmrs_regions2plot)
-    print(input$select_dmrs_contrasts2plot)
-    print(str(rval_filteredmcsea()))
-    
-    voi_design = as.matrix(rval_design()[, seq_len(length(unique(rval_voi())))])
-    covariables_design = as.matrix(rval_design()[,-seq_len(length(unique(rval_voi())))])
-
     #filtering contrasts
     join_table = create_dmrs_heatdata(
       mcsea_result = rval_filteredmcsea()[input$select_dmrs_contrasts2plot],
-      bvalues = if (!input$select_dmrs_removebatch) {
-        rval_gset_getBeta()
-      } else {
-        as.data.frame(
-          limma::removeBatchEffect(
-            rval_gset_getBeta(),
-            design = voi_design,
-            covariates = covariables_design
-          )
-        )
-      },
+      bvalues = rval_gset_getBeta(),
       regions = input$select_dmrs_regions2plot,
-      contrasts = input$select_dmrs_contrasts
-    )
+      contrasts = input$select_dmrs_contrasts,
+      removebatch = input$select_dmrs_removebatch,
+      design = rval_design(),
+      voi = rval_voi())
     
     #If the number of CpGs is not in the plotting range, return NULL to avoid errors in plot_dmrsheatmap
     if (is.null(join_table) |
@@ -1315,6 +1288,14 @@ app_server = function(input, output, session) {
   plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, ignoreNULL=FALSE, {
 
     validate(need(input$fileinput_input != "", "DMR calculation has not been performed or data has not been uploaded."))
+    
+    validate(
+      need(
+        !is.null(input$select_dmrs_groups2plot) &
+          input$select_dmrs_groups2plot != "",
+        "Select at least one group to plot."
+      )
+    )
     
     validate(need(
       !is.null(rval_filteredmcsea2heatmap()),

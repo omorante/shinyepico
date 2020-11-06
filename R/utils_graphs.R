@@ -639,11 +639,52 @@ cor3 = function(df1, df2, p.value = FALSE) {
   return(corrmat)
 }
 
-create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts) {
+create_dmps_heatdata = function(filtered_data, contrasts2plot, removebatch, design, voi, bvalues){
+  
+  filtered_data = filtered_data[names(filtered_data) %in% contrasts2plot] # filter contrasts2plot
+  dif_cpgs = unique(data.table::rbindlist(filtered_data)$cpg)
+  
+  #If remove batch option is enabled, limma:removebatcheffects is applied using the design info data.
+  if (!removebatch)
+  {
+    join_table = bvalues[dif_cpgs,]
+  }
+  else
+  {
+    voi_design = as.matrix(design[, seq_len(length(unique(voi)))])
+    covariables_design = as.matrix(design[, -seq_len(length(unique(voi)))])
+    
+    join_table = as.data.frame(
+      limma::removeBatchEffect(
+        bvalues,
+        design = voi_design,
+        covariates = covariables_design
+      )[dif_cpgs,]
+    )
+  }
+  
+  join_table$cpg = NULL #removing cpg column
+  
+  join_table
+}
+
+
+create_dmrs_heatdata = function(mcsea_result, bvalues, regions, contrasts, removebatch, design, voi) {
   
   mcsea_result = mcsea_result[contrasts]
   associations = paste0(regions, "_association")
   
+  voi_design = as.matrix(design[, seq_len(length(unique(voi)))])
+  covariables_design = as.matrix(design[, -seq_len(length(unique(voi)))])
+  
+  if (removebatch) {
+    bvalues = as.data.frame(
+      limma::removeBatchEffect(
+        bvalues,
+        design = voi_design,
+        covariates = covariables_design
+      ))
+  }
   
   bvalues$cpg = row.names(bvalues)
   data.table::setDT(bvalues)
