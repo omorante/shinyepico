@@ -236,7 +236,12 @@ app_ui <- function(request) {
           width = 3,
           h4("Linear Model Options"),
           
-          selectInput("select_limma_voi", "Select Variable of Interest", c()),
+          pickerInput(
+            inputId = "select_limma_voi",
+            label = "Select Variable of Interest",
+            choices = c(),
+            multiple = FALSE
+          ),
           
           pickerInput(
             inputId = "checkbox_limma_covariables",
