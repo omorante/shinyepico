@@ -1137,8 +1137,7 @@ app_server = function(input, output, session) {
         "You should select at least one DMR type."
       )
     )
-    print("calculating rval_mcsea")
-    
+
     updateSelectInput(session,
                       "select_dmrs_selcont",
                       choices = input$select_dmrs_contrasts)
@@ -1231,8 +1230,7 @@ app_server = function(input, output, session) {
   rval_filteredmcsea = eventReactive(list(input$button_dmrs_calculate, input$button_dmrs_heatmapcalc),{
     
     req(rval_mcsea())
-    print("calculating rval_filteredmcsea")
-    
+
     filter_dmrs(
       mcsea_list = rval_mcsea(),
       fdr = input$slider_dmrs_adjpvalue,
@@ -1277,8 +1275,7 @@ app_server = function(input, output, session) {
   observeEvent(rval_dmrs_ready2heatmap(),{
     if(rval_dmrs_ready2heatmap()){
       rval_dmrs_ready2heatmap(FALSE)
-      print("clicked")
-      
+
       shinyjs::click("button_dmrs_heatmapcalc")
     }
   })
@@ -1286,21 +1283,29 @@ app_server = function(input, output, session) {
   #Heatmap DMRs
   
   plot_dmrsheatmap = eventReactive(input$button_dmrs_heatmapcalc, ignoreNULL=FALSE, {
-
-    validate(need(input$fileinput_input != "", "DMR calculation has not been performed or data has not been uploaded."))
     
     validate(
+      need(
+        requireNamespace("mCSEA", quietly = T),
+        "mCSEA is not installed. You should install the package to calculate DMRs."
+      )
+    )
+    
+    validate(
+      need(
+        input$fileinput_input != "",
+        "DMR calculation has not been performed or data has not been uploaded."
+      ),
       need(
         !is.null(input$select_dmrs_groups2plot) &
           input$select_dmrs_groups2plot != "",
         "Select at least one group to plot."
+      ),
+      need(
+        !is.null(rval_filteredmcsea2heatmap()),
+        "Differences are not in the plotting range (<12000, >1)"
       )
     )
-    
-    validate(need(
-      !is.null(rval_filteredmcsea2heatmap()),
-      "Differences are not in the plotting range (<12000, >1)"
-    ))
     
     create_heatmap(
       rval_filteredmcsea2heatmap(),
@@ -1392,7 +1397,6 @@ app_server = function(input, output, session) {
   #DMRs count table
   
   make_table_dmrscount = eventReactive(rval_filteredmcsea(),{
-    print("calculating table")
     result = data.frame(
       contrast =  rep(
         names(rval_filteredmcsea()),
@@ -1583,9 +1587,6 @@ app_server = function(input, output, session) {
                      )
                      
                      annotation = as.data.table(annotation[,!(colnames(annotation) %in% c("chr", "pos", "genome"))])
-                     
-                     print(str(hg38))
-                     print(str(annotation))
                      
                      hg38 = as.data.frame(data.table::merge.data.table(
                        x = annotation,
@@ -1838,7 +1839,7 @@ app_server = function(input, output, session) {
                     
                      fileConn = file(file)
                      writeLines(c(
-                       paste("#This script was generated with shinyÉPICo", packageVersion("shinyepico"), "on", Sys.Date()),
+                       paste("#This script was generated with shiny\u00C9PICo", utils::packageVersion("shinyepico"), "on", Sys.Date()),
                        "library(shiny)",
                        "library(data.table)",
                        "library(rlang)",

@@ -1,13 +1,13 @@
-<<<<<<< HEAD
 .Rhistory
 .RData
 .Rproj.user
 inst/doc
 doc
 Meta
-=======
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
->>>>>>> 707ab8e45d439906f6ffada0effac4de890932c8
+.Rhistory
+shiny.epico.Rproj
+
