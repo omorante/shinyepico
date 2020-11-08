@@ -1267,10 +1267,10 @@ app_server <- function(input, output, session) {
 
     # filtering contrasts
     join_table <- create_dmrs_heatdata(
-      mcsea_result = rval_filteredmcsea()[input$select_dmrs_contrasts2plot],
+      mcsea_result = rval_filteredmcsea(),
       bvalues = rval_gset_getBeta(),
       regions = input$select_dmrs_regions2plot,
-      contrasts = input$select_dmrs_contrasts,
+      contrasts = input$select_dmrs_contrasts2plot,
       removebatch = input$select_dmrs_removebatch,
       design = rval_design(),
       voi = rval_voi()
