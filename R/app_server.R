@@ -1214,7 +1214,7 @@ app_server <- function(input, output, session) {
           dmrs_result <- add_dmrs_globaldifs(
             mcsea_result = dmrs_result,
             cpg_globaldifs = rval_globaldifs(),
-            regionsTypes = input$select_dmrs_regions,
+            regionsTypes = input$select_dmrs_regions
           )
         })
       }
