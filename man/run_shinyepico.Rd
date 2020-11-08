@@ -8,7 +8,8 @@ run_shinyepico(
   n_cores = parallel::detectCores()/2,
   max_upload_size = 2000,
   host = "127.0.0.1",
-  port = NULL
+  port = NULL,
+  seed = 123
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ run_shinyepico(
 \item{host}{IP used to deploy the server. By default, your local IP (127.0.0.1)}
 
 \item{port}{Port used to deploy the server.}
+
+\item{seed}{Seed used to make DMR calculations reproducible. Set it to NULL to not use a seed. DMR calculation is based on permutations, and is subject to uncertainty. Therefore, you can get slightly different results every time you use the application if you do not set a seed.}
 }
 \value{
 None
@@ -27,5 +30,9 @@ None
 ShinyÉPICo! Interactive minfi and limma pipeline for Illumina methylation arrays
 }
 \examples{
-{if(interactive()){run_shinyepico()}}
+{
+  if (interactive()) {
+    run_shinyepico()
+  }
+}
 }

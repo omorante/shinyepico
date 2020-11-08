@@ -138,7 +138,7 @@ One aspect to take into account is that shinyÉPICo autodetects the variable typ
 
 In the next table, you can see the sample sheet of the example dataset:
 
-```{r, echo=F, eval=F}
+```{r, echo=FALSE, eval=FALSE}
 knitr::kable(read.csv("../example_data/Sample_Sheet.csv"))
 ```
 
