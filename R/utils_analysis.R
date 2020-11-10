@@ -4,6 +4,7 @@ globalVariables("grupo")
 globalVariables("type")
 globalVariables("table")
 globalVariables("ranking")
+globalVariables("association")
 
 # READING AND NORMALIZATION FUNCTIONS
 read_idats <- function(targets, detectP) {
@@ -20,6 +21,7 @@ normalize_rgset <- function(rgset, normalization_mode, dropSNPs,
   # Normalizing data by the selected method
   if (normalization_mode == "Illumina") {
     gset <- minfi::mapToGenome(minfi::ratioConvert(
+      type = "Illumina",
       betaThreshold = 0.001,
       minfi::preprocessIllumina(rgset,
         bg.correct = TRUE,

@@ -4,7 +4,7 @@ Version: 0.99.0
 Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
 Description: ShinyÉPICo is a graphical pipeline to analyze Illumina DNA methylation arrays. It allows to calculate differentially methylated positions and differentially methylated regions in a user-friendly interface.
 License: AGPL-3 + file LICENSE
-Depends: R (>= 3.6.0)
+Depends: R (>= 4.0.0)
 Imports: 
     DT (>= 0.15.0),
     IlluminaHumanMethylation450kanno.ilmn12.hg19,

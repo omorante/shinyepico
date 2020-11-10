@@ -1178,8 +1178,8 @@ app_server <- function(input, output, session) {
       session,
       "select_dmrs_contrasts2plot",
       label = "Contrasts to plot",
-      choices = rval_contrasts(),
-      selected = rval_contrasts()
+      choices = input$select_dmrs_contrasts,
+      selected = input$select_dmrs_contrasts
     )
     updateSelectInput(
       session,
@@ -1338,7 +1338,7 @@ app_server <- function(input, output, session) {
     )
   })
 
-  rval_dendrogram_dmrs <- eventReactive(input$button_dmrs_heatmapcalc, {
+  rval_dendrogram_dmrs <- eventReactive(input$button_dmrs_heatmapcalc, ignoreNULL = FALSE, {
     if (input$select_dmrs_rowsidecolors) {
 
       # check if dendrogram cutting works (k should be minor than heatmap rows)
@@ -1625,33 +1625,27 @@ app_server <- function(input, output, session) {
   observe({
     if (input$select_export_analysistype == "DMPs") {
       if (rval_analysis_finished() &
-        input$select_export_bedtype == "by heatmap cluster" &
-        (!rval_filteredlist2heatmap_valid() |
-          is.null(rval_dendrogram()))) {
+          rval_filteredlist2heatmap_valid() &
+          !is.null(rval_dendrogram())) {
+        shinyjs::enable("download_export_filteredbeds")
+      } else if (rval_analysis_finished() &
+                 input$select_export_bedtype == "by contrasts") {
+        shinyjs::enable("download_export_filteredbeds")
+      }
+      else{
         shinyjs::disable("download_export_filteredbeds")
-      } else if (rval_analysis_finished() &
-        rval_filteredlist2heatmap_valid() &
-        !is.null(rval_dendrogram())) {
-        shinyjs::enable("download_export_filteredbeds")
-      } else if (rval_analysis_finished() &
-        input$select_export_bedtype == "by contrasts") {
-        shinyjs::enable("download_export_filteredbeds")
       }
     }
-    else {
+    else if (input$select_export_analysistype == "DMRs") {
       if (rval_dmrs_finished() &
-        input$select_export_bedtype == "by heatmap cluster" &
-        (!rval_filteredmcsea2heatmap_valid() |
-          is.null(rval_dendrogram_dmrs()))) {
-        shinyjs::disable("download_export_filteredbeds")
-      }
-      else if (rval_dmrs_finished() &
-        rval_filteredmcsea2heatmap_valid() &
-        !is.null(rval_dendrogram_dmrs())) {
+          rval_filteredmcsea2heatmap_valid() &
+          !is.null(rval_dendrogram_dmrs())) {
         shinyjs::enable("download_export_filteredbeds")
       } else if (rval_dmrs_finished() &
-        input$select_export_bedtype == "by contrasts") {
+                 input$select_export_bedtype == "by contrasts") {
         shinyjs::enable("download_export_filteredbeds")
+      } else{
+        shinyjs::disable("download_export_filteredbeds")
       }
     }
   })
@@ -1943,7 +1937,7 @@ app_server <- function(input, output, session) {
               paste("\n\n\n########################", "PIPELINE", "########################"),
               "#Data reading",
               "sheet = minfi::read.metharray.sheet(path)",
-              "sheet_target = sheet[,sheet[[sample_name_var]] %in% selected_samples]",
+              "sheet_target = sheet[sheet[[sample_name_var]] %in% selected_samples,]",
               "voi = factor(make.names(sheet_target[[voi_var]]))",
               "rgset = read_idats(sheet_target, detectP)\n",
               "#Normalization",
