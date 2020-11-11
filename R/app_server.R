@@ -1945,7 +1945,7 @@ app_server <- function(input, output, session) {
               "contrasts <- generate_contrasts(voi)",
               "Mvalues <- minfi::getM(gset)",
               "Bvalues <- as.data.frame(minfi::getBeta(gset))",
-              "colnames(Bvalues) <- clean_sheet_target[[sample_name_var]]",
+              "colnames(Bvalues) <- sheet_target[[sample_name_var]]",
               "fit <- generate_limma_fit(Mvalues, design, weighting)\n",
               "#DMPs calculation",
               "global_difs <- calculate_global_difs(Bvalues, voi, contrasts, cores)",
