@@ -1096,7 +1096,7 @@ app_server <- function(input, output, session) {
       updatePickerInput(
         session,
         "select_dmrs_platform",
-        selected = if (nrow(rval_finddifcpgs()[[1]]) > 450001) {
+        selected = if (nrow(rval_finddifcpgs()[[1]]) > 500000) {
           "EPIC"
         } else {
           "450k"
@@ -1917,6 +1917,7 @@ app_server <- function(input, output, session) {
               paste("\n\n\n########################", "FUNCTIONS", "########################"),
               paste("read_idats <-", rlang::expr_text(read_idats)),
               paste("normalize_rgset <-", rlang::expr_text(normalize_rgset)),
+              paste("generate_clean_samplesheet <-", rlang::expr_text(generate_clean_samplesheet)),
               paste("generate_contrasts <-", rlang::expr_text(generate_contrasts)),
               paste("generate_design <-", rlang::expr_text(generate_design)),
               paste("generate_limma_fit <-", rlang::expr_text(generate_limma_fit)),

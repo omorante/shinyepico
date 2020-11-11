@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.1.24)  11 NOV 2020 11:28
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.1.24)  11 NOV 2020 16:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**/tmp/Rtmpnugfdi/preview-48c13e84c7b4.dir/shiny_epico.tex
-(/tmp/Rtmpnugfdi/preview-48c13e84c7b4.dir/shiny_epico.tex
+**shiny_epico.tex
+(./shiny_epico.tex
 LaTeX2e <2017-04-15>
 Babel <3.18> and hyphenation patterns for 84 language(s) loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
@@ -1274,163 +1274,394 @@ LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <10> not available
 
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4] [5] [6]
-<./densityraw.png, id=135, 527.0892pt x 338.7054pt>
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4] [5]
+Overfull \hbox (310.07092pt too wide) in paragraph at lines 317--334
+[][] 
+ []
+
+[6]
+<./densityraw.png, id=136, 527.0892pt x 338.7054pt>
 File: ./densityraw.png Graphic file (type png)
 <use ./densityraw.png>
-Package pdftex.def Info: ./densityraw.png  used on input line 389.
+Package pdftex.def Info: ./densityraw.png  used on input line 402.
 (pdftex.def)             Requested size: 341.44577pt x 219.41168pt.
 LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <8> not available
-(Font)              Font shape `T1/phv/b/n' tried instead on input line 390.
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 403.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 390--390
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 403--403
 [] [] 
  []
 
-<./densityquantile.png, id=137, 527.0892pt x 338.7054pt>
+[7]
+<./densityquantile.png, id=145, 527.0892pt x 338.7054pt>
 File: ./densityquantile.png Graphic file (type png)
 <use ./densityquantile.png>
-Package pdftex.def Info: ./densityquantile.png  used on input line 397.
+Package pdftex.def Info: ./densityquantile.png  used on input line 410.
 (pdftex.def)             Requested size: 341.44577pt x 219.41168pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 398--398
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 411--411
 [] [] 
  []
 
-[7 <./densityraw.png>]
-<./boxplotraw.png, id=149, 685.56125pt x 401.5pt>
+<./boxplotraw.png, id=146, 685.56125pt x 401.5pt>
 File: ./boxplotraw.png Graphic file (type png)
 <use ./boxplotraw.png>
-Package pdftex.def Info: ./boxplotraw.png  used on input line 407.
-(pdftex.def)             Requested size: 345.7088pt x 202.46489pt.
-<./boxplotquantile.png, id=150, 685.56125pt x 401.5pt>
-File: ./boxplotquantile.png Graphic file (type png)
-<use ./boxplotquantile.png>
-Package pdftex.def Info: ./boxplotquantile.png  used on input line 410.
-(pdftex.def)             Requested size: 345.7088pt x 202.46489pt.
+Package pdftex.def Info: ./boxplotraw.png  used on input line 423.
+(pdftex.def)             Requested size: 307.2967pt x 179.96878pt.
 
-Overfull \hbox (7.22102pt too wide) in paragraph at lines 409--411
-[]\T1/lmss/bx/n/10 Quantile: [] 
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 424--424
+[] [] 
  []
 
-[8 <./densityquantile.png> <./boxplotraw.png>]
+[8 <./densityraw.png> <./densityquantile.png>]
+<./boxplotquantile.png, id=157, 685.56125pt x 401.5pt>
+File: ./boxplotquantile.png Graphic file (type png)
+<use ./boxplotquantile.png>
+Package pdftex.def Info: ./boxplotquantile.png  used on input line 431.
+(pdftex.def)             Requested size: 307.2967pt x 179.96878pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 432--432
+[] [] 
+ []
+
 <./heatmapsnps.png, id=158, 527.571pt x 339.1872pt>
 File: ./heatmapsnps.png Graphic file (type png)
 <use ./heatmapsnps.png>
-Package pdftex.def Info: ./heatmapsnps.png  used on input line 419.
+Package pdftex.def Info: ./heatmapsnps.png  used on input line 442.
 (pdftex.def)             Requested size: 341.43587pt x 219.51675pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 420--420
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 443--443
 [] [] 
  []
 
-[9 <./boxplotquantile.png> <./heatmapsnps.png>]
-<./sexplot.png, id=171, 545.8794pt x 338.7054pt>
+[9 <./boxplotraw.png> <./boxplotquantile.png>]
+<./sexplot.png, id=172, 545.8794pt x 338.7054pt>
 File: ./sexplot.png Graphic file (type png)
 <use ./sexplot.png>
-Package pdftex.def Info: ./sexplot.png  used on input line 429.
+Package pdftex.def Info: ./sexplot.png  used on input line 452.
 (pdftex.def)             Requested size: 384.11203pt x 238.33253pt.
 
-Underfull \hbox (badness 1558) in paragraph at lines 428--430
+Underfull \hbox (badness 1558) in paragraph at lines 451--453
 []\T1/lmss/m/n/10 (+20) In this ex-am-ple, the three donors are males, as can b
 e ob-served in the chart.
  []
 
-<./pcaplot.png, id=172, 536.7252pt x 301.125pt>
+[10 <./heatmapsnps.png> <./sexplot.png>]
+<./pcaplot.png, id=182, 536.7252pt x 301.125pt>
 File: ./pcaplot.png Graphic file (type png)
 <use ./pcaplot.png>
-Package pdftex.def Info: ./pcaplot.png  used on input line 446.
+Package pdftex.def Info: ./pcaplot.png  used on input line 469.
 (pdftex.def)             Requested size: 341.43095pt x 191.55685pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 447--447
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 470--470
 [] [] 
  []
 
-[10 <./sexplot.png>]
-<./corrplot.png, id=180, 527.0892pt x 338.7054pt>
+<./corrplot.png, id=183, 527.0892pt x 338.7054pt>
 File: ./corrplot.png Graphic file (type png)
 <use ./corrplot.png>
-Package pdftex.def Info: ./corrplot.png  used on input line 466.
+Package pdftex.def Info: ./corrplot.png  used on input line 489.
 (pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
-<./corrplotpvalue.png, id=181, 527.0892pt x 338.7054pt>
+<./corrplotpvalue.png, id=184, 527.0892pt x 338.7054pt>
 File: ./corrplotpvalue.png Graphic file (type png)
 <use ./corrplotpvalue.png>
-Package pdftex.def Info: ./corrplotpvalue.png  used on input line 469.
-(pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
-[11 <./pcaplot.png> <./corrplot.png>] [12 <./corrplotpvalue.png>]
-<./plotSA.png, id=200, 692.5875pt x 401.5pt>
+Package pdftex.def Info: ./corrplotpvalue.png  used on input line 494.
+(pdftex.def)             Requested size: 341.44577pt x 219.41168pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 495--495
+[] [] 
+ []
+
+[11 <./pcaplot.png>] [12 <./corrplot.png> <./corrplotpvalue.png>]
+<./plotSA.png, id=202, 692.5875pt x 401.5pt>
 File: ./plotSA.png Graphic file (type png)
 <use ./plotSA.png>
-Package pdftex.def Info: ./plotSA.png  used on input line 505.
+Package pdftex.def Info: ./plotSA.png  used on input line 531.
 (pdftex.def)             Requested size: 341.44217pt x 197.93748pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 506--506
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 532--532
 [] [] 
  []
 
-[13 <./plotSA.png>] [14]
-<./dmp_heatmap.png, id=216, 602.25pt x 602.25pt>
+[13] [14 <./plotSA.png>]
+<./dmp_heatmap.png, id=218, 602.25pt x 602.25pt>
 File: ./dmp_heatmap.png Graphic file (type png)
 <use ./dmp_heatmap.png>
-Package pdftex.def Info: ./dmp_heatmap.png  used on input line 624.
+Package pdftex.def Info: ./dmp_heatmap.png  used on input line 648.
 (pdftex.def)             Requested size: 341.44815pt x 341.44815pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 625--625
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 649--649
 [] [] 
  []
 
-<./A2M_cpg.png, id=217, 685.56125pt x 401.5pt>
+[15]
+<./A2M_cpg.png, id=223, 685.56125pt x 401.5pt>
 File: ./A2M_cpg.png Graphic file (type png)
 <use ./A2M_cpg.png>
-Package pdftex.def Info: ./A2M_cpg.png  used on input line 635.
+Package pdftex.def Info: ./A2M_cpg.png  used on input line 659.
 (pdftex.def)             Requested size: 341.4408pt x 199.96532pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 636--636
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 660--660
 [] [] 
  []
 
-[15] [16 <./dmp_heatmap.png> <./A2M_cpg.png>] [17] [18]
-<./dmr_heatmap.png, id=245, 602.25pt x 602.25pt>
+[16 <./dmp_heatmap.png>] [17 <./A2M_cpg.png>]
+<./dmr_heatmap.png, id=242, 602.25pt x 602.25pt>
 File: ./dmr_heatmap.png Graphic file (type png)
 <use ./dmr_heatmap.png>
-Package pdftex.def Info: ./dmr_heatmap.png  used on input line 751.
+Package pdftex.def Info: ./dmr_heatmap.png  used on input line 720.
 (pdftex.def)             Requested size: 384.12457pt x 384.12457pt.
-<./A2M_dmr.png, id=246, 685.56125pt x 401.5pt>
+[18]
+<./A2M_dmr.png, id=250, 685.56125pt x 401.5pt>
 File: ./A2M_dmr.png Graphic file (type png)
 <use ./A2M_dmr.png>
-Package pdftex.def Info: ./A2M_dmr.png  used on input line 755.
-(pdftex.def)             Requested size: 384.1209pt x 224.96098pt.
-[19 <./dmr_heatmap.png>] [20 <./A2M_dmr.png>] [21]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 837.
+Package pdftex.def Info: ./A2M_dmr.png  used on input line 727.
+(pdftex.def)             Requested size: 341.4408pt x 199.96532pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 728--728
+[] [] 
+ []
+
+[19 <./dmr_heatmap.png>] [20 <./A2M_dmr.png>]
+Overfull \hbox (289.64178pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [1] LC_CTYPE=es_ES.UTF-8       LC_NUMERIC=C               
+LC_TIME=en_AU.UTF-8        LC_COLLATE=es_ES.UTF-8     LC_MONETARY=en_AU.UTF-8[]
+ 
+ []
+
+
+Overfull \hbox (246.40591pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [6] LC_MESSAGES=es_ES.UTF-8    LC_PAPER=en_AU.UTF-8       
+LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C[] 
+ []
+
+
+Overfull \hbox (59.05048pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [1] stats4    parallel  stats     graphics  grDevices utils
+     datasets  methods   base[] 
+ []
+
+
+Overfull \hbox (97.48236pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [3] Homo.sapiens_1.3.1                                  Tx
+Db.Hsapiens.UCSC.hg19.knownGene_3.2.2[] 
+ []
+
+
+Overfull \hbox (15.8146pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [7] OrganismDbi_1.33.0                                  Ge
+nomicFeatures_1.43.1[] 
+ []
+
+
+Overfull \hbox (111.89432pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [11] IlluminaHumanMethylationEPICanno.ilm10b4.hg19_0.6.0 Il
+luminaHumanMethylationEPICmanifest_0.3.0[] 
+ []
+
+
+Overfull \hbox (39.83453pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [19] XVector_0.31.0                                      Su
+mmarizedExperiment_1.21.0[] 
+ []
+
+
+Overfull \hbox (6.20663pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [21] Biobase_2.51.0                                      Ma
+trixGenerics_1.3.0[] 
+ []
+
+
+Overfull \hbox (6.20663pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [23] matrixStats_0.57.0                                  Ge
+nomicRanges_1.43.0[] 
+ []
+
+
+Overfull \hbox (1.40265pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [27] S4Vectors_0.29.3                                    Bi
+ocGenerics_0.37.0[] 
+ []
+
+
+Overfull \hbox (256.01389pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>   [1] BiocFileCache_1.15.0      plyr_1.8.6                l
+azyeval_0.2.2            splines_4.1.0             BiocParallel_1.25.1[] 
+ []
+
+
+Overfull \hbox (227.18997pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>   [6] ggplot2_3.3.2             digest_0.6.27             h
+tmltools_0.5.0           magrittr_1.5              memoise_1.1.0[] 
+ []
+
+
+Overfull \hbox (236.79794pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [11] limma_3.47.0              readr_1.4.0               a
+nnotate_1.69.0           askpass_1.1               siggenes_1.65.0[] 
+ []
+
+
+Overfull \hbox (207.97403pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [16] prettyunits_1.1.1         colorspace_1.4-1          b
+lob_1.2.1                rappdirs_0.3.1            xfun_0.19[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [21] dplyr_1.0.2               crayon_1.3.4              R
+Curl_1.98-1.2            jsonlite_1.7.1            graph_1.69.0[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [26] genefilter_1.73.0         GEOquery_2.59.0           s
+urvival_3.2-7            glue_1.4.2                gtable_0.3.0[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [31] zlibbioc_1.37.0           DelayedArray_0.17.0       R
+hdf5lib_1.13.0           HDF5Array_1.19.0          scales_1.1.1[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [36] DBI_1.1.0                 rngtools_1.5              R
+cpp_1.0.5                viridisLite_0.3.0         xtable_1.8-4[] 
+ []
+
+
+Overfull \hbox (198.36606pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [41] progress_1.2.2            bit_4.0.4                 m
+clust_5.4.6              preprocessCore_1.53.0     DT_0.16[] 
+ []
+
+
+Overfull \hbox (236.79794pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [46] htmlwidgets_1.5.2         httr_1.4.2                R
+ColorBrewer_1.1-2        ellipsis_0.3.1            pkgconfig_2.0.3[] 
+ []
+
+
+Overfull \hbox (217.582pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [51] reshape_0.8.8             XML_3.99-0.5              d
+bplyr_2.0.0              tidyselect_1.1.0          rlang_0.4.8[] 
+ []
+
+
+Overfull \hbox (227.18997pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [56] later_1.1.0.1             munsell_0.5.0             t
+ools_4.1.0               generics_0.1.0            RSQLite_2.2.1[] 
+ []
+
+
+Overfull \hbox (212.77802pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [61] evaluate_0.14             stringr_1.4.0             f
+astmap_1.0.1             yaml_2.2.1                knitr_1.30[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [66] bit64_4.0.5               shinycssloaders_1.0.0     z
+ip_2.1.1                 beanplot_1.2              scrime_1.3.5[] 
+ []
+
+
+Overfull \hbox (275.22983pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [71] purrr_0.3.4               RBGL_1.67.0               n
+lme_3.1-150              doRNG_1.8.2               sparseMatrixStats_1.3.0[] 
+ []
+
+
+Overfull \hbox (231.99396pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [76] mime_0.9                  nor1mix_1.3-0             x
+ml2_1.3.2                biomaRt_2.47.0            compiler_4.1.0[] 
+ []
+
+
+Overfull \hbox (227.18997pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [81] rstudioapi_0.11           plotly_4.9.2.1            c
+url_4.3                  tibble_3.0.4              stringi_1.5.3[] 
+ []
+
+
+Overfull \hbox (217.582pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [86] lattice_0.20-41           Matrix_1.2-18             s
+hinyjs_2.0.0             multtest_2.47.0           vctrs_0.3.4[] 
+ []
+
+
+Overfull \hbox (246.40591pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [91] pillar_1.4.6              lifecycle_0.2.0           r
+hdf5filters_1.3.0        BiocManager_1.30.10       data.table_1.13.2[] 
+ []
+
+
+Overfull \hbox (227.18997pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #>  [96] bitops_1.0-6              httpuv_1.5.4              r
+tracklayer_1.51.0        R6_2.5.0                  bookdown_0.21[] 
+ []
+
+
+Overfull \hbox (222.38599pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [101] promises_1.1.1            codetools_0.2-18          M
+ASS_7.3-53               assertthat_0.2.1          rhdf5_2.35.0[] 
+ []
+
+
+Overfull \hbox (270.42584pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [106] openssl_1.4.3             shinyWidgets_0.5.4        G
+enomicAlignments_1.27.1  Rsamtools_2.7.0           GenomeInfoDbData_1.2.4[] 
+ []
+
+
+Overfull \hbox (212.77802pt too wide) in paragraph at lines 837--837
+[]\T1/fvm/m/n/10 #> [111] hms_0.5.3                 quadprog_1.5-8            g
+rid_4.1.0                tidyr_1.1.2               base64_2.0[] 
+ []
+
+[21]
+Overfull \hbox (0.46219pt too wide) in paragraph at lines 844--846
+\T1/lmss/m/n/10 (-20) comprehensive Bioconductor package for the analysis of In
+finium DNA methylation microarrays.''
+ []
+
 [22]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 837.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 869.
+[23]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 869.
 (./shiny_epico.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 837.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 837.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 869.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 869.
 Package rerunfilecheck Info: File `shiny_epico.out' has not changed.
-(rerunfilecheck)             Checksum: 27EFDFD63E07E41434124044D59C5FBD;1100.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 837.
+(rerunfilecheck)             Checksum: 0A6AD24C612D334724DD20906129C0D0;1112.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 869.
  ) 
 Here is how much of TeX's memory you used:
- 14179 strings out of 492982
- 216896 string characters out of 6134896
- 345238 words of memory out of 5000000
- 17237 multiletter control sequences out of 15000+600000
- 89706 words of font info for 119 fonts, out of 8000000 for 9000
+ 14205 strings out of 492982
+ 217263 string characters out of 6134896
+ 360240 words of memory out of 5000000
+ 17236 multiletter control sequences out of 15000+600000
+ 90588 words of font info for 126 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 43i,14n,45p,1149b,478s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dv
-ips/lm/lm-ts1.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</
-usr/share/texlive/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/share/tex
-mf/fonts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/type1/public/lm/lms
-s8.pfb></usr/share/texmf/fonts/type1/public/lm/lmssbo10.pfb></usr/share/texmf/f
-onts/type1/public/lm/lmssbx10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsso
-10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr
-/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
-Output written on shiny_epico.pdf (22 pages, 1033829 bytes).
+ 43i,14n,45p,1108b,486s stack positions out of 5000i,500n,10000p,200000b,80000s
+pdfTeX warning (dest): name{ux5cux23ux5cux2520Differentiallyux5cux2520Methyla
+tedux5cux2520Positionsux5cux2520ux28DMPux29ux5cux2520calculation} has been refe
+renced but does not exist, replaced by a fixed one
+
+{/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dvip
+s/lm/lm-ts1.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</us
+r/share/texlive/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/share/texmf
+/fonts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/type1/public/lm/lmss8
+.pfb></usr/share/texmf/fonts/type1/public/lm/lmssbo10.pfb></usr/share/texmf/fon
+ts/type1/public/lm/lmssbx10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsso10
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/s
+hare/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
+Output written on shiny_epico.pdf (23 pages, 1038101 bytes).
 PDF statistics:
- 335 PDF objects out of 1000 (max. 8388607)
- 258 compressed objects within 3 object streams
- 92 named destinations out of 1000 (max. 500000)
+ 364 PDF objects out of 1000 (max. 8388607)
+ 286 compressed objects within 3 object streams
+ 106 named destinations out of 1000 (max. 500000)
  10423 words of extra memory for PDF output out of 12000 (max. 10000000)
 

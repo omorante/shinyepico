@@ -768,7 +768,7 @@ app_ui <- function(request) {
       downloadButton("download_export_filteredbeds"),
       p(
         "Press to download the created filtered lists of contrasts, or heatmap clusters,
-        with the chosen criteria, in bed format (hg19 genome)."
+        with the chosen criteria, in BED format."
       ),
       h3("Download Workflow Report"),
       downloadButton("download_export_markdown"),
@@ -801,7 +801,7 @@ app_ui <- function(request) {
         width = 150
       ),
       h1("shiny\u00C9PICo"),
-      h3("1.1.0"),
+      h3(as.character(utils::packageVersion("shinyepico"))),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target = "_blank")
