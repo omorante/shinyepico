@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.1.24)  10 NOV 2020 18:44
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.1.24)  11 NOV 2020 11:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**/tmp/Rtmpnugfdi/preview-48c176f307b0.dir/shiny_epico.tex
-(/tmp/Rtmpnugfdi/preview-48c176f307b0.dir/shiny_epico.tex
+**/tmp/Rtmpnugfdi/preview-48c13e84c7b4.dir/shiny_epico.tex
+(/tmp/Rtmpnugfdi/preview-48c13e84c7b4.dir/shiny_epico.tex
 LaTeX2e <2017-04-15>
 Babel <3.18> and hyphenation patterns for 84 language(s) loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
@@ -1275,127 +1275,162 @@ LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <10> not available
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4] [5] [6]
-<./densityraw.png, id=134, 527.0892pt x 338.7054pt>
+<./densityraw.png, id=135, 527.0892pt x 338.7054pt>
 File: ./densityraw.png Graphic file (type png)
 <use ./densityraw.png>
-Package pdftex.def Info: ./densityraw.png  used on input line 385.
-(pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
-<./densityquantile.png, id=136, 527.0892pt x 338.7054pt>
+Package pdftex.def Info: ./densityraw.png  used on input line 389.
+(pdftex.def)             Requested size: 341.44577pt x 219.41168pt.
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <8> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 390.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 390--390
+[] [] 
+ []
+
+<./densityquantile.png, id=137, 527.0892pt x 338.7054pt>
 File: ./densityquantile.png Graphic file (type png)
 <use ./densityquantile.png>
-Package pdftex.def Info: ./densityquantile.png  used on input line 389.
-(pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
+Package pdftex.def Info: ./densityquantile.png  used on input line 397.
+(pdftex.def)             Requested size: 341.44577pt x 219.41168pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 398--398
+[] [] 
+ []
+
 [7 <./densityraw.png>]
-<./boxplotraw.png, id=145, 685.56125pt x 401.5pt>
+<./boxplotraw.png, id=149, 685.56125pt x 401.5pt>
 File: ./boxplotraw.png Graphic file (type png)
 <use ./boxplotraw.png>
-Package pdftex.def Info: ./boxplotraw.png  used on input line 397.
+Package pdftex.def Info: ./boxplotraw.png  used on input line 407.
 (pdftex.def)             Requested size: 345.7088pt x 202.46489pt.
-<./boxplotquantile.png, id=146, 685.56125pt x 401.5pt>
+<./boxplotquantile.png, id=150, 685.56125pt x 401.5pt>
 File: ./boxplotquantile.png Graphic file (type png)
 <use ./boxplotquantile.png>
-Package pdftex.def Info: ./boxplotquantile.png  used on input line 400.
+Package pdftex.def Info: ./boxplotquantile.png  used on input line 410.
 (pdftex.def)             Requested size: 345.7088pt x 202.46489pt.
 
-Overfull \hbox (7.22102pt too wide) in paragraph at lines 399--401
+Overfull \hbox (7.22102pt too wide) in paragraph at lines 409--411
 []\T1/lmss/bx/n/10 Quantile: [] 
  []
 
 [8 <./densityquantile.png> <./boxplotraw.png>]
-<./heatmapsnps.png, id=155, 527.571pt x 339.1872pt>
+<./heatmapsnps.png, id=158, 527.571pt x 339.1872pt>
 File: ./heatmapsnps.png Graphic file (type png)
 <use ./heatmapsnps.png>
-Package pdftex.def Info: ./heatmapsnps.png  used on input line 407.
-(pdftex.def)             Requested size: 384.11737pt x 246.95764pt.
+Package pdftex.def Info: ./heatmapsnps.png  used on input line 419.
+(pdftex.def)             Requested size: 341.43587pt x 219.51675pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 420--420
+[] [] 
+ []
+
 [9 <./boxplotquantile.png> <./heatmapsnps.png>]
-<./sexplot.png, id=167, 545.8794pt x 338.7054pt>
+<./sexplot.png, id=171, 545.8794pt x 338.7054pt>
 File: ./sexplot.png Graphic file (type png)
 <use ./sexplot.png>
-Package pdftex.def Info: ./sexplot.png  used on input line 414.
+Package pdftex.def Info: ./sexplot.png  used on input line 429.
 (pdftex.def)             Requested size: 384.11203pt x 238.33253pt.
-<./pcaplot.png, id=168, 536.7252pt x 301.125pt>
+
+Underfull \hbox (badness 1558) in paragraph at lines 428--430
+[]\T1/lmss/m/n/10 (+20) In this ex-am-ple, the three donors are males, as can b
+e ob-served in the chart.
+ []
+
+<./pcaplot.png, id=172, 536.7252pt x 301.125pt>
 File: ./pcaplot.png Graphic file (type png)
 <use ./pcaplot.png>
-Package pdftex.def Info: ./pcaplot.png  used on input line 429.
-(pdftex.def)             Requested size: 384.10777pt x 215.5003pt.
+Package pdftex.def Info: ./pcaplot.png  used on input line 446.
+(pdftex.def)             Requested size: 341.43095pt x 191.55685pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 447--447
+[] [] 
+ []
+
 [10 <./sexplot.png>]
-<./corrplot.png, id=176, 527.0892pt x 338.7054pt>
+<./corrplot.png, id=180, 527.0892pt x 338.7054pt>
 File: ./corrplot.png Graphic file (type png)
 <use ./corrplot.png>
-Package pdftex.def Info: ./corrplot.png  used on input line 447.
+Package pdftex.def Info: ./corrplot.png  used on input line 466.
 (pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
-[11 <./pcaplot.png>]
-<./corrplotpvalue.png, id=182, 527.0892pt x 338.7054pt>
+<./corrplotpvalue.png, id=181, 527.0892pt x 338.7054pt>
 File: ./corrplotpvalue.png Graphic file (type png)
 <use ./corrplotpvalue.png>
-Package pdftex.def Info: ./corrplotpvalue.png  used on input line 450.
+Package pdftex.def Info: ./corrplotpvalue.png  used on input line 469.
 (pdftex.def)             Requested size: 384.12851pt x 246.83943pt.
-[12 <./corrplot.png> <./corrplotpvalue.png>] [13] [14]
-<./dmp_heatmap.png, id=208, 602.25pt x 602.25pt>
+[11 <./pcaplot.png> <./corrplot.png>] [12 <./corrplotpvalue.png>]
+<./plotSA.png, id=200, 692.5875pt x 401.5pt>
+File: ./plotSA.png Graphic file (type png)
+<use ./plotSA.png>
+Package pdftex.def Info: ./plotSA.png  used on input line 505.
+(pdftex.def)             Requested size: 341.44217pt x 197.93748pt.
+
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 506--506
+[] [] 
+ []
+
+[13 <./plotSA.png>] [14]
+<./dmp_heatmap.png, id=216, 602.25pt x 602.25pt>
 File: ./dmp_heatmap.png Graphic file (type png)
 <use ./dmp_heatmap.png>
-Package pdftex.def Info: ./dmp_heatmap.png  used on input line 569.
+Package pdftex.def Info: ./dmp_heatmap.png  used on input line 624.
 (pdftex.def)             Requested size: 341.44815pt x 341.44815pt.
-LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <8> not available
-(Font)              Font shape `T1/phv/b/n' tried instead on input line 570.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 570--570
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 625--625
 [] [] 
  []
 
-<./A2M_cpg.png, id=209, 685.56125pt x 401.5pt>
+<./A2M_cpg.png, id=217, 685.56125pt x 401.5pt>
 File: ./A2M_cpg.png Graphic file (type png)
 <use ./A2M_cpg.png>
-Package pdftex.def Info: ./A2M_cpg.png  used on input line 580.
+Package pdftex.def Info: ./A2M_cpg.png  used on input line 635.
 (pdftex.def)             Requested size: 341.4408pt x 199.96532pt.
 
-Overfull \hbox (42.67912pt too wide) in paragraph at lines 581--581
+Overfull \hbox (42.67912pt too wide) in paragraph at lines 636--636
 [] [] 
  []
 
-[15 <./dmp_heatmap.png>] [16 <./A2M_cpg.png>] [17]
-<./dmr_heatmap.png, id=233, 602.25pt x 602.25pt>
+[15] [16 <./dmp_heatmap.png> <./A2M_cpg.png>] [17] [18]
+<./dmr_heatmap.png, id=245, 602.25pt x 602.25pt>
 File: ./dmr_heatmap.png Graphic file (type png)
 <use ./dmr_heatmap.png>
-Package pdftex.def Info: ./dmr_heatmap.png  used on input line 696.
+Package pdftex.def Info: ./dmr_heatmap.png  used on input line 751.
 (pdftex.def)             Requested size: 384.12457pt x 384.12457pt.
-[18]
-<./A2M_dmr.png, id=238, 685.56125pt x 401.5pt>
+<./A2M_dmr.png, id=246, 685.56125pt x 401.5pt>
 File: ./A2M_dmr.png Graphic file (type png)
 <use ./A2M_dmr.png>
-Package pdftex.def Info: ./A2M_dmr.png  used on input line 700.
+Package pdftex.def Info: ./A2M_dmr.png  used on input line 755.
 (pdftex.def)             Requested size: 384.1209pt x 224.96098pt.
-[19 <./dmr_heatmap.png>] [20 <./A2M_dmr.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 760.
-[21]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 760.
+[19 <./dmr_heatmap.png>] [20 <./A2M_dmr.png>] [21]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 837.
+[22]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 837.
 (./shiny_epico.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 760.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 760.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 837.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 837.
 Package rerunfilecheck Info: File `shiny_epico.out' has not changed.
 (rerunfilecheck)             Checksum: 27EFDFD63E07E41434124044D59C5FBD;1100.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 760.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 837.
  ) 
 Here is how much of TeX's memory you used:
- 14161 strings out of 492982
- 216644 string characters out of 6134896
- 344238 words of memory out of 5000000
- 17233 multiletter control sequences out of 15000+600000
- 89267 words of font info for 115 fonts, out of 8000000 for 9000
+ 14179 strings out of 492982
+ 216896 string characters out of 6134896
+ 345238 words of memory out of 5000000
+ 17237 multiletter control sequences out of 15000+600000
+ 89706 words of font info for 119 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  43i,14n,45p,1149b,478s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/share/texlive/texmf-dis
-t/fonts/enc/dvips/base/8r.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}</
+{/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dv
+ips/lm/lm-ts1.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</
 usr/share/texlive/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/share/tex
 mf/fonts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/type1/public/lm/lms
 s8.pfb></usr/share/texmf/fonts/type1/public/lm/lmssbo10.pfb></usr/share/texmf/f
-onts/type1/public/lm/lmssbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/ur
-w/helvetic/uhvb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/u
-hvr8a.pfb>
-Output written on shiny_epico.pdf (21 pages, 964722 bytes).
+onts/type1/public/lm/lmssbx10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsso
+10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr
+/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
+Output written on shiny_epico.pdf (22 pages, 1033829 bytes).
 PDF statistics:
- 318 PDF objects out of 1000 (max. 8388607)
- 245 compressed objects within 3 object streams
- 86 named destinations out of 1000 (max. 500000)
- 10418 words of extra memory for PDF output out of 12000 (max. 10000000)
+ 335 PDF objects out of 1000 (max. 8388607)
+ 258 compressed objects within 3 object streams
+ 92 named destinations out of 1000 (max. 500000)
+ 10423 words of extra memory for PDF output out of 12000 (max. 10000000)
 

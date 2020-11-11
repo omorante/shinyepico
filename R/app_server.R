@@ -83,28 +83,9 @@ app_server <- function(input, output, session) {
 
 
   rval_clean_sheet_target <- eventReactive(rval_gset(), {
-    suppressWarnings({
-      clean_sample_sheet <- as.data.frame(lapply(minfi::pData(rval_gset()), function(x) {
-        if (sum(is.na(as.numeric(x))) < length(x) * 0.75 & stats::sd(x, na.rm = TRUE) > 0) {
-          return(as.numeric(x))
-        } # if NAs produced with as.numeric are less than 75%, and SD is greater than 0 we consider the variable numeric
-        else if (length(unique(x)) > 1 &
-          length(unique(x)) < length(x)) {
-          return(as.factor(make.names(x))) # returning syntactically valid names
-        } # if the variable is a character, it should have unique values more than 1 and less than total
-        else {
-          return(rep(NA, length(x)))
-        } # if the requeriments are not fullfilled, we discard the variable
-      }),
-      stringsAsFactors = FALSE
-      )
-    })
-
-    clean_sample_sheet[["Slide"]] <- as.factor(clean_sample_sheet[["Slide"]]) # adding Slide as factor
-    clean_sample_sheet[[input$select_input_donorvar]] <- as.factor(clean_sample_sheet[[input$select_input_donorvar]]) # adding donorvar as factor
-    clean_sample_sheet <- clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] # cleaning all NA variables
-
-    clean_sample_sheet
+    generate_clean_samplesheet(target_samplesheet = minfi::pData(rval_gset()),
+                                                                 donorvar = input$select_input_donorvar)
+                               
   })
 
 
@@ -363,7 +344,9 @@ app_server <- function(input, output, session) {
   })
 
   rval_gset_getM <- reactive({
-    minfi::getM(rval_gset())
+    mvalues <- minfi::getM(rval_gset())
+    colnames(mvalues) <- input$selected_samples
+    mvalues
   })
   ##############
 
@@ -1511,14 +1494,26 @@ app_server <- function(input, output, session) {
           bvalues <- rval_gset_getBeta()
           mvalues <- rval_gset_getM()
           global_difs <- rval_globaldifs()
+          
+          if (rval_dmrs_finished()) {
+            dmr_results <- rval_mcsea()
+          }
+          else{
+            dmr_results <- NULL
+          }
 
           objetos <- list(
-            RGSet = "rgset", GenomicRatioSet = "gset", fit = "fit", design = "design",
-            ebayestables = "ebayes_tables", Bvalues = "bvalues", Mvalues = "mvalues", global_difs = "global_difs"
+            RGSet = "rgset",
+            GenomicRatioSet = "gset",
+            fit = "fit",
+            design = "design",
+            ebayestables = "ebayes_tables",
+            Bvalues = "bvalues",
+            Mvalues = "mvalues",
+            global_difs = "global_difs",
+            dmr_results = "dmr_results"
           )
-
-          # if(rval_dmrs_finished()) mcsea_result = rval_mcsea()
-
+          
           setProgress(value = 2, message = "Saving RObjects...")
 
           for (id in input$select_export_objects2download) {
@@ -1861,101 +1856,103 @@ app_server <- function(input, output, session) {
               "library(data.table)",
               "library(rlang)",
               paste("########################", "PARAMETERS", "########################"),
-              "path = \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
+              "path <- \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
               "#Performance",
-              paste("cores =", n_cores),
+              paste("cores <-", n_cores),
               "#Data reading",
-              paste("sample_name_var =", rlang::expr_text(input$select_input_samplenamevar)),
-              paste("selected_samples =", rlang::expr_text(input$selected_samples)),
-              paste("detectP =", 0.01),
+              paste("sample_name_var <-", rlang::expr_text(input$select_input_samplenamevar)),
+              paste("selected_samples <-", rlang::expr_text(input$selected_samples)),
+              paste("donorvar <-", rlang::expr_text(input$select_input_donorvar)),
+              paste("detectP <-", 0.01),
               "#Normalization",
-              paste("normalization_mode =", rlang::expr_text(input$select_minfi_norm)),
-              paste("dropSNPs =", rlang::expr_text(input$select_minfi_dropsnps)),
-              paste("maf =", rlang::expr_text(input$slider_minfi_maf)),
-              paste("dropCpHs =", rlang::expr_text(input$select_minfi_dropcphs)),
-              paste("dropSex =", rlang::expr_text(input$select_minfi_chromosomes)),
+              paste("normalization_mode <-", rlang::expr_text(input$select_minfi_norm)),
+              paste("dropSNPs <-", rlang::expr_text(input$select_minfi_dropsnps)),
+              paste("maf <-", rlang::expr_text(input$slider_minfi_maf)),
+              paste("dropCpHs <-", rlang::expr_text(input$select_minfi_dropcphs)),
+              paste("dropSex <-", rlang::expr_text(input$select_minfi_chromosomes)),
               "#Linear model and contrasts",
-              paste("voi_var =", rlang::expr_text(input$select_limma_voi)),
-              paste("covariables =", rlang::expr_text(input$checkbox_limma_covariables)),
-              paste("interactions =", rlang::expr_text(input$checkbox_limma_interactions)),
-              paste("weighting =", rlang::expr_text(input$select_limma_weights)),
-              paste("trend =", rlang::expr_text(input$select_limma_trend)),
-              paste("robust =", rlang::expr_text(input$select_limma_robust)),
+              paste("voi_var <-", rlang::expr_text(input$select_limma_voi)),
+              paste("covariables <-", rlang::expr_text(input$checkbox_limma_covariables)),
+              paste("interactions <-", rlang::expr_text(input$checkbox_limma_interactions)),
+              paste("weighting <-", rlang::expr_text(input$select_limma_weights)),
+              paste("trend <-", rlang::expr_text(input$select_limma_trend)),
+              paste("robust <-", rlang::expr_text(input$select_limma_robust)),
               "#DMP filtering",
-              paste("deltaB =", rlang::expr_text(input$slider_limma_deltab)),
-              paste("adjp_max =", rlang::expr_text(input$slider_limma_adjpvalue)),
-              paste("p.value =", rlang::expr_text(input$slider_limma_pvalue)),
+              paste("deltaB <-", rlang::expr_text(input$slider_limma_deltab)),
+              paste("adjp_max <-", rlang::expr_text(input$slider_limma_adjpvalue)),
+              paste("p.value <-", rlang::expr_text(input$slider_limma_pvalue)),
               "#DMP Heatmap",
-              paste("removebatch =", rlang::expr_text(input$select_limma_removebatch)),
-              paste("contrasts2plot =", rlang::expr_text(input$select_limma_contrasts2plot)),
-              paste("groups2plot =", rlang::expr_text(input$select_limma_groups2plot)),
-              paste("colv =", rlang::expr_text(input$select_limma_colv)),
-              paste("colsidecolors =", rlang::expr_text(input$select_limma_colsidecolors)),
-              paste("clusteralg =", rlang::expr_text(input$select_limma_clusteralg)),
-              paste("distance =", rlang::expr_text(input$select_limma_clusterdist)),
-              paste("scale =", rlang::expr_text(input$select_limma_scale)),
-              paste("rowsidecolors =", rlang::expr_text(input$select_limma_rowsidecolors)),
-              paste("k_number =", rlang::expr_text(input$select_limma_knumber)),
+              paste("removebatch <-", rlang::expr_text(input$select_limma_removebatch)),
+              paste("contrasts2plot <-", rlang::expr_text(input$select_limma_contrasts2plot)),
+              paste("groups2plot <-", rlang::expr_text(input$select_limma_groups2plot)),
+              paste("colv <-", rlang::expr_text(input$select_limma_colv)),
+              paste("colsidecolors <-", rlang::expr_text(input$select_limma_colsidecolors)),
+              paste("clusteralg <-", rlang::expr_text(input$select_limma_clusteralg)),
+              paste("distance <-", rlang::expr_text(input$select_limma_clusterdist)),
+              paste("scale <-", rlang::expr_text(input$select_limma_scale)),
+              paste("rowsidecolors <-", rlang::expr_text(input$select_limma_rowsidecolors)),
+              paste("k_number <-", rlang::expr_text(input$select_limma_knumber)),
               "#DMR calculation",
-              paste("mincpgs_dmrs =", rlang::expr_text(input$slider_dmrs_cpgs)),
-              paste("platform =", rlang::expr_text(input$select_dmrs_platform)),
-              paste("permutations_dmrs =", rlang::expr_text(input$slider_dmrs_permutations)),
-              paste("regions_dmrs =", rlang::expr_text(input$select_dmrs_regions)),
-              paste("contrasts_dmrs =", rlang::expr_text(input$select_dmrs_contrasts)),
+              paste("mincpgs_dmrs <-", rlang::expr_text(input$slider_dmrs_cpgs)),
+              paste("platform <-", rlang::expr_text(input$select_dmrs_platform)),
+              paste("permutations_dmrs <-", rlang::expr_text(input$slider_dmrs_permutations)),
+              paste("regions_dmrs <-", rlang::expr_text(input$select_dmrs_regions)),
+              paste("contrasts_dmrs <-", rlang::expr_text(input$select_dmrs_contrasts)),
               "#DMR filtering",
-              paste("fdr_dmrs =", rlang::expr_text(input$slider_dmrs_adjpvalue)),
-              paste("pval_dmrs =", rlang::expr_text(input$slider_dmrs_pvalue)),
-              paste("dif_beta_dmrs =", rlang::expr_text(input$slider_dmrs_deltab)),
+              paste("fdr_dmrs <-", rlang::expr_text(input$slider_dmrs_adjpvalue)),
+              paste("pval_dmrs <-", rlang::expr_text(input$slider_dmrs_pvalue)),
+              paste("dif_beta_dmrs <-", rlang::expr_text(input$slider_dmrs_deltab)),
               "#DMR heatmap",
-              paste("dmrs_removebatch =", rlang::expr_text(input$select_dmrs_removebatch)),
-              paste("dmrs_contrasts2plot =", rlang::expr_text(input$select_dmrs_contrasts2plot)),
-              paste("dmrs_groups2plot =", rlang::expr_text(input$select_dmrs_groups2plot)),
-              paste("dmrs_regions2plot =", rlang::expr_text(input$select_dmrs_regions2plot)),
-              paste("dmrs_colv =", rlang::expr_text(input$select_dmrs_colv)),
-              paste("dmrs_colsidecolors =", rlang::expr_text(input$select_dmrs_colsidecolors)),
-              paste("dmrs_clusteralg =", rlang::expr_text(input$select_dmrs_clusteralg)),
-              paste("dmrs_distance =", rlang::expr_text(input$select_dmrs_clusterdist)),
-              paste("dmrs_scale =", rlang::expr_text(input$select_dmrs_scale)),
-              paste("dmrs_rowsidecolors =", rlang::expr_text(input$select_dmrs_rowsidecolors)),
-              paste("dmrs_k_number =", rlang::expr_text(input$select_dmrs_knumber)),
+              paste("dmrs_removebatch <-", rlang::expr_text(input$select_dmrs_removebatch)),
+              paste("dmrs_contrasts2plot <-", rlang::expr_text(input$select_dmrs_contrasts2plot)),
+              paste("dmrs_groups2plot <-", rlang::expr_text(input$select_dmrs_groups2plot)),
+              paste("dmrs_regions2plot <-", rlang::expr_text(input$select_dmrs_regions2plot)),
+              paste("dmrs_colv <-", rlang::expr_text(input$select_dmrs_colv)),
+              paste("dmrs_colsidecolors <-", rlang::expr_text(input$select_dmrs_colsidecolors)),
+              paste("dmrs_clusteralg <-", rlang::expr_text(input$select_dmrs_clusteralg)),
+              paste("dmrs_distance <-", rlang::expr_text(input$select_dmrs_clusterdist)),
+              paste("dmrs_scale <-", rlang::expr_text(input$select_dmrs_scale)),
+              paste("dmrs_rowsidecolors <-", rlang::expr_text(input$select_dmrs_rowsidecolors)),
+              paste("dmrs_k_number <-", rlang::expr_text(input$select_dmrs_knumber)),
               paste("\n\n\n########################", "FUNCTIONS", "########################"),
-              paste("read_idats =", rlang::expr_text(read_idats)),
-              paste("normalize_rgset =", rlang::expr_text(normalize_rgset)),
-              paste("generate_contrasts =", rlang::expr_text(generate_contrasts)),
-              paste("generate_design =", rlang::expr_text(generate_design)),
-              paste("generate_limma_fit =", rlang::expr_text(generate_limma_fit)),
-              paste("calculate_global_difs =", rlang::expr_text(calculate_global_difs)),
-              paste("find_dif_cpgs =", rlang::expr_text(find_dif_cpgs)),
-              paste("create_filtered_list =", rlang::expr_text(create_filtered_list)),
-              paste("find_dmrs =", rlang::expr_text(find_dmrs)),
-              paste("add_dmrs_globaldifs =", rlang::expr_text(add_dmrs_globaldifs)),
-              paste("filter_dmrs =", rlang::expr_text(filter_dmrs)),
-              paste("create_dmps_heatdata =", rlang::expr_text(create_dmps_heatdata)),
-              paste("create_dmrs_heatdata =", rlang::expr_text(create_dmrs_heatdata)),
-              paste("create_dendrogram =", rlang::expr_text(create_dendrogram)),
-              paste("create_heatmap =", rlang::expr_text(create_heatmap)),
+              paste("read_idats <-", rlang::expr_text(read_idats)),
+              paste("normalize_rgset <-", rlang::expr_text(normalize_rgset)),
+              paste("generate_contrasts <-", rlang::expr_text(generate_contrasts)),
+              paste("generate_design <-", rlang::expr_text(generate_design)),
+              paste("generate_limma_fit <-", rlang::expr_text(generate_limma_fit)),
+              paste("calculate_global_difs <-", rlang::expr_text(calculate_global_difs)),
+              paste("find_dif_cpgs <-", rlang::expr_text(find_dif_cpgs)),
+              paste("create_filtered_list <-", rlang::expr_text(create_filtered_list)),
+              paste("find_dmrs <-", rlang::expr_text(find_dmrs)),
+              paste("add_dmrs_globaldifs <-", rlang::expr_text(add_dmrs_globaldifs)),
+              paste("filter_dmrs <-", rlang::expr_text(filter_dmrs)),
+              paste("create_dmps_heatdata <-", rlang::expr_text(create_dmps_heatdata)),
+              paste("create_dmrs_heatdata <-", rlang::expr_text(create_dmrs_heatdata)),
+              paste("create_dendrogram <-", rlang::expr_text(create_dendrogram)),
+              paste("create_heatmap <-", rlang::expr_text(create_heatmap)),
               paste("\n\n\n########################", "PIPELINE", "########################"),
               "#Data reading",
-              "sheet = minfi::read.metharray.sheet(path)",
-              "sheet_target = sheet[sheet[[sample_name_var]] %in% selected_samples,]",
-              "voi = factor(make.names(sheet_target[[voi_var]]))",
-              "rgset = read_idats(sheet_target, detectP)\n",
+              "sheet <- minfi::read.metharray.sheet(path)",
+              "sheet_target <- sheet[sheet[[sample_name_var]] %in% selected_samples,]",
+              "voi <- factor(make.names(sheet_target[[voi_var]]))",
+              "rgset <- read_idats(sheet_target, detectP)\n",
               "#Normalization",
-              "gset = normalize_rgset(rgset, normalization_mode, dropSNPs, maf, dropCpHs, dropSex) #normalization\n",
+              "gset <- normalize_rgset(rgset, normalization_mode, dropSNPs, maf, dropCpHs, dropSex)",
+              "clean_sheet_target <- generate_clean_samplesheet(minfi::pData(gset), donorvar)\n",
               "#Limma model",
-              "design = generate_design(voi_var, sample_name_var, covariables, interactions, sheet_target)",
-              "contrasts = generate_contrasts(voi)",
-              "Mvalues = minfi::getM(gset)",
-              "Bvalues = as.data.frame(minfi::getBeta(gset))",
-              "colnames(Bvalues) = sheet_target[[sample_name_var]]",
-              "fit = generate_limma_fit(Mvalues, design, weighting)\n",
+              "design <- generate_design(voi_var, sample_name_var, covariables, interactions, clean_sheet_target)",
+              "contrasts <- generate_contrasts(voi)",
+              "Mvalues <- minfi::getM(gset)",
+              "Bvalues <- as.data.frame(minfi::getBeta(gset))",
+              "colnames(Bvalues) <- clean_sheet_target[[sample_name_var]]",
+              "fit <- generate_limma_fit(Mvalues, design, weighting)\n",
               "#DMPs calculation",
-              "global_difs = calculate_global_difs(Bvalues, voi, contrasts, cores)",
-              "ebayes_tables = find_dif_cpgs(design, fit, contrasts, trend, robust, cores)",
-              "filtered_list = create_filtered_list(ebayes_tables, global_difs, deltaB, adjp_max, p.value, cores)\n",
+              "global_difs <- calculate_global_difs(Bvalues, voi, contrasts, cores)",
+              "ebayes_tables <- find_dif_cpgs(design, fit, contrasts, trend, robust, cores)",
+              "filtered_list <- create_filtered_list(ebayes_tables, global_difs, deltaB, adjp_max, p.value, cores)\n",
               "#DMPs heatmap",
-              "dmps_heatdata = create_dmps_heatdata(filtered_list, contrasts2plot, removebatch, design, voi, Bvalues)",
-              "if(rowsidecolors) {dendrogram = create_dendrogram(
+              "dmps_heatdata <- create_dmps_heatdata(filtered_list, contrasts2plot, removebatch, design, voi, Bvalues)",
+              "if(rowsidecolors) {dendrogram <- create_dendrogram(
                        plot_data = dmps_heatdata, 
                        factorgroups = factor(voi[voi %in% groups2plot], levels = groups2plot),
                        groups2plot = voi %in% groups2plot,
@@ -1963,7 +1960,7 @@ app_server <- function(input, output, session) {
                        distance = distance,
                        scale_selection = scale,
                        k_number = k_number)} else{
-                       dendrogram = NULL
+                       dendrogram <- NULL
                        }",
               "create_heatmap(
                        plot_data = dmps_heatdata, 
@@ -1978,12 +1975,12 @@ app_server <- function(input, output, session) {
                        static = TRUE
                        )\n",
               "#DMRs calculation",
-              "mcsea_list = find_dmrs(ebayes_tables, mincpgs_dmrs, platform, voi, regions_dmrs, contrasts_dmrs, Bvalues, permutations_dmrs, cores)",
-              "mcsea_list = add_dmrs_globaldifs(mcsea_list, global_difs, regions_dmrs)",
-              "mcsea_filtered = filter_dmrs(mcsea_list, fdr_dmrs,pval_dmrs,dif_beta_dmrs,regions_dmrs,contrasts_dmrs)\n",
+              "mcsea_list <- find_dmrs(ebayes_tables, mincpgs_dmrs, platform, voi, regions_dmrs, contrasts_dmrs, Bvalues, permutations_dmrs, cores)",
+              "mcsea_list <- add_dmrs_globaldifs(mcsea_list, global_difs, regions_dmrs)",
+              "mcsea_filtered <- filter_dmrs(mcsea_list, fdr_dmrs,pval_dmrs,dif_beta_dmrs,regions_dmrs,contrasts_dmrs)\n",
               "#DMRs heatmap",
-              "dmrs_heatdata = create_dmrs_heatdata(mcsea_filtered, Bvalues, dmrs_regions2plot, dmrs_contrasts2plot, dmrs_removebatch, design, voi)",
-              "if(dmrs_rowsidecolors) {dmrs_dendrogram = create_dendrogram(
+              "dmrs_heatdata <- create_dmrs_heatdata(mcsea_filtered, Bvalues, dmrs_regions2plot, dmrs_contrasts2plot, dmrs_removebatch, design, voi)",
+              "if(dmrs_rowsidecolors) {dmrs_dendrogram <- create_dendrogram(
                        plot_data = dmrs_heatdata, 
                        factorgroups = factor(voi[voi %in% dmrs_groups2plot], levels = dmrs_groups2plot),
                        groups2plot = voi %in% dmrs_groups2plot,
@@ -1991,7 +1988,7 @@ app_server <- function(input, output, session) {
                        distance = dmrs_distance,
                        scale_selection = dmrs_scale,
                        k_number = dmrs_k_number)} else{
-                       dmrs_dendrogram = NULL
+                       dmrs_dendrogram <- NULL
                        }",
               "create_heatmap(
                        plot_data = dmrs_heatdata, 

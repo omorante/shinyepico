@@ -719,7 +719,7 @@ app_ui <- function(request) {
       pickerInput(
         inputId = "select_export_objects2download",
         label = "Selected objects",
-        choices = c("RGSet", "GenomicRatioSet", "fit", "design", "ebayestables", "Bvalues", "Mvalues", "global_difs"),
+        choices = c("RGSet", "GenomicRatioSet", "fit", "design", "ebayestables", "Bvalues", "Mvalues", "global_difs", "dmr_results"),
         selected = c("RGSet", "GenomicRatioSet", "fit", "design", "ebayestables", "Bvalues", "Mvalues", "global_difs"),
         options = list(
           `actions-box` = TRUE,

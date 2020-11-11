@@ -16,6 +16,41 @@ read_idats <- function(targets, detectP) {
   RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < detectP), ]
 }
 
+generate_clean_samplesheet <- function(target_samplesheet, donorvar){
+  
+  suppressWarnings({
+    clean_sample_sheet <- as.data.frame(lapply(target_samplesheet, function(x) {
+      if (sum(is.na(as.numeric(x))) < length(x) * 0.75 & stats::sd(x, na.rm = TRUE) > 0) {
+        return(as.numeric(x))
+      } # if NAs produced with as.numeric are less than 75%, and SD is greater than 0 we consider the variable numeric
+      else if (length(unique(x)) > 1 &
+               length(unique(x)) < length(x)) {
+        return(as.factor(make.names(x))) # returning syntactically valid names
+      } # if the variable is a character, it should have unique values more than 1 and less than total
+      else {
+        return(rep(NA, length(x)))
+      } # if the requirements are not fulfilled, we discard the variable
+    }),
+    stringsAsFactors = FALSE
+    )
+  })
+  
+  # adding Slide as factor
+  clean_sample_sheet[["Slide"]] <- as.factor(clean_sample_sheet[["Slide"]])
+  
+  # adding donorvar as factor
+  clean_sample_sheet[[donorvar]] <- as.factor(clean_sample_sheet[[donorvar]]) 
+  
+  #Removing xMed and yMed variables
+  clean_sample_sheet[["xMed"]] <- NULL
+  clean_sample_sheet[["yMed"]] <- NULL
+  
+  clean_sample_sheet <- clean_sample_sheet[, colSums(is.na(clean_sample_sheet)) < nrow(clean_sample_sheet)] # cleaning all NA variables
+  
+  clean_sample_sheet
+  
+}
+
 normalize_rgset <- function(rgset, normalization_mode, dropSNPs,
                             maf, dropCpHs, dropSex) {
   # Normalizing data by the selected method
