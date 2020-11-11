@@ -125,5 +125,5 @@ health/disease, treatment/control, age, sex, hybridization day, etc.).
 Usually, iDATs and sample sheet are obtained meeting these features by
 default, and no additional work is required.
 
-You can find examples of both the sample sheet and the final .zip to
-upload to the application in the example\_data folder.
+You can find an example of the final .zip to
+upload to the application in [the example\_data folder of the dev branch](https://github.com/omorante/shinyepico/blob/dev/example_data/Li_NAR_2019.zip).
