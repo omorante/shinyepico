@@ -11,5 +11,5 @@
 }
 
 .onUnload <- function(libname, pkgname) {
-   shiny::removeResourcePath("images")
+  shiny::removeResourcePath("images")
 }
