@@ -35,6 +35,22 @@ knitr::opts_chunk$set(
 div, code {overflow-x:auto !important}
 ```
 
+```{r, echo=FALSE, message=FALSE}
+library(shinyepico)
+library(minfi)
+library(limma)
+library(mCSEA)
+library(dplyr)
+library(tidyr)
+library(statmod)
+library(foreach)
+library(gplots)
+library(heatmaply)
+library(zip)
+library(shinyjs)
+library(shinythemes)
+```
+
 # Introduction: What is ShinyÉPICo for?
 
 shinyÉPICo is a web application based on [shiny]((https://github.com/rstudio/shiny)) and created to accelerate and to make easier the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. For this purpose, shinyÉPICo uses, among others, the widely used minfi [@Aryee2014] and limma [@Ritchie2015] packages for the array normalization and the differentially methylated positions (DMPs) calculation, respectively. Moreover, shinyÉPICo also allows calculation of differentially methylated regions calculation (DMRs), based on the mCSEA package [@Martorell-Marugan2019].
