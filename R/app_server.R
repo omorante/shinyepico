@@ -84,8 +84,8 @@ app_server <- function(input, output, session) {
 
   rval_clean_sheet_target <- eventReactive(rval_gset(), {
     generate_clean_samplesheet(target_samplesheet = minfi::pData(rval_gset()),
-                                                                 donorvar = input$select_input_donorvar)
-                               
+      donorvar = input$select_input_donorvar)
+
   })
 
 
@@ -1494,11 +1494,11 @@ app_server <- function(input, output, session) {
           bvalues <- rval_gset_getBeta()
           mvalues <- rval_gset_getM()
           global_difs <- rval_globaldifs()
-          
+
           if (rval_dmrs_finished()) {
             dmr_results <- rval_mcsea()
           }
-          else{
+          else {
             dmr_results <- NULL
           }
 
@@ -1513,7 +1513,7 @@ app_server <- function(input, output, session) {
             global_difs = "global_difs",
             dmr_results = "dmr_results"
           )
-          
+
           setProgress(value = 2, message = "Saving RObjects...")
 
           for (id in input$select_export_objects2download) {
@@ -1620,26 +1620,26 @@ app_server <- function(input, output, session) {
   observe({
     if (input$select_export_analysistype == "DMPs") {
       if (rval_analysis_finished() &
-          rval_filteredlist2heatmap_valid() &
-          !is.null(rval_dendrogram())) {
+        rval_filteredlist2heatmap_valid() &
+        !is.null(rval_dendrogram())) {
         shinyjs::enable("download_export_filteredbeds")
       } else if (rval_analysis_finished() &
-                 input$select_export_bedtype == "by contrasts") {
+        input$select_export_bedtype == "by contrasts") {
         shinyjs::enable("download_export_filteredbeds")
       }
-      else{
+      else {
         shinyjs::disable("download_export_filteredbeds")
       }
     }
     else if (input$select_export_analysistype == "DMRs") {
       if (rval_dmrs_finished() &
-          rval_filteredmcsea2heatmap_valid() &
-          !is.null(rval_dendrogram_dmrs())) {
+        rval_filteredmcsea2heatmap_valid() &
+        !is.null(rval_dendrogram_dmrs())) {
         shinyjs::enable("download_export_filteredbeds")
       } else if (rval_dmrs_finished() &
-                 input$select_export_bedtype == "by contrasts") {
+        input$select_export_bedtype == "by contrasts") {
         shinyjs::enable("download_export_filteredbeds")
-      } else{
+      } else {
         shinyjs::disable("download_export_filteredbeds")
       }
     }
