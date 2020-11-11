@@ -14,9 +14,9 @@ author:
     email:
       - eballestar@carrerasresearch.org
 output:
+  BiocStyle::pdf_document: default
   BiocStyle::html_document:
     toc_float: true
-  BiocStyle::pdf_document: default
 vignette: >
   %\VignetteIndexEntry{shinyepico}
   %\VignetteEncoding{UTF-8}
@@ -156,7 +156,7 @@ In the next sections, we will discuss the different steps, the options, and char
 
 In the following example, iDATs from a study using Illumina EPIC DNA methylation arrays will be used to illustrate the steps [@Li2020]. Although shinyÉPICo can be used with multiple groups and large cohorts, and in that case, iteration and automation are more useful, for this manual we have decided to use a minimal example that can be easily reproduced on almost any computer. Specifically, monocyte and monocyte-derived macrophages (produced with M-CSF) has been selected, only 6 samples (3 monocyte samples and 3 macrophage samples from 3 different healthy donors).
 
-The .zip file of this dataset can be found in the  [Github repository](https://github.com/omorante/shinyepico/blob/master/example_data/Li_NAR_2019.zip)
+The .zip file of this dataset can be found in the  [Github repository](https://github.com/omorante/shinyepico/blob/dev/example_data/Li_NAR_2019.zip)
 
 ## Data Import and Sample Selection
 
