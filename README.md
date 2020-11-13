@@ -126,4 +126,4 @@ Usually, iDATs and sample sheet are obtained meeting these features by
 default, and no additional work is required.
 
 You can find an example of the final .zip to
-upload to the application in [the example\_data folder of the dev branch](https://github.com/omorante/shinyepico/blob/dev/example_data/Li_NAR_2019.zip).
+upload to the application in [the example\_data folder of the doc branch](https://github.com/omorante/shinyepico/blob/doc/example_data/Li_NAR_2019.zip).
