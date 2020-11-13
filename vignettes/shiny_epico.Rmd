@@ -35,21 +35,6 @@ knitr::opts_chunk$set(
 div, code {overflow-x:auto !important}
 ```
 
-```{r, echo=FALSE, message=FALSE}
-library(shinyepico)
-library(minfi)
-library(limma)
-library(mCSEA)
-library(dplyr)
-library(tidyr)
-library(statmod)
-library(foreach)
-library(gplots)
-library(heatmaply)
-library(zip)
-library(shinyjs)
-library(shinythemes)
-```
 
 # Introduction: What is ShinyÉPICo for?
 
