@@ -812,7 +812,16 @@ app_ui <- function(request) {
       ),
       p(
         "shiny\u00C9PICo is a graphical interface based on Shiny. It is intended for importing and normalizing Illumina DNA methylation arrays (450k or EPIC), exploring DNA methylation data and also for following a statistical analysis to
-        detect differentially methylated CpGs, and plotting them in useful and customable heatmaps."
+        detect differentially methylated CpGs and differentially methylated regions, and plotting them in useful and customable heatmaps."
+      ),
+      p(
+        "The",
+        tags$a(
+          href = "https://github.com/omorante/shinyepico/blob/doc/doc/shiny_epico.pdf",
+          "shiny\u00C9PICo user's guide",
+          target = "_blank"
+        ),
+        "provides details of the steps and options to select during the workflow."
       ),
       p(
         "For suggestions or bug reports, please use the",
