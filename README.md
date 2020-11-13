@@ -30,7 +30,7 @@ ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package
 dependencies are automatically tried to install when you install the
 package.
 
-R 3.6 or higher with updated packages is required.
+**R 4.0** or higher with updated packages is required.
 
 Since the application allows to follow interactively all the analysis
 process, many objects have to be stored in RAM memory. Therefore, the
@@ -42,9 +42,7 @@ higher.
 
 # Installation and use
 
-To install shinyÉPICo, you have to use the GitHub repository. It is easy
-to install it directly in R using the install\_github function from the
-remotes package.
+We have started the process to upload our package to the Bioconductor repository. Meanwhile, to install shinyÉPICo, you have to use the GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
 
 ``` r
 install.packages("remotes")
@@ -127,3 +125,9 @@ default, and no additional work is required.
 
 You can find an example of the final .zip to
 upload to the application in [the example\_data folder of the doc branch](https://github.com/omorante/shinyepico/blob/doc/example_data/Li_NAR_2019.zip).
+
+# Package documentation
+
+The package includes a detailed vignette explaining the steps and options of the application. In addition, you can access the updated version of the vignette in pdf at this [link](https://github.com/omorante/shinyepico/blob/doc/doc/shiny_epico.pdf) 
+
+
