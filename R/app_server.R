@@ -195,13 +195,8 @@ app_server <- function(input, output, session) {
       {
         try({
           RGSet <- read_idats(
-            targets = rval_sheet_target(),
-            detectP = 0.01
-          )
+            targets = rval_sheet_target())
         })
-
-
-
 
         if (!exists("RGSet", inherits = FALSE)) {
           showModal(
@@ -285,7 +280,7 @@ app_server <- function(input, output, session) {
         try({
           gset <- normalize_rgset(
             rgset = rval_rgset(), normalization_mode = input$select_minfi_norm,
-            dropSNPs = input$select_minfi_dropsnps, maf = input$slider_minfi_maf,
+            detectP = 0.01, dropSNPs = input$select_minfi_dropsnps, maf = input$slider_minfi_maf,
             dropCpHs = input$select_minfi_dropcphs, dropSex = input$select_minfi_chromosomes
           )
         })
@@ -1936,9 +1931,9 @@ app_server <- function(input, output, session) {
               "sheet <- minfi::read.metharray.sheet(path)",
               "sheet_target <- sheet[sheet[[sample_name_var]] %in% selected_samples,]",
               "voi <- factor(make.names(sheet_target[[voi_var]]))",
-              "rgset <- read_idats(sheet_target, detectP)\n",
+              "rgset <- read_idats(sheet_target)\n",
               "#Normalization",
-              "gset <- normalize_rgset(rgset, normalization_mode, dropSNPs, maf, dropCpHs, dropSex)",
+              "gset <- normalize_rgset(rgset, normalization_mode, detectP, dropSNPs, maf, dropCpHs, dropSex)",
               "clean_sheet_target <- generate_clean_samplesheet(minfi::pData(gset), donorvar)\n",
               "#Limma model",
               "design <- generate_design(voi_var, sample_name_var, covariables, interactions, clean_sheet_target)",

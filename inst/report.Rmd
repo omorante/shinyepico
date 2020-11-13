@@ -144,10 +144,11 @@ cat(params$rval_sheet[[params$name_var]][!(params$rval_sheet[[params$name_var]] 
 
 ## Bad probes filtering
 
-Before Minfi Normalization, probes in RGChannelSet are filtered using a standard p.value threshold (0.01):
+After Minfi Normalization, 'bad' probes in RGChannelSet are calculated using a standard p.value threshold (0.01). They will be filtered in the normalized data:
 
 ```{r bad_probes, eval=FALSE, echo=TRUE}
-RGSet [(rowMeans(as.matrix(minfi::detectionP(RGSet))) < 0.01),]
+  detP <- minfi::detectionP(rgset)
+  bad_pos <- row.names(as.data.frame(detP))[rowMeans(detP) > detectP]
 ```
 
 <br>

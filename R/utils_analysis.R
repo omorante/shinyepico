@@ -7,13 +7,11 @@ globalVariables("ranking")
 globalVariables("association")
 
 # READING AND NORMALIZATION FUNCTIONS
-read_idats <- function(targets, detectP) {
-  RGSet <- minfi::read.metharray.exp(
+read_idats <- function(targets) {
+  minfi::read.metharray.exp(
     targets = targets, verbose = TRUE,
     force = TRUE
   )
-
-  RGSet[(rowMeans(as.matrix(minfi::detectionP(RGSet))) < detectP), ]
 }
 
 generate_clean_samplesheet <- function(target_samplesheet, donorvar) {
@@ -51,12 +49,18 @@ generate_clean_samplesheet <- function(target_samplesheet, donorvar) {
 
 }
 
-normalize_rgset <- function(rgset, normalization_mode, dropSNPs,
+normalize_rgset <- function(rgset, normalization_mode, detectP, dropSNPs,
                             maf, dropCpHs, dropSex) {
+  
+  
+  #Calculating detection p.value
+  detP <- minfi::detectionP(rgset)
+  bad_pos <- row.names(as.data.frame(detP))[rowMeans(detP) > detectP]
+  
   # Normalizing data by the selected method
   if (normalization_mode == "Illumina") {
     gset <- minfi::mapToGenome(minfi::ratioConvert(
-      type = "Illumina",
+      #type = "Illumina",
       betaThreshold = 0.001,
       minfi::preprocessIllumina(rgset,
         bg.correct = TRUE,
@@ -102,6 +106,10 @@ normalize_rgset <- function(rgset, normalization_mode, dropSNPs,
     gset <- gset[rownames(minfi::getAnnotation(gset))[!(minfi::getAnnotation(gset)$chr %in%
       c("chrX", "chrY"))], ]
   }
+  
+  # remobe bad probes
+  gset <- gset[minfi::featureNames(gset)[!(minfi::featureNames(gset) %in% bad_pos)],]
+  
 
   # Info CpGs removed
   message(paste(
