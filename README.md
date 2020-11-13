@@ -125,3 +125,9 @@ default, and no additional work is required.
 
 You can find an example of the final .zip to
 upload to the application in [the example\_data folder of the doc branch](https://github.com/omorante/shinyepico/blob/doc/example_data/Li_NAR_2019.zip).
+
+# Package documentation
+
+The package includes a detailed vignette explaining the steps and options of the application. In addition, you can access the updated version of the vignette in pdf at this [link](https://github.com/omorante/shinyepico/blob/doc/doc/shiny_epico.pdf) 
+
+
