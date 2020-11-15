@@ -9,7 +9,6 @@
 #' @param max_upload_size The limit in MB of the .zip file size to be uploaded. By default, 2000MB.
 #' @param host IP used to deploy the server. By default, your local IP (127.0.0.1)
 #' @param port Port used to deploy the server.
-#' @param seed Seed used to make DMR calculations reproducible. Set it to NULL to not use a seed. DMR calculation is based on permutations, and is subject to uncertainty. Therefore, you can get slightly different results every time you use the application if you do not set a seed.
 #' @return None
 #' @examples
 #' {
@@ -26,7 +25,6 @@ run_shinyepico <- function(n_cores = parallel::detectCores() / 2,
 
   stopifnot(is.numeric(n_cores) & n_cores >= 1)
   stopifnot(is.numeric(max_upload_size) & max_upload_size > 0)
-  stopifnot(is.numeric(seed) | is.null(seed))
   stopifnot(is.numeric(port) | is.null(port))
 
   # Specified n_cores and max_upload_size

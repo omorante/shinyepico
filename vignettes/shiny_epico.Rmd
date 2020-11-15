@@ -59,7 +59,7 @@ At the moment, you can install the application through github using the 'remotes
 ```{r eval=FALSE}
 install.packages("remotes")
 library("remotes")
-install_github("omorante/shinyepico", upgrade="always")
+install_github("omorante/shinyepico", upgrade="always", dependencies = TRUE)
 ```
 
 ## Dependencies and implementation
@@ -77,10 +77,6 @@ The complete list of the application dependencies are:
 
     R (>= 4.0.0),
     DT (>= 0.15.0),
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    IlluminaHumanMethylation450kmanifest,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
-    IlluminaHumanMethylationEPICmanifest,
     data.table (>= 1.13.0),
     doParallel (>= 1.0.0),
     dplyr (>= 1.0.0),
@@ -105,10 +101,14 @@ The complete list of the application dependencies are:
     tidyr (>= 1.1.0),
     zip (>= 2.1.0)
 
-For the DMR calculation, additional suggested packages are required. You can use the application without installing this package, but you will not able to calculate DMRs.
+For the DMR calculation, additional suggested packages are required. You can use the application without installing this package, but you will not able to calculate DMRs. Moreover, for the array normalization, you will need to install annotation and manifest packages, for 450k or EPIC.
 
-    mCSEA (>= 1.10.0)
-
+    mCSEA (>= 1.10.0),
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylation450kmanifest,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    IlluminaHumanMethylationEPICmanifest
+    
 And, to run the application: 
 ```{r eval=FALSE}
 library("shinyepico")
@@ -350,7 +350,7 @@ shinyÉPICo provides plenty of options to filter the statistics produced by limm
 With this options, a summary table with the DMPs found in each contrast is shown. In this example:
 
 ```{r, echo=FALSE, eval=TRUE}
-knitr::kable(data.frame(contrast = "MAC-MO", Hypermethylated=2272, Hypomethylated=21, total=2293))
+knitr::kable(data.frame(contrast = "MAC-MO", Hypermethylated=2275, Hypomethylated=21, total=2296))
 ```
 
 The differential of beta is always calculated as the subtraction of the average value from the first group to the second group (in this example, MOavg - MACavg) and the positions are assigned to the "Hypermethylated" group if the differential is greater than 0, and to the "Hypomethylated" group if the differential is lower than 0. 
@@ -422,7 +422,7 @@ Note that the default differential of beta threshold for DMRs is 0, in contrast 
 
 With this options, a summary table with the DMRs found in each contrast is shown. In this example:
 ```{r, echo=FALSE, eval=TRUE}
-knitr::kable(data.frame(contrast = rep("MAC-MO",3), Hypermethylated=c(54,112,48), Hypomethylated=c(76,95,56),total=c(130,207,104)))
+knitr::kable(data.frame(contrast = rep("MAC-MO",3), Hypermethylated=c(64,160,45), Hypomethylated=c(78,111,62),total=c(142,271,107)))
 ```
 
 In order to calculate the differential of beta for DMRs, all the positions in DMRs are considered, and the average difference is used. The differential of beta is always calculated as the subtraction of the average value from the first group to the second group (in this example, MOavg - MACavg) and the positions are assigned to the "Hypermethylated" group if the differential is greater than 0, and to the "Hypomethylated" group if the differential is lower than 0. 

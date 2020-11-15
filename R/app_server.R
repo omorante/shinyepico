@@ -5,6 +5,7 @@
 #' @import shiny
 #' @importFrom rlang .data
 #' @import data.table
+#' @import statmod
 #'
 #' @noRd
 
