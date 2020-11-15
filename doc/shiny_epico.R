@@ -4,21 +4,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ---- echo=FALSE, message=FALSE-----------------------------------------------
-library(shinyepico)
-library(minfi)
-library(limma)
-library(mCSEA)
-library(dplyr)
-library(tidyr)
-library(statmod)
-library(foreach)
-library(gplots)
-library(heatmaply)
-library(zip)
-library(shinyjs)
-library(shinythemes)
-
 ## ----eval=FALSE---------------------------------------------------------------
 #  install.packages("remotes")
 #  library("remotes")
@@ -26,6 +11,7 @@ library(shinythemes)
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  library("shinyepico")
+#  set.seed(123)
 #  run_shinyepico()
 
 ## ---- echo=FALSE, eval=TRUE---------------------------------------------------

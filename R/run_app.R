@@ -22,16 +22,12 @@
 #' @export
 #'
 run_shinyepico <- function(n_cores = parallel::detectCores() / 2,
-                           max_upload_size = 2000, host = "127.0.0.1", port = NULL, seed = 123) {
+                           max_upload_size = 2000, host = "127.0.0.1", port = NULL) {
 
   stopifnot(is.numeric(n_cores) & n_cores >= 1)
   stopifnot(is.numeric(max_upload_size) & max_upload_size > 0)
   stopifnot(is.numeric(seed) | is.null(seed))
   stopifnot(is.numeric(port) | is.null(port))
-
-
-  # Specified seed to obtain always the same results
-  set.seed(seed)
 
   # Specified n_cores and max_upload_size
   shinyOptions(n_cores = round(n_cores), shiny.maxRequestSize = max_upload_size *

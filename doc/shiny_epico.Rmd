@@ -35,21 +35,6 @@ knitr::opts_chunk$set(
 div, code {overflow-x:auto !important}
 ```
 
-```{r, echo=FALSE, message=FALSE}
-library(shinyepico)
-library(minfi)
-library(limma)
-library(mCSEA)
-library(dplyr)
-library(tidyr)
-library(statmod)
-library(foreach)
-library(gplots)
-library(heatmaply)
-library(zip)
-library(shinyjs)
-library(shinythemes)
-```
 
 # Introduction: What is ShinyÉPICo for?
 
@@ -127,6 +112,7 @@ For the DMR calculation, additional suggested packages are required. You can use
 And, to run the application: 
 ```{r eval=FALSE}
 library("shinyepico")
+set.seed(123)
 run_shinyepico()
 ```
 
@@ -136,7 +122,8 @@ The function run_shinyepico has 5 parameters that can be modified:
 * **max_upload_size:** By default, shiny applications have an upload limit (in MB), useful when the application is running on a web server. By default, this parameter is 2000MB.
 * **host:** IP used to deploy the application. By default, this parameter is your local IP (127.0.0.1) which means that only you, from your computer, will have access to the application. However, it is possible to make the app reachable to other computers in the same LAN by changing the IP to 0.0.0.0.
 * **port:** Port used to deploy the application. By default, a random free port.
-* **seed:** Seed used to make the calculations reproducible. By default, 123. If you do not want to use a seed, you should set this parameter to NULL. Particularly, DMRs calculation, that rely on the mCSEA package, utilizes permutations to estimate the p.value. For that reason, some uncertainty is expected, and results can be a bit different every time you run the application. Using a seed avoids this problem, as you will obtain always the same result with the same seed.
+
+As can be seen in the example, we used the set.seed function before starting ShinyÉPICo. We recommend always setting the same seed, which can be any number, to avoid uncertainties and ensure that the results obtained are reproducible. Particularly, DMRs calculation, that rely on the mCSEA package, utilizes permutations to estimate the p.value. For that reason, some uncertainty is expected, and results can be a bit different every time you run the application. Using a seed avoids this problem, as you will obtain always the same result with the same seed.
 
 # ShinyÉPICo workflow
 
@@ -157,6 +144,8 @@ In the next sections, we will discuss the different steps, the options, and char
 In the following example, iDATs from a study using Illumina EPIC DNA methylation arrays will be used to illustrate the steps [@Li2020]. Although shinyÉPICo can be used with multiple groups and large cohorts, and in that case, iteration and automation are more useful, for this manual we have decided to use a minimal example that can be easily reproduced on almost any computer. Specifically, monocyte and monocyte-derived macrophages (produced with M-CSF) has been selected, only 6 samples (3 monocyte samples and 3 macrophage samples from 3 different healthy donors).
 
 The .zip file of this dataset can be found in the  [Github repository](https://github.com/omorante/shinyepico/blob/dev/example_data/Li_NAR_2019.zip)
+
+In this example, the seed 123 has been set using the function set.seed() before run_shinyepico().
 
 ## Data Import and Sample Selection
 
