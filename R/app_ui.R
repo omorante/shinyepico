@@ -792,7 +792,9 @@ app_ui <- function(request) {
     ),
 
     tabPanel(
-      "About",
+      "Help",
+      tabsetPanel(
+        tabPanel("Credits",
       tags$head(tags$style(HTML(
         "a {color: #0275d8}"
       ))),
@@ -815,19 +817,18 @@ app_ui <- function(request) {
         detect differentially methylated CpGs and differentially methylated regions, and plotting them in useful and customable heatmaps."
       ),
       p(
-        "The",
-        tags$a(
-          href = "https://github.com/omorante/shinyepico/blob/doc/doc/shiny_epico.pdf",
-          "shiny\u00C9PICo user's guide",
-          target = "_blank"
-        ),
-        "provides details of the steps and options to select during the workflow."
-      ),
-      p(
         "For suggestions or bug reports, please use the",
         tags$a(href = "https://github.com/omorante/shinyepico/issues", "GitHub", target = "_blank"),
         "issues forum."
       )
+    ),
+    
+    tabPanel("Manual",
+      tags$iframe(style="height:900px; scrolling=yes; border=0; width:100%", src="https://omorante.github.io/shinyepico/shiny_epico.pdf")
+      )
     )
+    )
+    
   )
+  
 }
