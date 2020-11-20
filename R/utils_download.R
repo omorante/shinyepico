@@ -57,10 +57,8 @@ create_dmrs_bed_background <- function(mcsea_result,
 
       if (length(res) != 4) {
         message(
-          paste(
             name,
-            "DMR is not correctly annotated. NAs will be introduced in final bed"
-          )
+            " DMR is not correctly annotated. NAs will be introduced in final bed"
         )
         res <- c(
           chr = "NA",
@@ -119,10 +117,8 @@ create_filtered_beds_dmrs <- function(mcsea_filtered,
 
         if (length(res) != 4) {
           message(
-            paste(
               name,
-              "DMR is not correctly annotated. It will be discarded in final bed"
-            )
+              " DMR is not correctly annotated. It will be discarded in final bed"
           )
           res <- c(
             chr = "NA",
@@ -173,10 +169,10 @@ create_filtered_bed_dmrs_clusters <- function(dendro_data,
       )
 
       if (length(res) != 4) {
-        message(paste(
+        message(
           name,
-          "DMR is not correctly annotated. NAs will be introduced in final bed"
-        ))
+          " DMR is not correctly annotated. NAs will be introduced in final bed"
+        )
         res <- c(
           chr = "NA",
           start = "NA",

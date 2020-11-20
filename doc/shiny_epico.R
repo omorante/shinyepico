@@ -5,9 +5,20 @@ knitr::opts_chunk$set(
 )
 
 ## ----eval=FALSE---------------------------------------------------------------
+#  if (!requireNamespace("BiocManager", quietly = TRUE))
+#      install.packages("BiocManager")
+#  BiocManager::install("shinyepico")
+
+## ----eval=FALSE---------------------------------------------------------------
 #  install.packages("remotes")
 #  library("remotes")
 #  install_github("omorante/shinyepico", upgrade="always", dependencies = TRUE)
+
+## ---- echo=FALSE, tidy=FALSE, comment=NA--------------------------------------
+writeLines(unlist(strsplit(packageDescription("shinyepico")[["Imports"]],", ")))
+
+## ---- echo=FALSE, tidy=FALSE, comment=NA--------------------------------------
+writeLines(unlist(strsplit(packageDescription("shinyepico")[["Suggests"]],", ")))
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  library("shinyepico")

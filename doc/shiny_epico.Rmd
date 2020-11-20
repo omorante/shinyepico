@@ -38,23 +38,32 @@ div, code {overflow-x:auto !important}
 
 # Introduction: What is ShinyÉPICo for?
 
-shinyÉPICo is a web application based on [shiny](https://github.com/rstudio/shiny) and created to accelerate and to make easier the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. For this purpose, shinyÉPICo uses, among others, the widely used minfi [@Aryee2014] and limma [@Ritchie2015] packages for the array normalization and the differentially methylated positions (DMPs) calculation, respectively. Moreover, shinyÉPICo also allows calculation of differentially methylated regions calculation (DMRs), based on the mCSEA package [@Martorell-Marugan2019].
+shinyÉPICo is a web application based on [shiny](https://github.com/rstudio/shiny) and created to accelerate and to streamline the study of Illumina Infinium DNA methylation arrays, including the 450k and EPIC. For this purpose, shinyÉPICo uses, among others, the widely used minfi [@Aryee2014] and limma [@Ritchie2015] packages for the array normalization and the differentially methylated positions (DMPs) calculation, respectively. Moreover, shinyÉPICo also allows calculation of differentially methylated regions calculation (DMRs), based on the mCSEA package [@Martorell-Marugan2019].
 
 It is conceived as a 'graphical pipeline' since, throughout the analysis, you can observe the result of the different options with multiple charts, and interactively modify decisions in current or prior steps. In addition, the application automates calculations that would otherwise take much more time and effort.
 
 shinyÉPICo is a fully graphical application and the calculations performed in R are done entirely on the server-side. Therefore, the application can be used both on the local computer and through a web server, to which devices, such as computers, smartphones or tablets could be connected, without high RAM or CPU requirements and only a web browser as requirement.
 
-The steps followed by the application includes the data importing, starting with iDAT files (Raw Illumina DNA methylation datasets), array normalization, quality control, and data exploring, and DMP and DMR calculation. Each step has multiple options and charts that we will describe along with this manual.
+The steps followed by the application includes the data importing, starting with iDAT files (Raw Illumina DNA methylation datasets), array normalization, quality control, and data exploring, and DMP and DMR calculation. Each step has multiple options and charts that we will describe in this manual.
 
-## What do I need to use ShinyÉPICo? 
+## What do I need in order to use ShinyÉPICo? 
 
-ShinyÉPICo can run in GNU/Linux, Windows, or macOS. The package dependencies are automatically tried to install with the package is installing. 
+ShinyÉPICo can run in GNU/Linux, Windows, or macOS. The package dependencies are automatically installed with the package. 
 
 Since the application allows to follow interactively all the analysis process, many objects have to be stored in RAM memory. Therefore, the application can be memory demanding, especially when trying to analyze a large number of samples at the same time. We recommend at least 12GB of RAM for smooth use of the application, but depending on the number of samples analyzed and whether they are EPIC or 450k, the needs may be lower or higher.
 
 ## How can I install ShinyÉPICo?
 
-At the moment, you can install the application through github using the 'remotes' R package:
+
+The package will be available soon from Bioconductor, where it can be installed following standard instructions:
+
+```{r eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("shinyepico")
+```
+
+Currently, you can install the application through GitHub using the 'remotes' R package:
 
 ```{r eval=FALSE}
 install.packages("remotes")
@@ -75,39 +84,16 @@ ShinyÉPICo implements internal functions to follow the array normalization, and
 
 The complete list of the application dependencies are:
 
-    R (>= 4.0.0),
-    DT (>= 0.15.0),
-    data.table (>= 1.13.0),
-    doParallel (>= 1.0.0),
-    dplyr (>= 1.0.0),
-    foreach (>= 1.5.0),
-    GenomicRanges (>= 1.38.0),
-    ggplot2 (>= 3.3.0),
-    gplots (>= 3.0.0),
-    heatmaply (>= 1.1.0),
-    limma (>= 3.42.0),
-    minfi (>= 1.32.0),
-    plotly (>= 4.9.2),
-    reshape2 (>= 1.4.0),
-    rlang (>= 0.4.0),
-    rmarkdown (>= 2.3.0),
-    rtracklayer (>= 1.46.0),
-    shiny (>= 1.5.0),
-    shinyWidgets (>= 0.5.0),
-    shinycssloaders (>= 0.3.0),
-    shinyjs (>= 1.1.0),
-    shinythemes (>= 1.1.0),
-    statmod (>= 1.4.0),
-    tidyr (>= 1.1.0),
-    zip (>= 2.1.0)
+```{r, echo=FALSE, tidy=FALSE, comment=NA}
+writeLines(unlist(strsplit(packageDescription("shinyepico")[["Imports"]],", ")))
+```
 
-For the DMR calculation, additional suggested packages are required. You can use the application without installing this package, but you will not able to calculate DMRs. Moreover, for the array normalization, you will need to install annotation and manifest packages, for 450k or EPIC.
+For DMR calculation, additional suggested packages are required. You can use the application without installing this package, but you will not able to calculate DMRs. Moreover, for the array normalization, you will need to install annotation and manifest packages, for 450k or EPIC.
 
-    mCSEA (>= 1.10.0),
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    IlluminaHumanMethylation450kmanifest,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
-    IlluminaHumanMethylationEPICmanifest
+```{r, echo=FALSE, tidy=FALSE, comment=NA}
+writeLines(unlist(strsplit(packageDescription("shinyepico")[["Suggests"]],", ")))
+```
+
     
 And, to run the application: 
 ```{r eval=FALSE}
@@ -123,7 +109,7 @@ The function run_shinyepico has 4 parameters that can be modified:
 * **host:** IP used to deploy the application. By default, this parameter is your local IP (127.0.0.1) which means that only you, from your computer, will have access to the application. However, it is possible to make the app reachable to other computers in the same LAN by changing the IP to 0.0.0.0.
 * **port:** Port used to deploy the application. By default, a random free port.
 
-As can be seen in the example, we used the set.seed function before starting ShinyÉPICo. We recommend always setting the same seed, which can be any number, to avoid uncertainties and ensure that the results obtained are reproducible. Particularly, DMRs calculation, that rely on the mCSEA package, utilizes permutations to estimate the p.value. For that reason, some uncertainty is expected, and results can be a bit different every time you run the application. Using a seed avoids this problem, as you will obtain always the same result with the same seed.
+As can be seen in the example, we used the set.seed function before starting ShinyÉPICo. We recommend always setting up the same seed, which can be any number, to avoid uncertainties and ensure that the results obtained are reproducible. Particularly, DMRs calculation, that rely on the mCSEA package, utilizes permutations to estimate the p.value. For that reason, some uncertainty is expected, and results can be a bit different every time you run the application. Using a seed avoids this problem, as you will obtain always the same result with the same seed.
 
 # ShinyÉPICo workflow
 
@@ -131,7 +117,7 @@ shinyÉPICO workflow is divided into tabs that summarize the different steps to 
 
 * **Data import**
 * **Quality control and array normalization**
-* **Differentially Methylated Positions calculation**
+* **Calculation of Differentially Methylated Positions**
 * **Calculation of Differentially Methylated Regions**
 * **Data export**
 
@@ -145,7 +131,7 @@ In the following example, iDATs from a study using Illumina EPIC DNA methylation
 
 The .zip file of this dataset can be found in the  [Github repository](https://github.com/omorante/shinyepico/blob/doc/example_data/Li_NAR_2019.zip)
 
-In this example, the seed 123 has been set using the function set.seed() before run_shinyepico().
+In this example, the seed 123 has been set up using the function set.seed() before run_shinyepico().
 
 ## Data Import and Sample Selection
 
@@ -159,7 +145,7 @@ In this regard, 3 parameters are required in the Input tab to continue the analy
 
 * A column with the **variable of interest**, in which sample groups will be found to calculate DMPs and DMRs.
 
-* Optionally, a **donor variable** is also included in the Input tab. If you have an experiment where several samples come from the same donor, it is recommended to add a column with this information and select it in the form. This information is used in the SNPs heatmap of the Normalization section (as we will discuss later), and also for the DMPs/DMR calculation. If you select a valid donor variable, this information is automatically added as covariable of the linear model in the DMPs section, and, therefore a "**paired analysis**" will be performed. If you do not have or you would not like to use this information, you can select the same column as sample names.
+* Optionally, a **donor variable** is also included in the Input tab. If you have an experiment where several samples come from the same donor, it is recommended to add a column with this information and select it in the form. This information is used in the SNPs heatmap of the Normalization section (as we will discuss below), and also for the DMPs/DMR calculation. If you select a valid donor variable, this information is automatically added as covariable of the linear model in the DMPs section, and, therefore a "**paired analysis**" will be performed. If you do not have or you would not like to use this information, you can select the same column as sample names.
 
 An aspect to take into account is that shinyÉPICo autodetects the variable types (numerical or categorical) depending on whether or not they can be coerced to numbers. For this purpose, variables are coerced to a numeric vector, and when the generated NAs are less than 75% of the total, the variable is set as numeric, and, otherwise, as categorical. Moreover, not informative categorical variables are excluded (e.g., a variable with the same value in all the samples, or with not equal values). Therefore, numbers should not be used for categorical variables in the sample sheet. Numerical variables with some NAs but less than 75% can be used in the exploratory analysis but not as covariables of the linear model, since Limma needs a design matrix without missing values.
 
@@ -185,7 +171,7 @@ On the one hand, the **QC Signal plot** shows the median methylated (mMed) and u
 
 On the other hand, the **Bisulfite conversion plot** is calculated using the information of the bisulfite conversion II control probes of the 450k/EPIC arrays. When the bisulfite conversion reaction is successful, the probe of the control position will have intensity in the Red channel, whereas if the sample has unconverted DNA, the probe will have a high signal in the Green channel. 
 
-For each sample, we calculate all the Red/Green ratios for each control position, and the minimum ratio is shown in the chart. When a sample has a ratio lower than 1.5, we flag it as "Failed".
+For each sample, we calculate all the Red/Green ratios for each control position, and the minimum ratio is shown in the chart. When the ratio of a sample is lower than 1.5, we flag it as "Failed".
 
 
 ## Array Normalization
@@ -218,7 +204,7 @@ Additionally, shinyÉPICo offers three more options in the Normalization tab:
 
 Moreover, Using the minfi recommended value, the genomic positions of the final obtained RGChannelSet object (Raw Data) are filtered by the detection p.value (using the minfi::detectionP function) in the normalized data, removing all the positions with an average p.value higher of 0.01.
 
-shinyÉPICo makes it very simple to test different methods and options. When a normalization method is selected, clicking the "Select" button, the different charts are automatically generated. 
+shinyÉPICo simplify the testing of different methods and options. When a normalization method is selected, clicking the "Select" button, the different charts are automatically generated. 
 
 In this example, we are going to select the Quantile normalization. We show different examples of the type of charts generated by the software.
 
@@ -262,7 +248,8 @@ This heatmap utilizes information of a special subset of single nucleotide polym
 Depending on the median X and Y chromosomes intensities, we show the sex prediction generated with the function minfi::getSex(). Note that, even if the Drop X/Y Chr. option is selected, this prediction is done before that step, and this graph will not be altered.
 
 In this example, the three donors are males, as can be observed in the chart.
-![Median X chromosome intensity vs Median Y chromosome intensity](./sexplot.png){width=75%}
+
+![Median X chromosome intensity vs Median Y chromosome intensity](./sexplot.png){width=65%}
 
 ### Exploratory analysis: PCA and Correlations
 
@@ -276,7 +263,7 @@ First, we show the principal component analysis (PCA). Selecting specific princi
 
 * **Correlations:**
 
-Secondly, we also provide a heatmap of the correlations between principal components and variables. As we explained before, variable types (categorical or numerical) are guessed, and not informative variables are excluded. 
+Secondly, we also provide a heatmap of the correlations between principal components and variables. As we explained above, variable types (categorical or numerical) are guessed, and not informative variables are excluded. 
 
 In the correlations tab, a detailed table of the variables is shown, including the type (categorical variables are shown as "factor", numerical variables as "numeric", and discarded variables as "discarded"). 
 
@@ -311,7 +298,7 @@ Several options can be set in this step:
 
 * **Variable of interest**: This variable, that should be categorical, will be used to perform the contrasts to generate the DMPs.
 
-* **Linear model covariables**: When other variables different from the variable of interest can be influencing the DNA methylation differences, they can be included in the linear model. Limma will take into account these differences and correct them in the result. For example, DNA methylation is very dependent on the donor, and, in experiments with several samples of the same donor, generally is recommendable to add the donor as a covariable. If you have selected a donor covariable in the Input tab, this option will be selected by default. 
+* **Linear model covariables**: When other variables different from the variable of interest can be influencing the DNA methylation differences, they can be included in the linear model. Limma will take into account these differences and correct them in the result. For example, DNA methylation is very dependent on the donor, and, in experiments with several samples of the same donor, it is generally advisable to add the donor as a covariable. If you have selected a donor covariable in the Input tab, this option will be selected by default. 
 
 * **Linear model interactions**: When you suspect that a variable can be affecting DNA methylation depending on another variable (for example, changes of DNA methylation between the sex that are specific of age), an interaction term can be added to the model.
 
@@ -349,7 +336,7 @@ shinyÉPICo provides plenty of options to filter the statistics produced by limm
 * **Max. FDR**:  The threshold of the maximum false discovery rate (adjusted p value). By default, this value is 0.05.
 * **Max. p-value**: The threshold of the maximum unadjusted p value. By default, this value is 1.
 
-With this options, a summary table with the DMPs found in each contrast is shown. In this example:
+With these options, a summary table with the DMPs found in each contrast is shown. In this example:
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::kable(data.frame(contrast = "MAC-MO", Hypermethylated=2275, Hypomethylated=21, total=2296))
@@ -365,7 +352,7 @@ The differential of beta is always calculated as the subtraction of the average 
 
 ***Data options***
 
-* **Remove Batch Effect**: If this option is enabled, Beta values are modified with the function limma::removeBatchEffect and the information provided of covariables and interactions and the heatmap is generated with these values. For representation, this option can help to see a more clear pattern when technical variables, such as hybridization time, are affecting the results. Note that these corrected beta values are not used for any statistical test, and this option does not affect the differential of beta calculation neither. 
+* **Remove Batch Effect**: If this option is enabled, Beta values are modified with the function limma::removeBatchEffect and the information provided of covariables and interactions and the heatmap is generated with these values. For representation, this option can help see a more clear pattern when technical variables, such as hybridization time, are affecting the results. Note that these corrected beta values are not used for any statistical test, and this option does not affect the differential of beta calculation neither. 
 
 ***Clustering options***
 
@@ -380,7 +367,7 @@ The differential of beta is always calculated as the subtraction of the average 
 * **Column Colors**: When this option is enabled, a color legend of the different groups is shown above each column.
 * **Row Colors**: When this option is enabled, row dendrogram is divided in the number of groups selected (k number) using the stats::cutree function. The resulting clusters are shown in different colors next to the row dendrogram.
 
-Since heatmap plotting can be very time- and memory-consuming, we have fixed a limitation of 12.000 positions (rows) in the heatmap. If you try to plot more positions, you will see a message with this information. However, if you need a bigger heatmap, you can download the information to generate it in the Export tab, as we will discuss later.
+Since heatmap plotting can be very time- and memory-consuming, we have fixed a limitation of 12.000 positions (rows) in the heatmap. If you try to plot more positions, you will see a message with this information. However, if you need a bigger heatmap, you can download the information to generate it in the Export tab, as we will discuss below
 
 
 ![DMP heatmap generated with default options](./dmp_heatmap.png){width=70%}
@@ -396,7 +383,7 @@ The information on the table can be downloaded in CSV or XLSX (Excel) formats, u
 
 ## Differentially Methylated Regions (DMR) calculation
 
-In addition to DMP calculation, shinyÉPICO also supports DMR calculation. A DMR is defined as a genomic region with differential methylation between groups. Instead of checking individual changes in genomic positions, DMR calculation involves the comparison of groups of genomic positions, which can be clusterized in several ways depending on the specific algorithm used.
+In addition to DMP calculation, shinyÉPICO also supports DMR calculation. A DMR is defined as a genomic region, including several positions, with differential methylation between groups. Instead of checking individual changes in genomic positions, DMR calculation involves the comparison of groups of genomic positions, which can be clusterized in several ways depending on the specific algorithm used.
 
 DMR calculation of shinyÉPICO is based on the package mCSEA which searches DMRs in predefined regions: promoters, gene bodies and CpG islands.
 
@@ -420,7 +407,7 @@ In the DMRs tab, some options can be set for the calculation generated by the mC
 
 In the DMR section, shinyÉPICo provides the same options to filter the data and customize the data as in the DMP section.
 
-Note that the default differential of beta threshold for DMRs is 0, in contrast with DMPs (0.2). This is justified considering that DMRs are calculated using the information of the methylation data of several positions, and that small changes may also be relevant if they are consistent. With this options, a summary table with the DMRs found in each contrast is shown. In this example:
+Note that the default differential of beta threshold for DMRs is 0, in contrast with DMPs (0.2). This is justified considering that DMRs are calculated using the information of the methylation data of several positions, and that small changes may also be relevant if they are consistent. With these options, a summary table with the DMRs found in each contrast is shown. In this example:
 ```{r, echo=FALSE, eval=TRUE}
 knitr::kable(data.frame(contrast = rep("MAC-MO",3), Hypermethylated=c(64,160,45), Hypomethylated=c(78,111,62),total=c(142,271,107)))
 ```
