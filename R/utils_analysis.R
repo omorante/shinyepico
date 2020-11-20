@@ -52,6 +52,15 @@ generate_clean_samplesheet <- function(target_samplesheet, donorvar) {
 normalize_rgset <- function(rgset, normalization_mode, detectP, dropSNPs,
                             maf, dropCpHs, dropSex) {
   
+  #Testing inputs
+  stopifnot(is.logical(dropCpHs))
+  stopifnot(is.logical(dropSex))
+  stopifnot(is.logical(dropSNPs))
+  stopifnot(is.numeric(maf))
+  stopifnot(is.numeric(detectP))
+  stopifnot(class(rgset) == "RGChannelSet")
+  stopifnot(any(norm_options %in% normalization_mode))
+  stopifnot(length(normalization_mode) == 1)
   
   #Calculating detection p.value
   detP <- minfi::detectionP(rgset)
@@ -123,6 +132,8 @@ normalize_rgset <- function(rgset, normalization_mode, detectP, dropSNPs,
 # MODEL GENERATION
 
 generate_contrasts <- function(voi) {
+  stopifnot(is.factor(voi))
+  
   conts <- utils::combn(levels(voi), 2)
 
   sprintf("%s-%s", conts[1, ], conts[2, ])
@@ -130,6 +141,12 @@ generate_contrasts <- function(voi) {
 
 generate_design <- function(voi, sample_name, covariables, interactions,
                             sample_sheet) {
+  stopifnot(is.character(voi) & length(voi) == 1)
+  stopifnot(is.character(sample_name) & length(sample_name) == 1)
+  stopifnot(is.null(covariables) | is.character(covariables))
+  stopifnot(is.null(interactions) | is.character(interactions))
+  stopifnot(inherits(sample_sheet, "data.frame"))
+  
   voi_factor <- factor(make.names(sample_sheet[[voi]]))
 
   formula <- stats::as.formula(paste0("~ 0 + ", paste(c(
