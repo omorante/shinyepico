@@ -128,6 +128,6 @@ upload to the application in [the example\_data folder of the doc branch](https:
 
 # Package documentation
 
-The package includes a detailed vignette explaining the steps and options of the application. In addition, you can access the updated version of the vignette in pdf at this [link](https://github.com/omorante/shinyepico/blob/doc/doc/shiny_epico.pdf) 
+The package includes a detailed vignette explaining the steps and options of the application. In addition, you can access the updated version of the vignette in pdf at this [link](https://omorante.github.io/shinyepico/shiny_epico.pdf)
 
 
