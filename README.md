@@ -47,7 +47,7 @@ We have started the process to upload our package to the Bioconductor repository
 ``` r
 install.packages("remotes")
 library("remotes")
-install_github("omorante/shinyepico", upgrade="always")
+install_github("omorante/shinyepico", upgrade="always", dependencies = TRUE)
 ```
 
 To run the package:
@@ -60,32 +60,31 @@ run_shinyepico()
 It is highly recommended to update all packages to avoid problems during the use of the application. The minimum
 versions required are:
 
-    DT (>= 0.15.0),
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    IlluminaHumanMethylation450kmanifest,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
-    IlluminaHumanMethylationEPICmanifest,
-    data.table (>= 1.13.0),
-    doParallel (>= 1.0.0),
-    dplyr (>= 1.0.0),
-    foreach (>= 1.5.0),
-    ggplot2 (>= 3.3.0),
-    gplots (>= 3.0.0),
-    heatmaply (>= 1.1.0),
-    limma (>= 3.44.0),
-    minfi (>= 1.34.0),
-    plotly (>= 4.9.2),
-    reshape2 (>= 1.4.0),
-    rlang (>= 0.4.0),
-    rmarkdown (>= 2.3.0),
-    shiny (>= 1.5.0),
-    shinyWidgets (>= 0.5.0),
-    shinycssloaders (>= 0.3.0),
-    shinyjs (>= 1.1.0),
-    shinythemes (>= 1.1.0),
-    statmod (>= 1.4.0),
-    tidyr (>= 1.1.0),
-    zip (>= 2.1.0)
+    DT (>= 0.15.0)
+    data.table (>= 1.13.0)
+    doParallel (>= 1.0.0)
+    dplyr (>= 1.0.0)
+    foreach (>= 1.5.0)
+    GenomicRanges (>=1.38.0)
+    ggplot2 (>= 3.3.0)
+    gplots (>= 3.0.0)
+    heatmaply (>=1.1.0)
+    limma (>= 3.42.0)
+    minfi (>= 1.32.0)
+    plotly (>=4.9.2)
+    reshape2 (>= 1.4.0)
+    rlang (>= 0.4.0)
+    rmarkdown (>=2.3.0)
+    rtracklayer (>= 1.46.0)
+    shiny (>= 1.5.0)
+    shinyWidgets(>= 0.5.0)
+    shinycssloaders (>= 0.3.0)
+    shinyjs (>= 1.1.0)
+    shinythemes (>= 1.1.0)
+    statmod (>= 1.4.0)
+    tidyr (>= 1.1.0)
+    zip (>= 2.1.0),
+    mCSEA (>= 1.10.0)
 
 The function run\_shinyepico has 4 parameters that can be modified:
 
