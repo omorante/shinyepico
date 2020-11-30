@@ -1907,6 +1907,7 @@ app_server <- function(input, output, session) {
               "library(rlang)",
               paste("########################", "PARAMETERS", "########################"),
               "path <- \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
+              paste("norm_options <-", rlang::expr_text(norm_options)),
               "#Performance",
               paste("cores <-", n_cores),
               "#Data reading",
