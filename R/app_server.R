@@ -268,7 +268,10 @@ app_server <- function(input, output, session) {
           )
         }
 
-
+        # analysis restarted
+        rval_analysis_finished(FALSE)
+        rval_dmrs_finished(FALSE)
+        
         # we return RGSet
         RGSet
       }
@@ -380,19 +383,19 @@ app_server <- function(input, output, session) {
   # getBeta/getM reactives
   rval_rgset_getBeta <- eventReactive(rval_rgset(), {
     bvalues <- as.data.frame(minfi::getBeta(rval_rgset()))
-    colnames(bvalues) <- input$selected_samples
+    colnames(bvalues) <- rval_sheet_target()[[input$select_input_samplenamevar]]
     bvalues
   })
 
   rval_gset_getBeta <- eventReactive(rval_gset(), {
     bvalues <- as.data.frame(minfi::getBeta(rval_gset()))
-    colnames(bvalues) <- input$selected_samples
+    colnames(bvalues) <- rval_sheet_target()[[input$select_input_samplenamevar]]
     bvalues
   })
 
   rval_gset_getM <- reactive({
     mvalues <- minfi::getM(rval_gset())
-    colnames(mvalues) <- input$selected_samples
+    colnames(mvalues) <- rval_sheet_target()[[input$select_input_samplenamevar]]
     mvalues
   })
   ##############
