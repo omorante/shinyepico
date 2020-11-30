@@ -42,7 +42,7 @@ higher.
 
 # Installation and use
 
-We have started the process to upload our package to the Bioconductor repository. Meanwhile, to install shinyÉPICo, you have to use the GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
+Our package is now uploaded to the devel version of [Bioconductor](https://bioconductor.org/packages/devel/bioc/html/shinyepico.html) and it will be included in the next release. Meanwhile, to install shinyÉPICo, you have to use the GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
 
 ``` r
 install.packages("remotes")
