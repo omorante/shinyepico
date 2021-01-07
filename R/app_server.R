@@ -1478,13 +1478,15 @@ app_server <- function(input, output, session) {
     validate(need(!is.null(input$table_dmrs_table_rows_selected), "A DMR should be selected."))
 
     selected_dmr <- row.names(rval_filteredmcsea()[[input$select_dmrs_selcont]][[input$select_dmrs_selreg]])[input$table_dmrs_table_rows_selected]
-
+    col <- grDevices::rainbow(length(levels(rval_voi())))
+    
     mCSEA::mCSEAPlot(
       rval_mcsea()[[input$select_dmrs_selcont]],
       regionType = input$select_dmrs_selreg,
       dmrName = selected_dmr,
       makePDF = FALSE,
-      transcriptAnnotation = "symbol"
+      transcriptAnnotation = "symbol",
+      col = col
     )
   })
 
