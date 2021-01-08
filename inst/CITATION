@@ -1,0 +1,19 @@
+citHeader("To cite shinyepico in publications use:")
+
+citEntry(
+  entry= "Article",
+  author   = as.person(c("Morante-Palacios, Octavio", "Ballestar, Esteban")) ,
+  title    = "shinyÉPICo: A graphical pipeline to analyze Illumina DNA methylation arrays" ,
+  year     = "2021" ,
+  journal  = "Bioinformatics",
+  publisher = "OXFORD ACADEMIC",
+  volume   = "btaa1095",
+  url      = "https://doi.org/10.1093/bioinformatics/btaa1095",
+  textVersion = paste(
+  "Morante-Palacios Octavio and Ballestar Esteban (2021)",
+  "shinyÉPICo: A graphical pipeline to analyze Illumina DNA methylation arrays",
+  "Bioinformatics, btaa1095",
+  "https://doi.org/10.1093/bioinformatics/btaa1095"
+  )
+)
+
