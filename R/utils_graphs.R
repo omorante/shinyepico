@@ -317,6 +317,11 @@ create_plotqc <- function(rgset, sample_names, badSampleCutoff = 10) {
 }
 
 create_densityplot <- function(Bvalues, n = 200000) {
+  
+  if (n > nrow(Bvalues)) {
+    n <- nrow(Bvalues)
+  }
+  
   # Creating density plot using a sample of n CpGs
   plotly::ggplotly(
     Bvalues[sample(seq_len(nrow(Bvalues)), n), ] %>%
@@ -339,6 +344,11 @@ create_densityplot <- function(Bvalues, n = 200000) {
 }
 
 create_boxplot <- function(Bvalues, n = 200000) {
+  
+  if (n > nrow(Bvalues)) {
+    n <- nrow(Bvalues)
+  }
+  
   Bvalues[sample(seq_len(nrow(Bvalues)), n), ] %>%
     tidyr::pivot_longer(
       cols = seq_len(ncol(Bvalues)),
