@@ -42,21 +42,18 @@ higher.
 
 # Installation and use
 
-Our package is now uploaded to the devel version of [Bioconductor](https://bioconductor.org/packages/devel/bioc/html/shinyepico.html) and it will be included in the next stable release. 
+Our package is now included in the 3.13 Release of [Bioconductor](https://bioconductor.org/packages/release/bioc/html/shinyepico.html).
 
-Meanwhile, to install the package through Bioconductor you have to install R 4.1 (development version) and enter:
+To install the package through Bioconductor you have to first install R 4.1 and enter:
 
 ``` r
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-# The following initializes usage of Bioc devel
-BiocManager::install(version='devel')
-
 BiocManager::install("shinyepico")
 ```
 
-Alternatively, to install shinyÉPICo in R 4.0, you have to use the GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
+Alternatively, you can install shinyÉPICo through our GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
 
 ``` r
 install.packages("remotes")
