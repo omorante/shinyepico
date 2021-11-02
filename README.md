@@ -60,6 +60,11 @@ library("remotes")
 install_github("omorante/shinyepico", upgrade="always", dependencies = TRUE)
 ```
 
+# Docker container
+
+In addition to the shinyÉPICo package, now an official shinyÉPICo container is available in [Docker](https://hub.docker.com/repository/docker/omorante/shinyepico). This is very useful to run shinyÉPICo in a webserver. [Shinyproxy](https://www.shinyproxy.io/) is an excellent option to provide ShinyApps to several users from a private or public server.
+
+
 To run the package:
 
 ``` r
