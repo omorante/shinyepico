@@ -52,19 +52,6 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("shinyepico")
 ```
 
-Alternatively, you can install shinyÉPICo through our GitHub repository. It is easy to install it directly in R using the install\_github function from the remotes package.
-
-``` r
-install.packages("remotes")
-library("remotes")
-install_github("omorante/shinyepico", upgrade="always", dependencies = TRUE)
-```
-
-# Docker container
-
-In addition to the shinyÉPICo package, now an official shinyÉPICo container is available in [Docker](https://hub.docker.com/repository/docker/omorante/shinyepico). This is very useful to run shinyÉPICo in a webserver. [Shinyproxy](https://www.shinyproxy.io/) is an excellent option to provide ShinyApps to several users from a private or public server.
-
-
 To run the package:
 
 ``` r
@@ -72,34 +59,11 @@ library("shinyepico")
 run_shinyepico()
 ```
 
-It is highly recommended to update all packages to avoid problems during the use of the application. The minimum
-versions required are:
+# Docker container
 
-    DT (>= 0.15.0)
-    data.table (>= 1.13.0)
-    doParallel (>= 1.0.0)
-    dplyr (>= 1.0.0)
-    foreach (>= 1.5.0)
-    GenomicRanges (>=1.38.0)
-    ggplot2 (>= 3.3.0)
-    gplots (>= 3.0.0)
-    heatmaply (>=1.1.0)
-    limma (>= 3.42.0)
-    minfi (>= 1.32.0)
-    plotly (>=4.9.2)
-    reshape2 (>= 1.4.0)
-    rlang (>= 0.4.0)
-    rmarkdown (>=2.3.0)
-    rtracklayer (>= 1.46.0)
-    shiny (>= 1.5.0)
-    shinyWidgets(>= 0.5.0)
-    shinycssloaders (>= 0.3.0)
-    shinyjs (>= 1.1.0)
-    shinythemes (>= 1.1.0)
-    statmod (>= 1.4.0)
-    tidyr (>= 1.1.0)
-    zip (>= 2.1.0),
-    mCSEA (>= 1.10.0)
+In addition to the shinyÉPICo package, now an official shinyÉPICo container is available in [Docker](https://hub.docker.com/repository/docker/omorante/shinyepico). This is very useful to run shinyÉPICo in a webserver. [Shinyproxy](https://www.shinyproxy.io/) is an excellent option to provide ShinyApps to several users from a private or public server.
+
+# Parameters
 
 The function run\_shinyepico has 4 parameters that can be modified:
 
