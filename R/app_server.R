@@ -1028,10 +1028,10 @@ app_server <- function(input, output, session) {
         )) %>%
         dplyr::group_by(.data$contrast, .data$type) %>%
         dplyr::summarise(CpGs = dplyr::n()) %>%
+        dplyr::ungroup() %>%
         tidyr::complete(.data$contrast, .data$type, fill = list(
-          CpGs =
-            0
-        )) %>%
+          CpGs = 0)
+        ) %>%
         tidyr::pivot_wider(
           names_from = .data$type,
           values_from = .data$CpGs

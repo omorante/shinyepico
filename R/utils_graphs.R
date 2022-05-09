@@ -484,7 +484,6 @@ create_bisulfiteplot <- function(rgset, sample_names, threshold = 1.5) {
 
   plot_data <- tidyr::pivot_wider(
     ctl,
-    id_cols = 2:4,
     values_from = "value",
     names_from = "channel"
   )
