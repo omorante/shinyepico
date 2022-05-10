@@ -4,12 +4,12 @@ Version: 1.4.1
 Authors@R: person('Octavio', 'Morante-Palacios', email = 'octaviompa@gmail.com', role = c('cre', 'aut'))
 Description: ShinyÉPICo is a graphical pipeline to analyze Illumina DNA methylation arrays (450k or EPIC). It allows to calculate differentially methylated positions and differentially methylated regions in a user-friendly interface. Moreover, it includes several options to export the results and obtain files to perform downstream analysis.
 License: AGPL-3 + file LICENSE
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.2.0)
 Imports: 
     DT (>= 0.15.0),
     data.table (>= 1.13.0),
     doParallel (>= 1.0.0),
-    dplyr (>= 1.0.0),
+    dplyr (>= 1.0.9),
     foreach (>= 1.5.0),
     GenomicRanges (>= 1.38.0),
     ggplot2 (>= 3.3.0),
@@ -19,7 +19,7 @@ Imports:
     minfi (>= 1.32.0),
     plotly (>= 4.9.2),
     reshape2 (>= 1.4.0),
-    rlang (>= 0.4.0),
+    rlang (>= 1.0.2),
     rmarkdown (>= 2.3.0),
     rtracklayer (>= 1.46.0),
     shiny (>= 1.5.0),
@@ -28,7 +28,7 @@ Imports:
     shinyjs (>= 1.1.0),
     shinythemes (>= 1.1.0),
     statmod (>= 1.4.0),
-    tidyr (>= 1.1.0),
+    tidyr (>= 1.2.0),
     zip (>= 2.1.0)
 Suggests:
     knitr (>= 1.30.0),
