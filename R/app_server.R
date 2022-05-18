@@ -1039,7 +1039,7 @@ app_server <- function(input, output, session) {
         dplyr::mutate(total = .data$Hypermethylated + .data$Hypomethylated) %>%
         dplyr::mutate(dplyr::across(
           c("Hypermethylated", "Hypomethylated", "total"),
-          ~ format(., scientific = FALSE, digits = 0)
+          ~ format(., scientific = FALSE)
         ))
     }
 
