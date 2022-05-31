@@ -89,9 +89,9 @@ params:
   filteredlist2heatmap: NULL
 ---
 
-```{r, out.width = "150px", echo=FALSE}
-knitr::include_graphics("images/logo.png")
-```
+
+![](http://raw.githubusercontent.com/omorante/shinyepico/master/inst/images/logo.png)
+
 <br>
 This report was created with shinyÉPICo. 
 <br>

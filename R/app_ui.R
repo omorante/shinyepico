@@ -803,7 +803,7 @@ app_ui <- function(request) {
         width = 150
       ),
       h1("shiny\u00C9PICo"),
-      h3(as.character(utils::packageVersion("shinyepico"))),
+      h3("1.5.2_shinyapp"),
       br(),
       h4(
         tags$a(href = "https://www.gnu.org/licenses/agpl-3.0.html", "GNU Affero GPLv3 License", target = "_blank")

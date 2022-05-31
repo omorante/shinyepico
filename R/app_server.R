@@ -1630,7 +1630,7 @@ app_server <- function(input, output, session) {
           annotation
         }
         else {
-          chain <- rtracklayer::import.chain(system.file("hg19ToHg38.over.chain", package = "shinyepico"))
+          chain <- rtracklayer::import.chain("resources/hg19ToHg38.over.chain")
 
           ann_granges <- data.frame(
             chr = annotation$chr,
@@ -1877,7 +1877,7 @@ app_server <- function(input, output, session) {
           newenv$create_heatmap <- create_heatmap
 
           render_file <- rmarkdown::render(
-            input = system.file("report.Rmd", package = "shinyepico"),
+            input = "resources/report.Rmd",
             output_file = file,
             run_pandoc = TRUE,
             params = params,
@@ -1903,7 +1903,7 @@ app_server <- function(input, output, session) {
           fileConn <- file(file)
           writeLines(
             c(
-              paste("#This script was generated with shiny\u00C9PICo", utils::packageVersion("shinyepico"), "on", Sys.Date()),
+              paste("#This script was generated with shiny\u00C9PICo", "1.5.2_shinyapp", "on", Sys.Date()),
               "library(shiny)",
               "library(data.table)",
               "library(rlang)",
