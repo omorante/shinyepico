@@ -63,6 +63,10 @@ run_shinyepico()
 
 In addition to the shinyÉPICo package, now an official shinyÉPICo container is available in [Docker](https://hub.docker.com/repository/docker/omorante/shinyepico). This is very useful to run shinyÉPICo in a webserver. [Shinyproxy](https://www.shinyproxy.io/) is an excellent option to provide ShinyApps to several users from a private or public server.
 
+# Shiny App
+
+The recommended way to run shinyÉPIco locally is through Bioconductor, as previously explained. However, if you would like to configure a Shiny Server with shinyÉPICo and Docker/Shinyproxy is not an option, it is possible to use shinyÉPICo as a shinyApp. It can be downloaded from the [shiny_app branch](https://github.com/omorante/shinyepico/tree/shiny_app). However, the Shiny Server should be properly configured, including all the packages needed for shinyÉPIco. An easy way to do that is install the shinyepico package from Bioconductor.
+
 # Parameters
 
 The function run\_shinyepico has 4 parameters that can be modified:
