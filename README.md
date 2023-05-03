@@ -29,7 +29,7 @@ ShinyÉPICo can run in GNU/Linux, Windows or macOS. The package
 dependencies are automatically tried to install when you install the
 package.
 
-**R 4.0** or higher with updated packages is required.
+**R 4.3** or higher with updated packages is required.
 
 Since the application allows to follow interactively all the analysis
 process, many objects have to be stored in RAM memory. Therefore, the
@@ -41,9 +41,9 @@ higher.
 
 # Installation and use
 
-Our package is now included in the 3.13 Release of [Bioconductor](https://bioconductor.org/packages/release/bioc/html/shinyepico.html).
+Our package is now included in the latest Release of [Bioconductor](https://bioconductor.org/packages/release/bioc/html/shinyepico.html).
 
-To install the package through Bioconductor you have to first install R 4.1 and enter:
+To install the package through Bioconductor you have to first install R 4.3 and enter:
 
 ``` r
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -58,6 +58,22 @@ To run the package:
 library("shinyepico")
 run_shinyepico()
 ```
+
+You can also install the development version of shinyepico through GitHub
+
+``` r
+library("remotes")
+install_github("omorante/shinyepico")
+```
+# Usage of custom annotations
+
+The latest development version of shinyepico (still not uploaded to Bioconductor) includes the possibility of manually select the array annotation to use. This is useful when minfi is not able to autodetect the array (for array designs more recent than 450k and EPIC such as EPIC v2 and Mouse). You will need to manually install the manifest and annotation package and select it in the first shinyepico tab. Please, note that this feature is still in development and some features of shinyepico could not work with custom annotations.
+
+Some useful custom annotations can be find below and installed following the instructions:
+* https://github.com/jokergoo/IlluminaHumanMethylationEPICv2manifest
+* https://github.com/jokergoo/IlluminaHumanMethylationEPICv2anno.20a1.hg38
+* https://github.com/chiaraherzog/IlluminaMouseMethylationmanifest
+* https://github.com/chiaraherzog/IlluminaMouseMethylationanno.12.v1.mm10
 
 # Docker container
 
