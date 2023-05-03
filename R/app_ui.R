@@ -21,6 +21,18 @@ hclust_methods <- c(
   "centroid"
 )
 
+annotation_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
+                            pattern = "Illumina.*anno", 
+                            value = TRUE)
+
+array_names <- gsub(x = annotation_packages, pattern="anno.*", replacement = "")
+annotation_names <- gsub(x = annotation_packages, pattern=".*anno\\.", replacement = "")
+names(array_names) <- annotation_names
+
+# manifest_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
+#                           pattern = "Illumina.*manifest", 
+#                           value = TRUE)
+
 
 `%dopar%` <- foreach::`%dopar%`
 `%do%` <- foreach::`%do%`
@@ -89,6 +101,22 @@ app_ui <- function(request) {
               ),
               multiple = TRUE
             ),
+            br(),
+            h5(strong("Custom Annotation:")),
+            switchInput(
+              inputId = "switch_input_customanno",
+              onLabel = "Yes",
+              offLabel = "No",
+              value = FALSE,
+              inline = FALSE
+            ),
+            conditionalPanel(
+              condition = "input.switch_input_customanno == true",
+              pickerInput(
+                inputId = "select_input_customarray",
+                label = "Array|Annotation:",
+                choices = paste(as.character(array_names), names(array_names),sep="|")
+              )),
             h3(),
             actionButton("button_input_next", "Continue")
           )

@@ -7,11 +7,19 @@ globalVariables("ranking")
 globalVariables("association")
 
 # READING AND NORMALIZATION FUNCTIONS
-read_idats <- function(targets) {
-  minfi::read.metharray.exp(
-    targets = targets, verbose = TRUE,
-    force = TRUE
-  )
+read_idats <- function(targets, custom_anno = FALSE, 
+                       array = NULL, annotation = NULL) {
+  rgset <- minfi::read.metharray.exp(
+    targets = targets, verbose = TRUE, force = TRUE)
+  
+  if(custom_anno){
+    rgset@annotation <- c(array = array, annotation = annotation)
+    rgset
+  }
+  else{
+    rgset
+  }
+  
 }
 
 generate_clean_samplesheet <- function(target_samplesheet, donorvar) {

@@ -196,7 +196,10 @@ app_server <- function(input, output, session) {
       {
         try({
           RGSet <- read_idats(
-            targets = rval_sheet_target())
+            targets = rval_sheet_target(),
+            custom_anno = input$switch_input_customanno, 
+            array = gsub(input$select_input_customarray, pattern = "\\|.*", replacement= ""), 
+            annotation = gsub(input$select_input_customarray, pattern = ".*\\|", replacement= ""))
         })
 
         if (!exists("RGSet", inherits = FALSE)) {
