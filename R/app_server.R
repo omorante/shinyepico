@@ -310,9 +310,18 @@ app_server <- function(input, output, session) {
         "yMed",
         "predictedSex"
       ),
-
       selected = input$select_input_groupingvar
     )
+    
+    if(input$switch_input_customanno){
+      updateSelectInput(
+        session,
+        "select_export_genometype",
+        choices = "as is",
+        selected = "as is"
+      )
+    }
+
 
     shinyjs::enable("button_minfi_select")
     updateNavbarPage(session, "navbar_epic", "Normalization")
@@ -1597,9 +1606,11 @@ app_server <- function(input, output, session) {
       "Relation_to_Island",
       "UCSC_RefGene_Name",
       "UCSC_RefGene_Group",
+      "GencodeV41_Name",
       "chr",
       "pos",
-      "strand"
+      "strand",
+      "EPICv1_Loci"
     )
 
     if (input$select_export_genometype == "hg38" &
@@ -1626,10 +1637,10 @@ app_server <- function(input, output, session) {
       value = 1,
       {
         annotation <- as.data.frame(minfi::getAnnotation(rval_gset()))
-        annotation <- annotation[, int_cols]
-        annotation$genome <- "hg19"
+        annotation <- annotation[, int_cols[int_cols %in% colnames(annotation)]]
+        annotation$genome <- input$select_export_genometype
 
-        if (input$select_export_genometype == "hg19") {
+        if (input$select_export_genometype == "hg19" | input$select_export_genometype == "as is") {
           annotation
         }
         else {
@@ -1912,6 +1923,9 @@ app_server <- function(input, output, session) {
               "library(rlang)",
               paste("########################", "PARAMETERS", "########################"),
               "path <- \"insert here the path to the decompress folder with iDATs and the sample_sheet in .csv\"",
+              paste("custom_anno <-", rlang::expr_text(input$switch_input_customanno)),
+              paste("array <-", rlang::expr_text(gsub(input$select_input_customarray, pattern = "\\|.*", replacement= ""))),
+              paste("annotation <-", rlang::expr_text(gsub(input$select_input_customarray, pattern = ".*\\|", replacement= ""))),
               paste("norm_options <-", rlang::expr_text(norm_options)),
               "#Performance",
               paste("cores <-", n_cores),
@@ -1989,7 +2003,7 @@ app_server <- function(input, output, session) {
               paste("create_heatmap <-", rlang::expr_text(create_heatmap)),
               paste("\n\n\n########################", "PIPELINE", "########################"),
               "#Data reading",
-              "sheet <- minfi::read.metharray.sheet(path)",
+              "sheet <- minfi::read.metharray.sheet(path, custom_anno = custom_anno, array = array, annotation = annotation)",
               "sheet_target <- sheet[sheet[[sample_name_var]] %in% selected_samples,]",
               "voi <- factor(make.names(sheet_target[[voi_var]]))",
               "rgset <- read_idats(sheet_target)\n",

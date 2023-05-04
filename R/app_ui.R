@@ -21,6 +21,7 @@ hclust_methods <- c(
   "centroid"
 )
 
+# RETRIEVING LIST OF installed annotations
 annotation_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
                             pattern = "Illumina.*anno", 
                             value = TRUE)
@@ -28,11 +29,6 @@ annotation_packages <- grep(x = as.data.frame(installed.packages())[,c("Package"
 array_names <- gsub(x = annotation_packages, pattern="anno.*", replacement = "")
 annotation_names <- gsub(x = annotation_packages, pattern=".*anno\\.", replacement = "")
 names(array_names) <- annotation_names
-
-# manifest_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
-#                           pattern = "Illumina.*manifest", 
-#                           value = TRUE)
-
 
 `%dopar%` <- foreach::`%dopar%`
 `%do%` <- foreach::`%do%`
@@ -838,7 +834,7 @@ app_ui <- function(request) {
       ),
       h4("\u00A9 2020 Octavio Morante-Palacios"),
       h4(
-        tags$a(href = "mailto:omorante@carrerasresearch.org?\u00C9PICo!", "omorante@carrerasresearch.org", target = "_blank")
+        tags$a(href = "mailto:octaviompa@gmail.com?\u00C9PICo!", "octaviompa@gmail.com", target = "_blank")
       ),
       p(
         "shiny\u00C9PICo is a graphical interface based on Shiny. It is intended for importing and normalizing Illumina DNA methylation arrays (450k or EPIC), exploring DNA methylation data and also for following a statistical analysis to
