@@ -21,15 +21,6 @@ hclust_methods <- c(
   "centroid"
 )
 
-# RETRIEVING LIST OF installed annotations
-annotation_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
-                            pattern = "Illumina.*anno", 
-                            value = TRUE)
-
-array_names <- gsub(x = annotation_packages, pattern="anno.*", replacement = "")
-annotation_names <- gsub(x = annotation_packages, pattern=".*anno\\.", replacement = "")
-names(array_names) <- annotation_names
-
 `%dopar%` <- foreach::`%dopar%`
 `%do%` <- foreach::`%do%`
 `%>%` <- magrittr::`%>%`
@@ -111,7 +102,7 @@ app_ui <- function(request) {
               pickerInput(
                 inputId = "select_input_customarray",
                 label = "Array|Annotation:",
-                choices = paste(as.character(array_names), names(array_names),sep="|")
+                choices = obtaining_annotations()
               )),
             h3(),
             actionButton("button_input_next", "Continue")

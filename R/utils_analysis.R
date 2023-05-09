@@ -7,6 +7,18 @@ globalVariables("ranking")
 globalVariables("association")
 
 # READING AND NORMALIZATION FUNCTIONS
+obtaining_annotations <- function(){
+
+  annotation_packages <- grep(x = as.data.frame(installed.packages())[,c("Package")],
+                              pattern = "Illumina.*anno", 
+                              value = TRUE)
+  
+  array_names <- gsub(x = annotation_packages, pattern="anno.*", replacement = "")
+  annotation_names <- gsub(x = annotation_packages, pattern=".*anno\\.", replacement = "")
+
+  paste(as.character(array_names),annotation_names, sep="|")
+}
+
 read_idats <- function(targets, custom_anno = FALSE, 
                        array = NULL, annotation = NULL) {
   rgset <- minfi::read.metharray.exp(
